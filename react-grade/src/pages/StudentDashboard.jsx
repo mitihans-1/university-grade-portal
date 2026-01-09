@@ -1,0 +1,288 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { api } from '../utils/api';
+import { Link } from 'react-router-dom';
+import LanguageSelector from '../components/common/LanguageSelector';
+
+const SummaryCard = ({ to, icon, value, label, color }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <Link
+      to={to}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        textDecoration: 'none',
+        color: 'inherit',
+        display: 'block',
+        height: '100%'
+      }}
+    >
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '25px',
+        textAlign: 'center',
+        boxShadow: isHovered ? '0 10px 20px rgba(0,0,0,0.12)' : '0 4px 12px rgba(0,0,0,0.06)',
+        borderBottom: `5px solid ${color}`,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ fontSize: '40px', marginBottom: '10px' }}>{icon}</div>
+        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}>{value}</div>
+        <div style={{ color: '#666', fontSize: '13px', fontWeight: '500', marginTop: '5px' }}>{label}</div>
+      </div>
+    </Link>
+  );
+};
+
+const StudentDashboard = () => {
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const [grades, setGrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [attendanceSummary, setAttendanceSummary] = useState(null);
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        setLoading(true);
+        // Fetch student's grades
+        const gradesData = await api.getMyGrades();
+        setGrades(Array.isArray(gradesData) ? gradesData : []);
+
+        // Fetch attendance summary
+        try {
+          const attendanceData = await api.getAttendanceSummary(user.studentId);
+          setAttendanceSummary(attendanceData);
+        } catch (error) {
+          console.error('Error fetching attendance summary:', error);
+        }
+      } catch (error) {
+        console.error('Error fetching student data:', error);
+        setGrades([]);
+        // Optionally show an error message to the user
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchStudentData();
+    }
+  }, [user]);
+
+  const calculateGPA = () => {
+    if (!Array.isArray(grades)) {
+      return '0.00';
+    }
+
+    const gradePoints = {
+      'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+      'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0
+    };
+
+    let totalPoints = 0;
+    let totalCredits = 0;
+
+    grades.forEach(g => {
+      const credits = g.creditHours || g.credits || 3;
+      totalPoints += (gradePoints[g.grade] || 0) * credits;
+      totalCredits += credits;
+    });
+
+    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+  };
+
+  if (!user) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '100px 20px',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        <div style={{ fontSize: '48px' }}>🔒</div>
+        <h2>Please log in to access your dashboard</h2>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard-container">
+      {/* Main Content */}
+      <div className="fade-in">
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
+            <p style={{ color: '#666' }}>{t('loadingDashboard')}</p>
+          </div>
+        ) : (
+          <div>
+
+
+            {/* Welcome Section */}
+            <div className="stagger-item" style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '30px',
+              marginBottom: '30px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              borderLeft: '6px solid #1976d2',
+              background: 'linear-gradient(to right, #ffffff, #f8faff)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                <div>
+                  <h1 style={{ margin: '0 0 10px 0', color: '#1a237e', fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}>
+                    {t('welcomeMessage').replace('{name}', user?.name || 'Student')}
+                  </h1>
+                  <p style={{ margin: 0, color: '#546e7a', fontSize: '1rem' }}>
+                    <span style={{ fontWeight: '600' }}>{user?.studentId || 'UGR/1234/14'}</span> • {user?.department || t('computerScience')} • {t('yearNumber').replace('{year}', user?.year || '3')} • {t('semester')} {user?.semester || '1'}
+                  </p>
+                </div>
+                <div style={{ textAlign: 'center', minWidth: '140px', padding: '15px', backgroundColor: '#e3f2fd', borderRadius: '12px', flex: '1 1 auto' }}>
+                  <div style={{ fontSize: '14px', color: '#1565c0', marginBottom: '5px', fontWeight: 'bold' }}>{t('currentGPA')}</div>
+                  <div style={{ fontSize: '36px', fontWeight: '900', color: '#0d47a1' }}>
+                    {calculateGPA()}
+                    <span style={{ fontSize: '18px', color: '#546e7a', fontWeight: 'normal' }}>/4.0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Academic Warning Banner */}
+            {(Array.isArray(grades) && parseFloat(calculateGPA()) < 2.5 && grades.some(g => ['F', 'D'].includes(g.grade))) && (
+              <div className="stagger-item" style={{
+                backgroundColor: 'fff4e5',
+                color: '#663c00',
+                padding: '20px',
+                borderRadius: '12px',
+                marginBottom: '30px',
+                borderLeft: '6px solid #ffa117',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '20px',
+                boxShadow: '0 4px 12px rgba(255, 161, 23, 0.15)'
+              }}>
+                <div style={{ fontSize: '32px' }}>⚠️</div>
+                <div>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#663c00' }}>{t('academicAdvisory')}</h4>
+                  <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                    {t('academicAdvisoryMessage')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid-container" style={{
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              alignItems: 'start'
+            }}>
+              {/* Quick Actions */}
+              <div className="stagger-item" style={{
+                backgroundColor: 'white',
+                padding: '30px',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+              }}>
+                <h3 style={{ marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px', color: '#1a237e' }}>
+                  <span style={{ fontSize: '24px' }}>⚡</span> {t('quickActions')}
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <QuickActionLink to="/student/grades" icon="📚" label={t('viewMyGrades')} />
+                  <QuickActionLink to="/student/notifications" icon="🔔" label={t('notifications')} />
+                  <QuickActionLink to="/student/attendance" icon="📅" label={t('myAttendance')} />
+                  <QuickActionLink to="/student/assignments" icon="📝" label="My Assignments" />
+                  <QuickActionLink to="/messages" icon="💬" label="Messages" />
+                  <QuickActionLink to="/student/id-card" icon="🪪" label="My Digital ID" />
+                  <QuickActionLink to="/settings" icon="⚙️" label={t('settings')} />
+                </div>
+              </div>
+
+              {/* Summary Stats Grid */}
+              <div className="grid-container" style={{
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: '15px'
+              }}>
+                <div className="stagger-item">
+                  <SummaryCard
+                    to="/student/grades"
+                    icon="📖"
+                    value={Array.isArray(grades) ? grades.length : 0}
+                    label={t('coursesTaken')}
+                    color="#1976d2"
+                  />
+                </div>
+                <div className="stagger-item">
+                  <SummaryCard
+                    to="/student/grades"
+                    icon="🎓"
+                    value={Array.isArray(grades) ? grades.reduce((sum, g) => sum + (g.creditHours || 3), 0) : 0}
+                    label={t('totalCredits')}
+                    color="#2e7d32"
+                  />
+                </div>
+                <div className="stagger-item">
+                  <SummaryCard
+                    to="/student/grades"
+                    icon="✅"
+                    value={Array.isArray(grades) ? grades.filter(g => (g.score || 0) >= 50).length : 0}
+                    label={t('passedCourses')}
+                    color="#ed6c02"
+                  />
+                </div>
+                <div className="stagger-item">
+                  <SummaryCard
+                    to="/student/attendance"
+                    icon="📅"
+                    value={attendanceSummary ? `${attendanceSummary.percentage}%` : 'N/A'}
+                    label={t('attendanceRecord')}
+                    color="#9c27b0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const QuickActionLink = ({ to, icon, label }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <Link
+      to={to}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '15px',
+        padding: '15px 20px',
+        backgroundColor: isHovered ? '#e8eaf6' : '#f8f9fa',
+        color: '#1a237e',
+        textDecoration: 'none',
+        borderRadius: '12px',
+        fontWeight: 'bold',
+        transition: 'all 0.2s ease',
+        transform: isHovered ? 'translateX(5px)' : 'translateX(0)',
+        borderLeft: isHovered ? '4px solid #1a237e' : '4px solid transparent'
+      }}
+    >
+      <span style={{ fontSize: '20px' }}>{icon}</span> {label}
+    </Link>
+  );
+};
+
+export default StudentDashboard;

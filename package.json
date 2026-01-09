@@ -1,0 +1,28 @@
+{
+  "name": "university-grade-portal",
+  "version": "1.0.0",
+  "description": "A comprehensive grade management system for universities that allows students, parents, and administrators to access academic information.",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd react-grade && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd react-grade && npm run dev"
+  },
+  "keywords": [
+    "university",
+    "grade",
+    "portal",
+    "student",
+    "parent",
+    "admin",
+    "education"
+  ],
+  "author": "University Grade Portal Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

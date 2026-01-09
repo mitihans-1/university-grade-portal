@@ -1,0 +1,758 @@
+/* Global Settings */
+:root {
+  --primary-color: #3b82f6;
+  /* Modern Blue */
+  --primary-hover: #2563eb;
+  --secondary-color: #f8fafc;
+  --text-color: #0f172a;
+  --text-muted: #64748b;
+  --header-bg: #ffffff;
+  --sidebar-bg: #0f172a;
+  /* Deep Navy Sidebar */
+  --sidebar-active-bg: #1e293b;
+  --border-radius: 10px;
+  --transition-speed: 0.3s;
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --glass-border: 1px solid rgba(226, 232, 240, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+  line-height: 1.5;
+  font-size: 14px;
+  /* Reduced from default */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-size: 1.8rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.2rem;
+}
+
+h4 {
+  font-size: 1rem;
+}
+
+/* --------------- ANIMATIONS --------------- */
+
+/* 1. Page Transitions (Fade In) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* 2. Staggered Entrance (Dashboard Cards) */
+/* Apply .stagger-container to the parent grid, and .stagger-item to children */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  opacity: 0;
+  /* Initially hidden */
+  animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Delay for each item */
+.stagger-item:nth-child(1) {
+  animation-delay: 100ms;
+}
+
+.stagger-item:nth-child(2) {
+  animation-delay: 200ms;
+}
+
+.stagger-item:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+.stagger-item:nth-child(4) {
+  animation-delay: 400ms;
+}
+
+.stagger-item:nth-child(5) {
+  animation-delay: 500ms;
+}
+
+.stagger-item:nth-child(6) {
+  animation-delay: 600ms;
+}
+
+/* 3. Button Click Scaledown */
+.btn:active,
+button:active,
+.card:active {
+  transform: scale(0.98) !important;
+}
+
+/* 4. Table Row Cascade */
+.table-row-animate {
+  animation: slideInLeft 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Apply staggered delays to rows specifically if needed, or rely on react to render them */
+tr.table-row-animate:nth-child(1) {
+  animation-delay: 50ms;
+}
+
+tr.table-row-animate:nth-child(2) {
+  animation-delay: 100ms;
+}
+
+tr.table-row-animate:nth-child(3) {
+  animation-delay: 150ms;
+}
+
+tr.table-row-animate:nth-child(4) {
+  animation-delay: 200ms;
+}
+
+tr.table-row-animate:nth-child(5) {
+  animation-delay: 250ms;
+}
+
+/* --------------- AUTH PAGE STYLES --------------- */
+
+.auth-page-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+/* Premium Glass Card */
+.auth-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  /* Smooth corners */
+  border: var(--glass-border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  /* Soft, deep shadow */
+  padding: 40px;
+  width: 100%;
+  max-width: 480px;
+  /* Slightly wider for modern feel */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(45deg, #1976d2, #64b5f6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.auth-subtitle {
+  color: #64748b;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+/* Modern Inputs */
+.modern-input-group {
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+
+.modern-input-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #1e293b;
+  /* Darker, distinct from placeholder */
+  letter-spacing: 0.01em;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  /* Darker border for visibility */
+  border-radius: 8px;
+  background-color: #f8fafc;
+  /* Slight off-white background */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* Inner shadow for depth */
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  color: #334155;
+}
+
+
+.modern-input:focus {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.1),
+    inset 0 1px 2px rgba(0, 0, 0, 0.01);
+  outline: none;
+}
+
+/* Modern Gradient Button */
+.modern-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
+}
+
+.modern-btn:hover {
+  background: linear-gradient(to right, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
+}
+
+/* Common Layout & Components */
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+  /* Reduced padding */
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Tables */
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #f1f5f9;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+}
+
+td {
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Buttons (Generic) */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Mobile Menu Scrollbar Styling */
+.mobile-menu-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mobile-menu-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.mobile-menu-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.mobile-menu-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile Menu Link Hover Effects */
+.mobile-menu-container a:hover,
+.mobile-menu-container button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- Responsive Sidebar & Hamburger Visibility --- */
+
+.hamburger-btn {
+  display: block;
+}
+
+.desktop-sidebar {
+  display: none;
+  width: 240px;
+  background-color: var(--sidebar-bg);
+  color: #cbd5e1;
+  padding: 15px;
+  border-right: 1px solid #e2e8f0;
+  overflow-y: auto;
+  height: calc(100vh - 56px);
+  position: sticky;
+  top: 56px;
+  transition: all 0.3s ease;
+}
+
+.main-content-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  /* Important for flex child scrolling */
+}
+
+@media (min-width: 1024px) {
+  .hamburger-btn {
+    display: none !important;
+  }
+
+  .desktop-sidebar {
+    display: block;
+  }
+
+  .desktop-nav {
+    display: flex !important;
+  }
+
+  /* Custom scrollbar for sidebar */
+  .desktop-sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .desktop-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .desktop-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+
+  .desktop-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+@media (max-width: 1023px) {
+  .desktop-nav {
+    display: none !important;
+  }
+}
+
+/* Reduce size of common elements */
+.card {
+  padding: 1rem;
+  /* Reduced from 1.5rem */
+}
+
+.modern-btn {
+  padding: 10px;
+  /* Reduced from 14px */
+}
+
+.modern-input {
+  padding: 8px 12px;
+  /* Reduced from 12px 16px */
+}
+
+/* ===== Incremental Incredible Styles ===== */
+
+/* 1. Deep Space/Aurora Background */
+.auth-page-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f172a;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+@keyframes floatOrb {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* 3. Glass Overlay Texture (Noise) */
+.auth-page-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 4. The Card (Bright White & Floating) */
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 40px;
+  /* Increased transparency for Glass effect */
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  /* Stronger blur */
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  /* Faster, snappier entry (Slide Up) */
+  z-index: 10;
+  position: relative;
+}
+
+@keyframes cardEntry {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 5. Inputs with animated border bottom */
+.modern-input-group {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  /* Darker border for visibility */
+  border-radius: 8px;
+  background-color: #f8fafc;
+  /* Slight off-white background */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* Inner shadow for depth */
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  color: #1e293b;
+  /* Dark text */
+}
+
+.modern-input::placeholder {
+  color: #94a3b8;
+  /* Light gray placeholder */
+  font-weight: 400;
+  opacity: 1;
+}
+
+.modern-input:focus {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.1),
+    inset 0 1px 2px rgba(0, 0, 0, 0.01);
+  outline: none;
+}
+
+/* 6. Incredible Button Shimmer */
+.modern-btn {
+  position: relative;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #4f46e5, #ec4899);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+}
+
+.modern-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.4);
+}
+
+.modern-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
+  transform: skewX(-25deg);
+  transition: 0.5s;
+}
+
+.modern-btn:hover::before {
+  left: 150%;
+  transition: 0.7s ease-in-out;
+}
+
+/* 7. Text Removal / Typewriter Animation */
+.typewriter-remove {
+  overflow: hidden;
+  border-right: 3px solid #3b82f6;
+  white-space: nowrap;
+  margin: 0 auto;
+  display: inline-block;
+  max-width: fit-content;
+  animation:
+    typing 3.5s steps(40, end),
+    blink-caret .75s step-end infinite,
+    deleting 2s steps(40, end) 6s forwards;
+  /* Deletes after 6s delay */
+}
+
+@keyframes typing {
+  from {
+    width: 0
+  }
+
+  to {
+    width: 100%
+  }
+}
+
+@keyframes deleting {
+  from {
+    width: 100%
+  }
+
+  to {
+    width: 0;
+    border-color: transparent;
+  }
+}
+
+@keyframes blink-caret {
+
+  from,
+  to {
+    border-color: transparent
+  }
+
+  50% {
+    border-color: #3b82f6;
+  }
+}
+
+/* 8. Infinite Loop Slide Right Animation */
+.loop-slide-right {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+@keyframes slideTextRight {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+.secure-badge {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0.9;
+  letter-spacing: 0.3px;
+}
+
+/* Small Register Buttons */
+/* Small Register Buttons (Improved) */
+.register-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  color: #475569;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.register-chip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+/* Hover State */
+
+.register-chip:hover {
+  color: #0369a1;
+  border-color: #93c5fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.register-chip:hover::before {
+  opacity: 1;
+}
+
+.register-label {
+  font-size: 0.95rem;
+  /* Larger */
+  font-weight: 700;
+  /* Bolder */
+  color: #1e293b;
+  /* Darker (almost black) */
+  margin-right: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #1e293b, #475569);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
