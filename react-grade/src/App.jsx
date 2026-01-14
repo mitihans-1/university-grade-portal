@@ -79,6 +79,8 @@ import StudentExams from './pages/StudentExams';
 import StudentExamPlayer from './pages/StudentExamPlayer';
 import StudentProfileSetup from './pages/StudentProfileSetup';
 import SupportPage from './pages/SupportPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedPermissions }) => {
   const { user, hasAnyPermission } = useAuth();
@@ -328,7 +330,15 @@ function AppLayout() {
   }, [isMenuOpen]);
 
   // Pages where Header/Sidebar/Footer should be hidden
-  const isFullScreenPage = ['/', '/login', '/register', '/parent/register', '/teacher/register', '/student/register', '/student/setup'].includes(window.location.pathname);
+  const isFullScreenPage = [
+    '/',
+    '/login',
+    '/student/register',
+    '/parent/register',
+    '/teacher/register',
+    '/student/setup',
+    '/forgot-password'
+  ].includes(window.location.pathname) || window.location.pathname.startsWith('/reset-password/');
 
   if (loading) {
     return (
@@ -467,6 +477,8 @@ function AppLayout() {
             <Route path="/student/register" element={<StudentRegistration />} />
             <Route path="/parent/register" element={<ParentRegistration />} />
             <Route path="/teacher/register" element={<TeacherRegistration />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
             <Route path="/student/setup" element={<ProtectedRoute><StudentProfileSetup /></ProtectedRoute>} />

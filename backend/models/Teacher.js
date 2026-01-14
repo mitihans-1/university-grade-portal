@@ -44,6 +44,14 @@ const Teacher = sequelize.define('Teacher', {
     status: {
         type: DataTypes.STRING,
         defaultValue: 'active'
+    },
+    resetPasswordToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    resetPasswordExpires: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
 }, {
     tableName: 'teachers',
