@@ -9,6 +9,8 @@ const Teacher = models.Teacher;
 const auth = require('../middleware/auth');
 const logAction = require('../utils/logger');
 const { sanitizeUser, createSecurePayload } = require('../utils/permissions');
+const { sendEmail } = require('../utils/notifier');
+const crypto = require('crypto');
 const router = express.Router();
 
 // @route   POST api/auth/login
@@ -207,6 +209,137 @@ router.put('/profile', auth, async (req, res) => {
 
   } catch (err) {
     console.error('Profile update error:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+// @route   POST api/auth/forgot-password
+// @desc    Request password reset
+// @access  Public
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ msg: 'Please provide an email address' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Find user across all roles
+    let user = null;
+    let userRole = null;
+    let UserModel = null;
+
+    const roles = [
+      { model: Student, role: 'student' },
+      { model: Parent, role: 'parent' },
+      { model: Teacher, role: 'teacher' },
+      { model: Admin, role: 'admin' }
+    ];
+
+    for (const r of roles) {
+      const u = await r.model.findOne({ where: { email: normalizedEmail } });
+      if (u) {
+        user = u;
+        userRole = r.role;
+        UserModel = r.model;
+        break;
+      }
+    }
+
+    if (!user) {
+      // For security, do not reveal if email exists or not, but for UX in this app we might want to say sent
+      return res.json({ msg: 'If an account exists with this email, a reset link has been sent.' });
+    }
+
+    // Generate token
+    const token = crypto.randomBytes(20).toString('hex');
+
+    // Set token and expiry (1 hour)
+    await UserModel.update({
+      resetPasswordToken: token,
+      resetPasswordExpires: Date.now() + 3600000
+    }, { where: { id: user.id } });
+
+    // Send email
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${token}`;
+
+    const emailHtml = `
+      <h3>Password Reset Request</h3>
+      <p>You are receiving this because you (or someone else) have requested the reset of the password for your account.</p>
+      <p>Please click on the following link, or paste this into your browser to complete the process:</p>
+      <p><a href="${resetUrl}">${resetUrl}</a></p>
+      <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+    `;
+
+    await sendEmail(user.email, 'Password Reset Request', emailHtml);
+
+    res.json({ msg: 'If an account exists with this email, a reset link has been sent.' });
+
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+// @route   POST api/auth/reset-password/:token
+// @desc    Reset password using token
+// @access  Public
+router.post('/reset-password/:token', async (req, res) => {
+  try {
+    const { password } = req.body;
+    const { token } = req.params;
+
+    if (!password) {
+      return res.status(400).json({ msg: 'Password is required' });
+    }
+
+    const { Op } = require('sequelize');
+
+    // Find user with valid token and expiry
+    let user = null;
+    let UserModel = null;
+
+    const roles = [
+      { model: Student },
+      { model: Parent },
+      { model: Teacher },
+      { model: Admin }
+    ];
+
+    for (const r of roles) {
+      const u = await r.model.findOne({
+        where: {
+          resetPasswordToken: token,
+          resetPasswordExpires: { [Op.gt]: Date.now() }
+        }
+      });
+      if (u) {
+        user = u;
+        UserModel = r.model;
+        break;
+      }
+    }
+
+    if (!user) {
+      return res.status(400).json({ msg: 'Password reset token is invalid or has expired.' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Update user
+    await UserModel.update({
+      password: hashedPassword,
+      resetPasswordToken: null,
+      resetPasswordExpires: null
+    }, { where: { id: user.id } });
+
+    res.json({ msg: 'Password has been updated successfully.' });
+
+  } catch (err) {
+    console.error('Reset password error:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 });

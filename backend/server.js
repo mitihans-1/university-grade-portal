@@ -5,6 +5,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
+const xss = require('xss-clean');
 const http = require('http');
 const { Server } = require('socket.io');
 const { connectDB } = require('./config/db');
@@ -16,7 +18,7 @@ const PORT = process.env.PORT || 5000;
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5174", "http://127.0.0.1:5174", "http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"],
     methods: ["GET", "POST"]
   }
 });
@@ -96,13 +98,29 @@ const generalLimiter = rateLimit({
 app.use(/^\/api\/(?!auth\/)/, generalLimiter);
 
 // Rate limiter disabled for testing
-const authLimiter = (req, res, next) => {
-  next();
-};
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { msg: 'Too many login attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Other middleware
-app.use(cors());
+// Strict CORS Configuration
+const corsOptions = {
+  origin: ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Data Sanitization against XSS
+app.use(xss());
+
+// Prevent Parameter Pollution
+app.use(hpp());
 
 // Connect to MySQL database
 const seedAdmin = require('./utils/seedAdmin');

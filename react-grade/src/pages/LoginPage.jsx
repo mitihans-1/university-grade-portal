@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../components/common/Toast';
@@ -11,6 +12,7 @@ const LoginPage = () => {
   const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Redirect if already logged in
@@ -95,19 +97,52 @@ const LoginPage = () => {
         </div>
 
         {/* Side-by-Side Password Input */}
-        <div className="modern-input-group" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div className="modern-input-group" style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
           <label className="modern-input-label" style={{ marginBottom: '0', minWidth: '80px', textAlign: 'right', fontWeight: '600' }}>
             {t('password')}
           </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="modern-input"
-            placeholder={t('enterYourPassword')}
-            autoComplete="current-password"
-            style={{ flex: 1 }}
-          />
+          <div style={{ position: 'relative', flex: 1, display: 'flex' }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="modern-input"
+              placeholder={t('enterYourPassword')}
+              autoComplete="current-password"
+              style={{ flex: 1, paddingRight: '40px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#64748b',
+                zIndex: 10
+              }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+          <Link
+            to="/forgot-password"
+            style={{
+              fontSize: '12px',
+              color: '#3b82f6',
+              textDecoration: 'none',
+              fontWeight: '500'
+            }}
+          >
+            Forgot Password?
+          </Link>
         </div>
 
         <button
