@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, UserPlus, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../components/common/Toast';
@@ -10,6 +10,9 @@ const LoginPage = () => {
   const { login, user } = useAuth();
   const { t } = useLanguage();
   const { showToast } = useToast();
+
+  // State for toggling between Login and Sign Up views
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,10 +42,8 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const result = await login(email, password);
-
       if (result.success) {
         showToast(t('loginSuccessful'), 'success');
-        // Navigation will be handled by the useEffect above
       } else {
         showToast(result.message || t('loginFailedMessage'), 'error');
       }
@@ -52,138 +53,138 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+
   return (
-    <div className="auth-page-container">
-      {/* Floating Background Blobs - Keep these if you added them, otherwise this block is fine */}
+    <div className="auth-page-container fade-in">
+      {/* Dynamic Background Blobs */}
       <div className="blob blob-1"></div>
       <div className="blob blob-2"></div>
       <div className="blob blob-3"></div>
 
-      <div className="auth-card" style={{ maxWidth: '480px' }}> {/* Slightly wider to accommodate side-by-side */}
-        <div style={{ textAlign: 'center', marginBottom: '20px', overflow: 'hidden' }}>
+      <div className="auth-card" style={{ maxWidth: '440px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '25px' }}>
           <div style={{
-            width: '50px', /* Reduced Size */
-            height: '50px',
-            background: 'linear-gradient(135deg, #1976d2, #64b5f6)',
+            width: '60px',
+            height: '60px',
+            background: 'linear-gradient(135deg, #4f46e5, #ec4899)',
             color: 'white',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '24px',
-            margin: '0 auto 10px',
-            boxShadow: '0 4px 15px rgba(25, 118, 210, 0.3)'
+            fontSize: '28px',
+            margin: '0 auto 15px',
+            boxShadow: '0 8px 20px rgba(79, 70, 229, 0.3)',
+            animation: 'float 3s ease-in-out infinite'
           }}>
             🏫
           </div>
-          <h1 className="auth-title loop-slide-right" style={{ fontSize: '1.4rem', marginBottom: '5px' }}>{t('universityGradePortal')}</h1>
-          <div style={{ marginBottom: '15px' }}></div>
+          <h1 className="auth-title" style={{ fontSize: '1.6rem', marginBottom: '5px' }}>
+            {isLogin ? t('universityGradePortal') : 'Join Our Community'}
+          </h1>
+          <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+            {isLogin ? 'Welcome back! Please enter your details.' : 'Choose your role to get started.'}
+          </p>
         </div>
 
-        {/* Side-by-Side Email Input */}
-        <div className="modern-input-group" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <label className="modern-input-label" style={{ marginBottom: '0', minWidth: '80px', textAlign: 'right', fontWeight: '600' }}>
-            {t('email')}
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="modern-input"
-            placeholder={t('enterYourEmail')}
-            autoComplete="username"
-            style={{ flex: 1 }}
-          />
-        </div>
+        {isLogin ? (
+          /* ----- LOGIN FORM ----- */
+          <div className="fade-in">
+            <div className="modern-input-group">
+              <label className="modern-input-label">{t('email')}</label>
+              <div style={{ position: 'relative' }}>
+                <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="modern-input"
+                  placeholder={t('enterYourEmail')}
+                  style={{ paddingLeft: '40px' }}
+                />
+              </div>
+            </div>
 
-        {/* Side-by-Side Password Input */}
-        <div className="modern-input-group" style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <label className="modern-input-label" style={{ marginBottom: '0', minWidth: '80px', textAlign: 'right', fontWeight: '600' }}>
-            {t('password')}
-          </label>
-          <div style={{ position: 'relative', flex: 1, display: 'flex' }}>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="modern-input"
-              placeholder={t('enterYourPassword')}
-              autoComplete="current-password"
-              style={{ flex: 1, paddingRight: '40px' }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#64748b',
-                zIndex: 10
-              }}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            <div className="modern-input-group">
+              <label className="modern-input-label">{t('password')}</label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="modern-input"
+                  placeholder={t('enterYourPassword')}
+                  style={{ paddingLeft: '40px', paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+              <Link to="/forgot-password" style={{ fontSize: '13px', color: '#4f46e5', fontWeight: '600', textDecoration: 'none' }}>
+                Forgot Password?
+              </Link>
+            </div>
+
+            <button onClick={handleLogin} disabled={loading} className="modern-btn">
+              {loading ? 'Authenticating...' : t('login')}
             </button>
-          </div>
-        </div>
 
-        <div style={{ textAlign: 'right', marginBottom: '20px' }}>
-          <Link
-            to="/forgot-password"
-            style={{
-              fontSize: '12px',
-              color: '#3b82f6',
-              textDecoration: 'none',
-              fontWeight: '500'
-            }}
-          >
-            Forgot Password?
-          </Link>
-        </div>
-
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="modern-btn"
-          style={{ opacity: loading ? 0.7 : 1, padding: '12px', marginBottom: '10px' }}
-        >
-          {loading ? '⏳ ' : t('login')}
-        </button>
-
-        {/* Compact Footer Section */}
-        <div style={{
-          marginTop: '15px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          {/* Trust Badge */}
-          <div className="secure-badge" style={{ marginTop: '0', fontSize: '0.75rem' }}>
-            🔒 {t('secureAccess') || 'Secure academic access'}
-          </div>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '10px', /* Increased gap for better spacing */
-            flexWrap: 'wrap',
-            paddingTop: '15px',
-            borderTop: '1px solid #e2e8f0',
-            width: '100%'
-          }}>
-            <span className="register-label">Register as</span> {/* Removed colon within text if desired, CSS handles spacing */}
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Link to="/student/register" className="register-chip">Student</Link>
-              <Link to="/parent/register" className="register-chip">Parent</Link>
-              <Link to="/teacher/register" className="register-chip">Teacher</Link>
+            <div style={{ marginTop: '25px', textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+              <p style={{ color: '#64748b', fontSize: '14px' }}>
+                Don't have an account?{' '}
+                <button
+                  onClick={() => setIsLogin(false)}
+                  style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: '700', cursor: 'pointer', fontSize: '14px' }}
+                >
+                  Sign Up Now
+                </button>
+              </p>
             </div>
           </div>
+        ) : (
+          /* ----- SIGN UP ROLE SELECTION ----- */
+          <div className="fade-in">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '25px' }}>
+              <Link to="/student/register" className="register-chip" style={{ justifyContent: 'flex-start', padding: '15px 20px', borderRadius: '12px', width: '100%', fontSize: '1rem' }}>
+                <span style={{ fontSize: '20px', marginRight: '15px' }}>👨‍🎓</span>
+                <span>Register as Student</span>
+              </Link>
+              <Link to="/parent/register" className="register-chip" style={{ justifyContent: 'flex-start', padding: '15px 20px', borderRadius: '12px', width: '100%', fontSize: '1rem' }}>
+                <span style={{ fontSize: '20px', marginRight: '15px' }}>👨‍👩‍👧</span>
+                <span>Register as Parent</span>
+              </Link>
+              <Link to="/teacher/register" className="register-chip" style={{ justifyContent: 'flex-start', padding: '15px 20px', borderRadius: '12px', width: '100%', fontSize: '1rem' }}>
+                <span style={{ fontSize: '20px', marginRight: '15px' }}>👨‍🏫</span>
+                <span>Register as Teacher</span>
+              </Link>
+            </div>
+
+            <div style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px dashed #cbd5e1', marginBottom: '20px' }}>
+              <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', margin: 0 }}>
+                ℹ️ Selecting a role will take you to the secure registration field where you can complete your profile.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsLogin(true)}
+              className="modern-btn"
+              style={{ background: 'white', color: '#4f46e5', border: '1px solid #4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+              <ArrowLeft size={18} /> Back to Login
+            </button>
+          </div>
+        )}
+
+        <div className="secure-badge" style={{ marginTop: '20px', fontSize: '0.75rem' }}>
+          🔒 {t('secureAccess') || 'Secure encrypted academic access'}
         </div>
       </div>
     </div>

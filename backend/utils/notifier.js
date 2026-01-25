@@ -3,6 +3,10 @@ const twilio = require('twilio');
 
 // Create a transporter using Gmail credentials from environment variables
 const createTransporter = () => {
+  console.log('DEBUG: Creating transporter for user:', process.env.GMAIL_USER);
+  if (!process.env.GMAIL_USER || !process.env.APP_PASSWORD) {
+    console.error('ERROR: Missing email credentials in process.env');
+  }
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -140,8 +144,34 @@ const notifyParent = async (parent, notification) => {
       console.log(`Skipping SMS for parent ${parent.id} (no phone number)`);
     }
   }
-
   return results;
+};
+
+// Function to send verification email
+const sendVerificationEmail = async (email, name, role, token) => {
+  const verificationLink = `http://localhost:5173/verify-email?token=${token}&role=${role}`;
+  const emailSubject = 'Verify Your Email - University Grade Portal';
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #f8fafc;">
+      <h2 style="color: #4f46e5; text-align: center;">Welcome to University Grade Portal</h2>
+      <p style="font-size: 16px; color: #334155;">Hello <strong>${name}</strong>,</p>
+      <p style="font-size: 16px; color: #334155;">Thank you for registering as a <strong>${role}</strong>. To complete your registration and secure your account, please click the button below to verify your email address:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${verificationLink}" style="display: inline-block; padding: 14px 28px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);">Verify Email Address</a>
+      </div>
+      <p style="font-size: 14px; color: #64748b;">If the button doesn't work, you can copy and paste this link into your browser:</p>
+      <p style="font-size: 14px; color: #4f46e5; word-break: break-all;">${verificationLink}</p>
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; text-align: center;">Admin Team<br>University Grade Portal</p>
+    </div>
+  `;
+
+  console.log('---------------------------------------------------');
+  console.log('VERIFICATION LINK (Click if email fails):');
+  console.log(verificationLink);
+  console.log('---------------------------------------------------');
+
+  return await sendEmail(email, emailSubject, emailHtml);
 };
 
 module.exports = {
@@ -149,5 +179,6 @@ module.exports = {
   sendSMS,
   sendGradeNotification,
   sendAcademicAlert,
-  notifyParent
+  notifyParent,
+  sendVerificationEmail
 };

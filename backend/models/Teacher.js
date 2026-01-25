@@ -52,6 +52,14 @@ const Teacher = sequelize.define('Teacher', {
     resetPasswordExpires: {
         type: DataTypes.DATE,
         allowNull: true
+    },
+    verificationToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    isEmailVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 }, {
     tableName: 'teachers',

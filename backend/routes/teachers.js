@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const models = require('../models');
 const Teacher = models.Teacher;
 const auth = require('../middleware/auth');
+const crypto = require('crypto');
+const { sendVerificationEmail } = require('../utils/notifier');
 const router = express.Router();
 
 // The secret code teachers need from admin
@@ -49,6 +51,8 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ msg: 'Teacher ID or Email already registered' });
         }
 
+        const verificationToken = crypto.randomBytes(20).toString('hex');
+
         // 5. Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -61,34 +65,24 @@ router.post('/register', async (req, res) => {
             password: hashedPassword,
             department,
             phone,
-            status: 'active'
+            status: 'pending_verification',
+            verificationToken
         });
 
-        // 7. Create JWT
-        const payload = {
-            userId: teacher.id,
-            role: 'teacher'
-        };
+        // Send verification email
+        await sendVerificationEmail(normalizedEmail, name, 'teacher', verificationToken);
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET || 'defaultSecret',
-            { expiresIn: '7 days' },
-            (err, token) => {
-                if (err) throw err;
-                res.json({
-                    token,
-                    user: {
-                        id: teacher.id,
-                        name: teacher.name,
-                        email: teacher.email,
-                        role: 'teacher',
-                        teacherId: teacher.teacherId,
-                        department: teacher.department
-                    }
-                });
+        res.json({
+            msg: 'Registration successful! Please check your email to verify your account.',
+            user: {
+                id: teacher.id,
+                name: teacher.name,
+                email: teacher.email,
+                role: 'teacher',
+                teacherId: teacher.teacherId,
+                department: teacher.department
             }
-        );
+        });
     } catch (err) {
         console.error('Teacher Registration Error:', err.message);
         res.status(500).json({ msg: 'Server error' });

@@ -81,6 +81,7 @@ import StudentProfileSetup from './pages/StudentProfileSetup';
 import SupportPage from './pages/SupportPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmail from './pages/VerifyEmail';
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedPermissions }) => {
   const { user, hasAnyPermission } = useAuth();
@@ -103,7 +104,7 @@ const ProtectedRoute = ({ children, allowedPermissions }) => {
   }
 
   // Check if student needs to complete profile
-  if (user.role === 'student' && (!user.department || !user.year)) {
+  if (user.role === 'student' && (!user.department || user.department === 'Undeclared')) {
     // Allow access to setup page, block others
     if (window.location.pathname !== '/student/setup') {
       return <Navigate to="/student/setup" />;
@@ -337,7 +338,8 @@ function AppLayout() {
     '/parent/register',
     '/teacher/register',
     '/student/setup',
-    '/forgot-password'
+    '/forgot-password',
+    '/verify-email'
   ].includes(window.location.pathname) || window.location.pathname.startsWith('/reset-password/');
 
   if (loading) {
@@ -479,6 +481,7 @@ function AppLayout() {
             <Route path="/teacher/register" element={<TeacherRegistration />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
             <Route path="/student/setup" element={<ProtectedRoute><StudentProfileSetup /></ProtectedRoute>} />
