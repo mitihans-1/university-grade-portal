@@ -76,22 +76,6 @@ CREATE TABLE notifications (
 INSERT INTO students (studentId, name, email, password, department, year, phone, status) 
 VALUES ('UGR/ADMIN/01', 'Admin User', 'admin@university.edu', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administration', 0, '+1234567890', 'active');
 
--- Insert a sample student
-INSERT INTO students (studentId, name, email, password, department, year, phone, status) 
-VALUES ('UGR/1234/14', 'Abebe Kebede', 'abebe@university.edu', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Computer Science', 3, '+251911223344', 'active');
-
--- Insert a sample parent
-INSERT INTO parents (name, email, password, phone, studentId, relationship, status) 
-VALUES ('Kebede Worku', 'kebede.parent@example.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+251922334455', 'UGR/1234/14', 'Father', 'approved');
-
--- Insert a sample grade
-INSERT INTO grades (studentId, courseCode, courseName, grade, score, creditHours, semester, uploadedBy, published, parentNotified) 
-VALUES ('UGR/1234/14', 'CS301', 'Data Structures', 'A', 92, 3, 'Spring 2024', 'AD001', TRUE, TRUE);
-
--- Insert a sample notification
-INSERT INTO notifications (parentId, studentId, type, title, message, is_read) 
-VALUES ('1', 'UGR/1234/14', 'grade_update', 'New Grade Published', 'Your child Abebe Kebede received A in Data Structures', FALSE);
-
 -- Create alerts table
 CREATE TABLE alerts (
     id INT AUTO_INCREMENT PRIMARY KEY,

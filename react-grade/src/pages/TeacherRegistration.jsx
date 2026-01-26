@@ -107,7 +107,10 @@ const TeacherRegistration = () => {
                 };
 
                 const result = await api.registerTeacher(teacherData);
-                if (result.token && result.user) {
+                if (result.msg && !result.error) {
+                    showToast(result.msg, 'success');
+                    setTimeout(() => navigate('/'), 3000);
+                } else if (result.token && result.user) {
                     showToast('Teacher registration successful!', 'success');
                     setTimeout(() => navigate('/'), 1500);
                 } else {

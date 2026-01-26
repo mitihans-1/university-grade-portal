@@ -6,6 +6,8 @@ const Parent = models.Parent;
 const Student = models.Student;
 const ParentStudentLink = models.ParentStudentLink;
 const auth = require('../middleware/auth');
+const crypto = require('crypto');
+const { sendVerificationEmail } = require('../utils/notifier');
 const router = express.Router();
 
 // @route   POST api/parents/register
@@ -17,7 +19,7 @@ router.post('/register', async (req, res) => {
     const { name, email, password, phone, studentId, relationship, notificationPreference, nationalId } = req.body;
 
     // Validation - email is optional, but if provided must be valid
-    if (!name || !password || !phone || !studentId || !relationship) {
+    if (!name || !password || !studentId || !relationship) {
       return res.status(400).json({ msg: 'Please enter all required fields' });
     }
 
@@ -52,9 +54,9 @@ router.post('/register', async (req, res) => {
     });
 
     if (existingParentCheck) {
-      if (existingParentCheck.phone === phone) return res.status(400).json({ msg: 'Phone number is already registered' });
       if (nationalId && existingParentCheck.nationalId === nationalId) return res.status(400).json({ msg: 'National ID is already registered' });
-      return res.status(400).json({ msg: 'User details already exist' });
+      // Removed strict phone check to allow parents to share phone with student if needed, or if re-registering
+      // if (existingParentCheck.phone === phone) return res.status(400).json({ msg: 'Phone number is already registered' });
     }
 
     // Check if student exists
@@ -86,17 +88,23 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(20).toString('hex');
+    const isPlaceholderEmail = normalizedEmail.includes('@noemail.local');
+
     // Create new parent
     const parent = await Parent.create({
       name,
       email: normalizedEmail,
       password: hashedPassword,
-      phone,
+      phone: phone || 'Not Provided',
       studentId,
       relationship,
       nationalId,
       notificationPreference: notificationPreference || 'both',
-      status: 'pending' // Initially pending approval
+      status: 'pending', // Set to pending initially
+      verificationToken,
+      isEmailVerified: isPlaceholderEmail // Auto-verify if no email provided
     });
 
     // Create ParentStudentLink request automatically
@@ -107,41 +115,37 @@ router.post('/register', async (req, res) => {
       status: 'pending'
     });
 
-    // Create JWT token
-    const payload = {
-      userId: parent.id,
-      role: 'parent'
-    };
-
-    const jwt = require('jsonwebtoken');
-    jwt.sign(
-      payload,
-      process.env.JWT_SECRET || 'defaultSecret',
-      { expiresIn: '7 days' },
-      (err, token) => {
-        if (err) throw err;
-        const response = {
-          token,
-          user: {
-            id: parent.id,
-            name: parent.name,
-            email: parent.email,
-            role: 'parent',
-            studentId: parent.studentId,
-            relationship: parent.relationship,
-            status: parent.status
-          }
-        };
-
-        // If email was auto-generated, include a message
-        if (normalizedEmail.includes('@noemail.local')) {
-          response.generatedEmail = normalizedEmail;
-          response.message = 'Email was auto-generated. Please save this email for login: ' + normalizedEmail;
+    // Send verification email if real email provided
+    if (!isPlaceholderEmail) {
+      await sendVerificationEmail(normalizedEmail, name, 'parent', verificationToken);
+      return res.json({
+        msg: 'Registration successful! Please check your email to verify your account.',
+        user: {
+          id: parent.id,
+          name: parent.name,
+          email: parent.email,
+          role: 'parent',
+          studentId: parent.studentId,
+          relationship: parent.relationship,
+          status: parent.status
         }
+      });
+    }
 
-        res.json(response);
+    // If placeholder email, we can't send verification, so standard success
+    res.json({
+      msg: 'Registration successful! Please save your generated email for future logins.',
+      generatedEmail: normalizedEmail,
+      user: {
+        id: parent.id,
+        name: parent.name,
+        email: parent.email,
+        role: 'parent',
+        studentId: parent.studentId,
+        relationship: parent.relationship,
+        status: parent.status
       }
-    );
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Server error' });

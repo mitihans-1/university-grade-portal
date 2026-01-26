@@ -93,8 +93,12 @@ const StudentRegistration = () => {
         // Call the API to register the student
         const result = await api.registerStudent(studentData);
 
-        if (result.token && result.user) {
-          // Registration successful
+        if (result.msg) {
+          // Registration submitted successfully (but pending approval)
+          alert(result.msg + '\n\nYou can try logging in, or wait for admin approval.');
+          navigate('/');
+        } else if (result.token && result.user) {
+          // Registration successful with immediate access (unlikely with current backend)
           alert(t('studentRegistrationSuccess'));
           navigate('/');
         } else {

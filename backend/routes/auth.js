@@ -58,6 +58,9 @@ router.post('/login', async (req, res) => {
     });
 
     if (student) {
+      if (!student.isEmailVerified) {
+        return res.status(400).json({ msg: 'Please verify your email address before logging in.' });
+      }
       if (student.status === 'pending_verification' || student.isVerified === false) {
         return res.status(400).json({ msg: 'Your account is pending verification. Please wait for admin approval.' });
       }
@@ -74,6 +77,9 @@ router.post('/login', async (req, res) => {
       });
 
       if (parent) {
+        if (!parent.isEmailVerified) {
+          return res.status(400).json({ msg: 'Please verify your email address before logging in.' });
+        }
         // Only allow login if parent account is approved/active
         if (parent.status !== 'approved' && parent.status !== 'active') {
           return res.status(400).json({ msg: 'Your account is pending approval. Please wait for admin approval.' });
@@ -104,9 +110,17 @@ router.post('/login', async (req, res) => {
         where: { email: normalizedEmail }
       });
 
-      if (teacher && await bcrypt.compare(password, teacher.password)) {
-        user = teacher;
-        userRole = 'teacher';
+      if (teacher) {
+        if (!teacher.isEmailVerified) {
+          return res.status(400).json({ msg: 'Please verify your email address before logging in.' });
+        }
+        if (teacher.status === 'pending_verification') {
+          return res.status(400).json({ msg: 'Your account is pending approval. Please wait for admin approval.' });
+        }
+        if (await bcrypt.compare(password, teacher.password)) {
+          user = teacher;
+          userRole = 'teacher';
+        }
       }
     }
 
@@ -173,7 +187,7 @@ router.post('/logout', auth, (req, res) => {
 // @access  Private
 router.put('/profile', auth, async (req, res) => {
   try {
-    const { name, email, phone, year, semester } = req.body;
+    const { name, email, phone, year, semester, department } = req.body;
     const userId = req.user.id;
     const userRole = req.user.role;
 
@@ -189,6 +203,7 @@ router.put('/profile', auth, async (req, res) => {
     if (userRole === 'student') {
       if (year) updateData.year = parseInt(year);
       if (semester) updateData.semester = parseInt(semester);
+      if (department) updateData.department = department;
 
       await Student.update(updateData, { where: { id: userId } });
       updatedUser = await Student.findByPk(userId);
@@ -340,6 +355,42 @@ router.post('/reset-password/:token', async (req, res) => {
 
   } catch (err) {
     console.error('Reset password error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+// @route   GET api/auth/verify-email/:token
+// @desc    Verify user email
+// @access  Public
+router.get('/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { role } = req.query;
+
+    if (!token || !role) {
+      return res.status(400).json({ msg: 'Invalid verification link' });
+    }
+
+    let UserModel;
+    if (role === 'student') UserModel = Student;
+    else if (role === 'parent') UserModel = Parent;
+    else if (role === 'teacher') UserModel = Teacher;
+    else return res.status(400).json({ msg: 'Invalid role' });
+
+    const user = await UserModel.findOne({ where: { verificationToken: token } });
+
+    if (!user) {
+      return res.status(400).json({ msg: 'Invalid or expired verification token' });
+    }
+
+    await UserModel.update({
+      isEmailVerified: true,
+      verificationToken: null
+    }, { where: { id: user.id } });
+
+    res.json({ msg: 'Email verified successfully! You can now log in (subject to admin approval if required).' });
+  } catch (err) {
+    console.error('Email verification error:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 });

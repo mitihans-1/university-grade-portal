@@ -7,6 +7,9 @@ const Student = models.Student;
 const Grade = models.Grade;
 const ParentStudentLink = models.ParentStudentLink;
 const auth = require('../middleware/auth');
+const { createSecurePayload } = require('../utils/permissions');
+const { sendVerificationEmail } = require('../utils/notifier');
+const crypto = require('crypto');
 const router = express.Router();
 
 // @route   POST api/students/register
@@ -14,6 +17,8 @@ const router = express.Router();
 // @access  Public
 router.post('/register', async (req, res) => {
   try {
+    const { studentId, name, email, password, phone, department, year, nationalId } = req.body;
+
     // Validation
     if (!studentId || !name || !email || !password || !phone) {
       return res.status(400).json({ msg: 'Please enter all fields' });
@@ -28,10 +33,11 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ msg: 'Password must contain at least 1 letter, 1 number, and 1 special character (@$!%*#?&), and be at least 6 characters long.' });
     }
 
-    // Verify Student ID Format (e.g., UGR/1234/12)
-    const studentIdRegex = /^UGR\/\d{4}\/\d{2}$/;
+    // Verify Student ID Format (Allow Letters, Numbers, /, -)
+    // Relaxed Regex: Just ensure it has some length and valid characters
+    const studentIdRegex = /^[a-zA-Z0-9\/\-]+$/;
     if (!studentIdRegex.test(studentId)) {
-      return res.status(400).json({ msg: 'Invalid Student ID format. Expected format: UGR/XXXX/XX (e.g., UGR/1234/12)' });
+      return res.status(400).json({ msg: 'Invalid Student ID format. Only letters, numbers, slashes (/), and hyphens (-) are allowed.' });
     }
 
     // Check if student already exists (email, studentId, phone, or nationalId)
@@ -54,32 +60,41 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ msg: 'User details already exist' });
     }
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(20).toString('hex');
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new student with PENDING status
+    // Create new student with pending verification
     const student = await Student.create({
       studentId,
       name,
       email: normalizedEmail,
       password: hashedPassword,
-      department: department || null,
-      year: year ? parseInt(year) : null,
+      department: department || 'Undeclared', // Default department
+      year: year ? parseInt(year) : 1, // Default to year 1
       semester: req.body.semester ? parseInt(req.body.semester) : 1,
       phone,
       nationalId,
-      status: 'pending_verification', // Require Admin Approval
-      isVerified: false
+      status: 'pending_verification', // Require admin approval
+      isVerified: false, // Not verified yet
+      verificationToken
     });
 
-    // Do not generate token for pending students
+    // Send verification email
+    await sendVerificationEmail(normalizedEmail, name, 'student', verificationToken);
+
     res.json({
-      msg: 'Registration successful! Your account is pending verification. Please wait for admin approval.',
+      msg: 'Registration successful! Please check your email to verify your account. Once verified, you will need admin approval to log in.',
       user: {
         id: student.id,
         name: student.name,
         email: student.email,
+        studentId: student.studentId,
+        department: student.department,
+        year: student.year,
         role: 'student',
         status: 'pending_verification'
       }
@@ -277,8 +292,15 @@ router.put('/:id/verify', auth, async (req, res) => {
 
     const { isVerified } = req.body;
 
+    const updateData = { isVerified };
+
+    // If Admin verifies the student, automatically set status to active so they can login
+    if (isVerified) {
+      updateData.status = 'active';
+    }
+
     await Student.update(
-      { isVerified },
+      updateData,
       { where: { id: req.params.id } }
     );
 

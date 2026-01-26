@@ -45,6 +45,11 @@ export const api = {
     return response.json();
   },
 
+  verifyEmail: async (token, role) => {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-email/${token}?role=${role}`);
+    return response.json();
+  },
+
   getUser: async () => {
     const token = getToken();
     const response = await fetch(`${API_BASE_URL}/auth/user`, {

@@ -93,7 +93,6 @@ const ParentRegistration = () => {
       newErrors.confirmPassword = t('passwordsDoNotMatch');
     }
 
-    if (!formData.phone) newErrors.phone = t('phoneRequired');
     if (!formData.studentId) newErrors.studentId = t('studentIdRequired');
     if (!formData.relationship) newErrors.relationship = t('relationshipRequired');
     if (!formData.agreeToTerms) newErrors.agreeToTerms = t('agreeToTermsRequired');
@@ -108,51 +107,56 @@ const ParentRegistration = () => {
     // Client-side Password Validation
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/;
     if (!passwordRegex.test(formData.password)) {
-      // We can add a specific error here or rely on validateForm if updated
-      // Ideally update validateForm to be consistent, but for now we enforce logic here
       if (!validationErrors.password) {
         validationErrors.password = 'Password must contain at least 1 letter, 1 number, and 1 special character.';
         setErrors(validationErrors);
+        alert('Password validation failed: ' + validationErrors.password); // Add user visible feedback
         return;
       }
     }
 
-    if (Object.keys(validationErrors).length === 0 && studentFound) {
-      try {
-        // ... (existing submission logic) ...
-        const parentData = {
-          name: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          studentId: formData.studentId,
-          relationship: formData.relationship
-        };
-
-        const result = await api.registerParent(parentData);
-        // ... (existing result handling) ...
-        if (result.token && result.user) {
-          if (result.generatedEmail) {
-            alert(
-              t('parentRegistrationSuccessWithoutEmail') + '\n\n' +
-              'Your login email: ' + result.generatedEmail + '\n' +
-              'Please save this email for future logins!'
-            );
-          } else if (formData.email) {
-            alert(t('parentRegistrationSuccessWithEmail'));
-          } else {
-            alert(t('parentRegistrationSuccessWithoutEmail'));
-          }
-          navigate('/');
-        } else {
-          alert(result.msg || t('parentRegistrationError'));
-        }
-      } catch (error) {
-        console.error('Parent registration error:', error);
-        alert(t('parentRegistrationError'));
-      }
-    } else {
+    if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      // Construct a readable error message for the user
+      const errorMsg = Object.values(validationErrors).join('\n');
+      alert('Please correct the following errors:\n' + errorMsg);
+      return;
+    }
+
+    try {
+      const parentData = {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        studentId: formData.studentId,
+        relationship: formData.relationship
+      };
+
+      const result = await api.registerParent(parentData);
+
+      if (result.msg && !result.error) {
+        alert(result.msg + (result.generatedEmail ? '\n\nYour login email: ' + result.generatedEmail : ''));
+        navigate('/');
+      } else if (result.token && result.user) {
+        if (result.generatedEmail) {
+          alert(
+            t('parentRegistrationSuccessWithoutEmail') + '\n\n' +
+            'Your login email: ' + result.generatedEmail + '\n' +
+            'Please save this email for future logins!'
+          );
+        } else if (formData.email) {
+          alert(t('parentRegistrationSuccessWithEmail'));
+        } else {
+          alert(t('parentRegistrationSuccessWithoutEmail'));
+        }
+        navigate('/');
+      } else {
+        alert(result.msg || t('parentRegistrationError'));
+      }
+    } catch (error) {
+      console.error('Parent registration error:', error);
+      alert(t('parentRegistrationError'));
     }
   };
 
@@ -207,7 +211,6 @@ const ParentRegistration = () => {
             />
             {errors.fullName && <small style={{ color: '#f44336' }}>{t('fullNameRequired')}</small>}
           </div>
-
 
 
           <div className="modern-input-group">
@@ -382,11 +385,10 @@ const ParentRegistration = () => {
 
           <button
             type="submit"
-            disabled={!studentFound}
             className="modern-btn"
             style={{
-              background: studentFound ? 'linear-gradient(to right, #2e7d32, #43a047)' : '#ccc',
-              cursor: studentFound ? 'pointer' : 'not-allowed',
+              background: 'linear-gradient(to right, #2e7d32, #43a047)',
+              cursor: 'pointer',
               padding: '15px'
             }}
           >
