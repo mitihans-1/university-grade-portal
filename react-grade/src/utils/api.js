@@ -1385,6 +1385,15 @@ export const api = {
     return response.json();
   },
 
+  previewExam: async (examId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/exams/${examId}/preview`, {
+      headers: { 'x-auth-token': token }
+    });
+    if (!response.ok) throw new Error('Failed to load preview');
+    return response.json();
+  },
+
   // ID Management
   getStudentIDs: async () => {
     const token = getToken();

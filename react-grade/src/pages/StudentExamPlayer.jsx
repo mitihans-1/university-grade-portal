@@ -26,6 +26,27 @@ const StudentExamPlayer = () => {
     const [examResults, setExamResults] = useState(null);
 
     useEffect(() => {
+        // PREVIEW MODE for Teachers/Admins
+        if (location.state?.preview) {
+            const fetchPreview = async () => {
+                try {
+                    setLoading(true);
+                    setExamInfo(location.state.exam);
+                    const data = await api.previewExam(id);
+                    setQuestions(data.results); // Uses same "results" format as review
+                    setGameState('preview'); // New state specifically for preview
+                    setCurrentIdx(0);
+                } catch (err) {
+                    console.error(err);
+                    setError('Failed to load preview.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchPreview();
+            return;
+        }
+
         // If we don't have exam info (direct link), fetch it
         if (!examInfo) {
             const fetchInfo = async () => {
@@ -72,10 +93,18 @@ const StudentExamPlayer = () => {
             setQuestions(data.questions);
             setAnswers(data.attempt.answers || {});
 
-            // Resume or Start Fresh
+            // If returned results (Review Mode)
+            if (data.mode === 'review' || data.results) {
+                setQuestions(data.results);
+                setExamResults({ score: data.attempt.score });
+                setGameState('review');
+                setCurrentIdx(0);
+                return;
+            }
+
             if (data.attempt.status === 'submitted') {
+                // Fallback if backend didn't send results for some reason
                 alert('You have already submitted this exam.');
-                navigate('/student/exams');
                 return;
             }
 
@@ -349,12 +378,36 @@ const StudentExamPlayer = () => {
         );
     }
 
-    // GAME / REVIEW VIEW
+    // GAME / REVIEW / PREVIEW VIEW
     const currentQ = questions[currentIdx];
-    const questionId = gameState === 'review' ? currentQ.questionId : currentQ.id;
+    const questionId = (gameState === 'review' || gameState === 'preview') ? currentQ.questionId : currentQ.id;
 
     return (
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
+            {/* Preview Banner */}
+            {gameState === 'preview' && (
+                <div style={{
+                    backgroundColor: '#fff7ed',
+                    border: '1px solid #fed7aa',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    marginBottom: '15px',
+                    textAlign: 'center',
+                    color: '#c2410c',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px'
+                }}>
+                    <span>👁️ Teacher/Admin Preview Mode</span>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{ padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}
+                    > Exit</button>
+                </div>
+            )}
+
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -389,12 +442,52 @@ const StudentExamPlayer = () => {
                     }}>
                         ⏱️ {formatTime(timeLeft)}
                     </div>
+                ) : gameState === 'preview' ? (
+                    <div style={{ fontSize: '14px', color: '#64748b', fontStyle: 'italic' }}>
+                        Read-Only View
+                    </div>
                 ) : (
-                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>
-                        Final Score: {examResults?.score}
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Final Result</div>
+                        <div style={{ fontSize: '24px', fontWeight: '800', color: '#3b82f6' }}>
+                            {examResults?.score} <span style={{ fontSize: '14px', color: '#94a3b8' }}>/ {questions.reduce((a, b) => a + (b.marks || 1), 0)}</span>
+                        </div>
                     </div>
                 )}
             </div>
+
+            {gameState === 'review' && (
+                <div style={{
+                    backgroundColor: '#f8fafc',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '15px'
+                }}>
+                    <div>
+                        <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>
+                            {examResults?.score >= (questions.reduce((a, b) => a + (b.marks || 1), 0) / 2) ? '🎉 Great Job!' : '📚 Keep Studying!'}
+                        </h2>
+                        <p style={{ margin: 0, color: '#64748b' }}>
+                            You answered <strong>{questions.filter(q => q.isCorrect).length}</strong> out of <strong>{questions.length}</strong> questions correctly.
+                        </p>
+                    </div>
+                    <div style={{
+                        padding: '10px 20px',
+                        backgroundColor: examResults?.score >= (questions.reduce((a, b) => a + (b.marks || 1), 0) / 2) ? '#dcfce7' : '#fee2e2',
+                        color: examResults?.score >= (questions.reduce((a, b) => a + (b.marks || 1), 0) / 2) ? '#166534' : '#991b1b',
+                        borderRadius: '10px',
+                        fontWeight: 'bold'
+                    }}>
+                        {Math.round((examResults?.score / (questions.reduce((a, b) => a + (b.marks || 1), 0) || 1)) * 100)}% Passing
+                    </div>
+                </div>
+            )}
 
             <div style={{
                 backgroundColor: 'white',
@@ -410,13 +503,20 @@ const StudentExamPlayer = () => {
                     {currentQ.questionText}
                 </h2>
 
-                <div style={{ display: 'grid', gap: '15px', flex: 1 }}>
+                <div style={{ display: 'grid', gap: '15px' }}>
                     {currentQ.options.map((option, idx) => (
                         <div
                             key={idx}
                             onClick={() => handleAnswerSelect(option)}
                             style={getOptionStyle(option, questionId || currentQ.id)}
                         >
+                            {/* Option Indicator Icon */}
+                            {(gameState === 'review' || gameState === 'preview') && (
+                                <div style={{ marginRight: '10px' }}>
+                                    {(questionId || currentQ.id) && currentQ.correctAnswer === option && <span>✅</span>}
+                                    {(questionId || currentQ.id) && answers[questionId || currentQ.id] === option && currentQ.correctAnswer !== option && <span>❌</span>}
+                                </div>
+                            )}
                             <span style={{
                                 width: '28px',
                                 height: '28px',
@@ -439,7 +539,7 @@ const StudentExamPlayer = () => {
                 </div>
 
                 {/* AI Explanation Section */}
-                {gameState === 'review' && currentQ.explanation && (
+                {(gameState === 'review' || gameState === 'preview') && currentQ.explanation && (
                     <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#fff7ed', borderRadius: '8px', borderLeft: '4px solid #f97316' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                             <span style={{ fontSize: '18px' }}>🤖</span>
@@ -452,12 +552,12 @@ const StudentExamPlayer = () => {
                 )}
 
                 <div style={{
-                    marginTop: '50px',
+                    marginTop: '25px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     borderTop: '1px solid #f1f5f9',
-                    paddingTop: '25px'
+                    paddingTop: '20px'
                 }}>
                     <button
                         onClick={handleBack}
@@ -534,22 +634,7 @@ const StudentExamPlayer = () => {
                                 >
                                     Next Question →
                                 </button>
-                            ) : (
-                                <button
-                                    onClick={() => navigate('/student/exams')}
-                                    style={{
-                                        padding: '12px 30px',
-                                        backgroundColor: '#64748b',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: '600',
-                                    }}
-                                >
-                                    Exit Review
-                                </button>
-                            )}
+                            ) : null}
                         </div>
                     )}
                 </div>
@@ -584,6 +669,14 @@ const StudentExamPlayer = () => {
                         } else {
                             bgColor = '#ef4444'; // Red for incorrect
                             textColor = 'white';
+                        }
+                    } else if (gameState === 'preview') {
+                        if (currentIdx === idx) {
+                            bgColor = '#3b82f6';
+                            textColor = 'white';
+                        } else {
+                            // Default preview style
+                            bgColor = 'white';
                         }
                     }
 

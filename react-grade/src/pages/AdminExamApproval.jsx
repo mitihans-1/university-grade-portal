@@ -146,11 +146,14 @@ const AdminExamApproval = () => {
                                     ) : exam.status !== 'ended' ? (
                                         <button
                                             onClick={async () => {
-                                                try {
-                                                    const res = await api.notifyExamCode(exam.id);
-                                                    alert(res.msg);
-                                                } catch (err) {
-                                                    alert('Failed to send code notification.');
+                                                if (window.confirm('Send secret code to students and START the exam timer?')) {
+                                                    try {
+                                                        const res = await api.notifyExamCode(exam.id);
+                                                        alert(res.msg);
+                                                        fetchPendingExams();
+                                                    } catch (err) {
+                                                        alert('Failed to send code notification.');
+                                                    }
                                                 }
                                             }}
                                             style={{
@@ -164,12 +167,42 @@ const AdminExamApproval = () => {
                                                 boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)'
                                             }}
                                         >
-                                            Send Code (Again) 🔓
+                                            🚀 Send Code & Start Exam
                                         </button>
-                                    ) : null}
+                                    ) : (
+                                        <div style={{ padding: '12px 20px', backgroundColor: '#f1f5f9', color: '#64748b', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 'bold' }}>
+                                            {exam.status === 'active' ? '✅ Active' : '🏁 Ended'}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                    {/* PREVIEW BUTTON - Not active or ended */}
+                                    {exam.status !== 'active' && exam.status !== 'ended' && (
+                                        <button
+                                            onClick={() => {
+                                                navigate(`/student/exam/${exam.id}`, { state: { preview: true, exam: exam } });
+                                            }}
+                                            style={{
+                                                padding: '8px 12px',
+                                                backgroundColor: '#f59e0b',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 4px 6px rgba(245, 158, 11, 0.2)',
+                                                fontWeight: 'bold',
+                                                fontSize: '13px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '5px'
+                                            }}
+                                            title="Preview Exam"
+                                        >
+                                            👁️ Preview
+                                        </button>
+                                    )}
+
                                     {/* DELETE BUTTON - Always available */}
                                     <button
                                         onClick={async () => {
@@ -255,33 +288,7 @@ const AdminExamApproval = () => {
                                         </button>
                                     )}
 
-                                    {exam.status === 'published' && (
-                                        <button
-                                            onClick={async () => {
-                                                if (window.confirm('Trigger the official countdown for ALL students now?')) {
-                                                    try {
-                                                        await api.startExamGlobal(exam.id);
-                                                        alert('Exam started! Countdown is now live.');
-                                                        fetchPendingExams();
-                                                    } catch (err) {
-                                                        alert('Failed to start exam.');
-                                                    }
-                                                }
-                                            }}
-                                            style={{
-                                                padding: '8px 16px',
-                                                backgroundColor: '#f59e0b',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                                fontSize: '13px'
-                                            }}
-                                        >
-                                            Start Official Timer ⏱️
-                                        </button>
-                                    )}
+                                    {/* Removed Start Official Timer button as it is now merged with Send Code */}
                                     {exam.status === 'active' && (
                                         <span style={{
                                             padding: '8px 16px',
