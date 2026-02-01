@@ -180,10 +180,6 @@ const LinkStudent = () => {
                                 <div style={{ fontWeight: 'bold', color: '#2e7d32', marginBottom: '5px' }}>
                                     ✅ {t('studentVerified')}
                                 </div>
-                                <div style={{ fontWeight: '500', color: '#334155' }}>{studentFound.name}</div>
-                                <div style={{ fontSize: '14px', color: '#64748b' }}>
-                                    {studentFound.department} • Year {studentFound.year}
-                                </div>
                             </div>
                         )}
                     </div>

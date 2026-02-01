@@ -489,7 +489,17 @@ export const api = {
   // Get student by ID
   getStudentById: async (studentId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/students/${studentId}`);
+      const token = getToken();
+      const headers = {};
+
+      if (token) {
+        headers['x-auth-token'] = token;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/students/${studentId}`, {
+        headers: headers
+      });
+
       if (!response.ok) {
         return { msg: 'Student not found' };
       }

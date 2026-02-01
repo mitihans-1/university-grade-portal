@@ -136,44 +136,30 @@ const AdminUpload = () => {
     setUploadProgress(0);
 
     try {
-      // In a real implementation, we would send the file to the server
-      // For now, we'll simulate the upload process
+      setIsUploading(true);
+      setUploadProgress(10); // Start progress
 
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
+      const result = await api.bulkUploadGrades(selectedFile);
+      setUploadProgress(100);
 
-            // In a real app, the server would process the file and add grades to the database
-            // For now, we'll just refresh the grades list
-            const refreshGrades = async () => {
-              try {
-                const updatedGrades = await api.getGrades();
-                setGrades(Array.isArray(updatedGrades) ? updatedGrades : []);
-                setIsUploading(false);
-                setSelectedFile(null);
-                alert(`Successfully uploaded ${selectedFile.name}! Grades will be processed and available shortly.`);
-              } catch (error) {
-                console.error('Error refreshing grades:', error);
-                setIsUploading(false);
-                setSelectedFile(null);
-                alert(`File uploaded but error occurred: ${error.message}`);
-              }
-            };
+      if (result.success) {
+        const count = result.count || 'multiple';
+        const msg = result.msg || 'File processed successfully';
+        alert(`Successfully uploaded ${selectedFile.name}! ${count} grades added/updated.`);
 
-            refreshGrades();
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
+        // Refresh grades list
+        const updatedGrades = await api.getGrades();
+        setGrades(Array.isArray(updatedGrades) ? updatedGrades : []);
+      } else {
+        alert(result.msg || 'Bulk upload failed');
+      }
     } catch (error) {
       console.error('Error uploading file:', error);
+      alert('Error uploading file: ' + error.message);
+    } finally {
       setIsUploading(false);
       setSelectedFile(null);
-      alert('Error uploading file: ' + error.message);
+      setUploadProgress(0);
     }
   };
 
