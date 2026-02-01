@@ -150,8 +150,12 @@ router.post('/register', async (req, res) => {
     // Mark the official ID as used
     await models.UniversityID.update({ isUsed: true }, { where: { studentId: studentId } });
 
-    // Send welcome/approval email immediately
-    await sendApprovalEmail(normalizedEmail, name);
+    // Send welcome/approval email immediately (Don't let email failure break the registration)
+    try {
+      await sendApprovalEmail(normalizedEmail, name);
+    } catch (emailErr) {
+      console.error('Email error during registration:', emailErr.message);
+    }
 
     res.json({
       msg: 'Registration successful! Your account has been verified and activated. You can now log in.',
@@ -163,7 +167,7 @@ router.post('/register', async (req, res) => {
         department: student.department,
         year: student.year,
         role: 'student',
-        status: 'pending_verification'
+        status: 'active'
       }
     });
   } catch (err) {
@@ -498,6 +502,12 @@ router.delete('/:id', auth, async (req, res) => {
     // Delete related records first
     await ParentStudentLink.destroy({ where: { studentId: student.studentId } });
     await Grade.destroy({ where: { studentId: student.studentId } });
+
+    // Mark the official University ID as not used anymore so it can be re-registered
+    await models.UniversityID.update(
+      { isUsed: false },
+      { where: { studentId: student.studentId } }
+    );
 
     // Delete the student
     await Student.destroy({ where: { id: req.params.id } });

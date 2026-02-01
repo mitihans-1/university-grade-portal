@@ -6,7 +6,7 @@ const options = {
         info: {
             title: 'University Grade Portal API',
             version: '1.0.0',
-            description: 'API documentation for the University Grade Portal system. This system manages students, parents, teachers, grades, and attendance.',
+            description: 'API documentation for the University Grade Portal system. For detailed workflows, role guides, and system features, see [API_DOCUMENTATION.md](https://github.com/your-repo/university-grade-portal/blob/main/API_DOCUMENTATION.md).',
             contact: {
                 name: 'API Support',
                 email: 'support@universityportal.edu'

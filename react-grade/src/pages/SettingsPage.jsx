@@ -31,7 +31,7 @@ const SettingsPage = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        showToast('Image is too large. Please select an image smaller than 2MB.', 'error');
+        showToast(t('imageTooLarge'), 'error');
         return;
       }
       const reader = new FileReader();
@@ -45,7 +45,7 @@ const SettingsPage = () => {
   const handleSaveImage = (croppedImage) => {
     updateUser({ profileImage: croppedImage });
     setEditingImage(null);
-    showToast('Profile picture updated!', 'success');
+    showToast(t('profilePictureUpdated'), 'success');
   };
 
   const validateProfile = () => {
@@ -218,13 +218,13 @@ const SettingsPage = () => {
                   color: 'white',
                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
-                title="Change Profile Photo"
+                title={t('changeProfilePhoto')}
               >
                 <Camera size={16} />
               </button>
             </div>
             <p style={{ marginTop: '12px', fontSize: '13px', color: '#64748b', fontWeight: '500' }}>
-              Profile Photo
+              {t('profilePhoto')}
             </p>
             <input
               type="file"

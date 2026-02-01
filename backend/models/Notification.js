@@ -15,6 +15,10 @@ const Notification = sequelize.define('Notification', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  teacherId: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   type: {
     type: DataTypes.STRING,
     allowNull: false
@@ -68,6 +72,7 @@ const Notification = sequelize.define('Notification', {
 Notification.associate = (models) => {
   Notification.belongsTo(models.Parent, { foreignKey: 'parentId', targetKey: 'id', as: 'parent' });
   Notification.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student' });
+  Notification.belongsTo(models.Teacher, { foreignKey: 'teacherId', targetKey: 'teacherId', as: 'teacher' });
 };
 
 module.exports = Notification;

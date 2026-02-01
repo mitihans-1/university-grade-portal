@@ -38,6 +38,8 @@ router.get('/', auth, async (req, res) => {
       whereClause = { studentId: req.user.studentId };
     } else if (req.userRole === 'parent') {
       whereClause = { parentId: req.user.id };
+    } else if (req.userRole === 'teacher') {
+      whereClause = { teacherId: req.user.teacherId };
     } else {
       return res.status(403).json({ msg: 'Access denied' });
     }
@@ -63,6 +65,8 @@ router.get('/unread', auth, async (req, res) => {
       whereClause.studentId = req.user.studentId;
     } else if (req.userRole === 'parent') {
       whereClause.parentId = req.user.id;
+    } else if (req.userRole === 'teacher') {
+      whereClause.teacherId = req.user.teacherId;
     } else {
       return res.status(403).json({ msg: 'Access denied' });
     }
@@ -88,6 +92,8 @@ router.put('/read-all', auth, async (req, res) => {
       whereClause.studentId = req.user.studentId;
     } else if (req.userRole === 'parent') {
       whereClause.parentId = req.user.id;
+    } else if (req.userRole === 'teacher') {
+      whereClause.teacherId = req.user.teacherId;
     } else {
       return res.status(403).json({ msg: 'Access denied' });
     }
@@ -159,6 +165,22 @@ router.post('/broadcast', upload.single('attachment'), async (req, res) => {
         attachment_type
       }));
       tasks.push(Notification.bulkCreate(parentNotifications));
+    }
+
+    if (targetGroup === 'all_teachers' || targetGroup === 'all') {
+      const teachers = await Teacher.findAll();
+
+      const teacherNotifications = teachers.map(teacher => ({
+        teacherId: teacher.teacherId,
+        type: 'broadcast',
+        title,
+        message,
+        date: new Date(),
+        is_read: false,
+        attachment_url,
+        attachment_type
+      }));
+      tasks.push(Notification.bulkCreate(teacherNotifications));
     }
 
     await Promise.all(tasks);

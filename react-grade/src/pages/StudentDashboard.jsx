@@ -50,6 +50,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [attendanceSummary, setAttendanceSummary] = useState(null);
   const [systemSettings, setSystemSettings] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -75,6 +76,14 @@ const StudentDashboard = () => {
           setAttendanceSummary(attendanceData);
         } catch (error) {
           console.error('Error fetching attendance summary:', error);
+        }
+
+        // Fetch announcements
+        try {
+          const notificationData = await api.getNotifications();
+          setAnnouncements(Array.isArray(notificationData) ? notificationData.filter(n => ['broadcast', 'exam_code'].includes(n.type)).slice(0, 5) : []);
+        } catch (error) {
+          console.error('Error fetching announcements:', error);
         }
       } catch (error) {
         console.error('Error fetching student data:', error);
@@ -233,6 +242,47 @@ const StudentDashboard = () => {
               </div>
             </div>
 
+            {/* Official Placement Record Card */}
+            <div className="stagger-item" style={{
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              padding: '24px',
+              borderRadius: '16px',
+              border: '1px solid #bae6fd',
+              marginBottom: '30px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '15px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#0369a1' }}>
+                <div style={{ fontSize: '24px' }}>📋</div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Official Academic Placement
+                </h3>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Faculty / Department</div>
+                  <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '15px' }}>{user?.department || 'General Science'}</div>
+                </div>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Academic Level</div>
+                  <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '15px' }}>{t('yearNumber').replace('{year}', user?.year || '1')}</div>
+                </div>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Current Term</div>
+                  <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '15px' }}>{t('semester')} {user?.semester || '1'}</div>
+                </div>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>ID Status</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
+                    <span style={{ fontWeight: '800', color: '#059669', fontSize: '13px' }}>Verified Record</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Academic Warning Banner */}
             {(Array.isArray(grades) && parseFloat(calculateGPA()) < 2.5 && grades.some(g => ['F', 'D'].includes(g.grade))) && (
               <div className="stagger-item" style={{
@@ -297,6 +347,100 @@ const StudentDashboard = () => {
                   color="#9c27b0"
                 />
               </div>
+              <div className="stagger-item">
+                <SummaryCard
+                  to="/student/exams"
+                  icon="📝"
+                  value={t('start')}
+                  label={t('onlineExams')}
+                  color="#6366f1"
+                />
+              </div>
+              <div className="stagger-item">
+                <SummaryCard
+                  to="/schedule"
+                  icon="⏰"
+                  value={t('view')}
+                  label={t('classSchedule')}
+                  color="#a855f7"
+                />
+              </div>
+            </div>
+
+            {/* Announcements Section */}
+            <div className="stagger-item" style={{
+              marginTop: '30px',
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '25px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+              border: '1px solid #f1f5f9'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '24px' }}>📢</span> {t('notifications')}
+                </h3>
+                <Link to="/student/notifications" style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 'bold', textDecoration: 'none' }}>
+                  {t('viewAll')} →
+                </Link>
+              </div>
+
+              {announcements.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {announcements.map(anno => (
+                    <div key={anno.id} style={{
+                      padding: '15px',
+                      backgroundColor: anno.type === 'exam_code' ? '#fff7ed' : '#f8fafc',
+                      borderRadius: '12px',
+                      borderLeft: `4px solid ${anno.type === 'exam_code' ? '#f97316' : '#3b82f6'}`,
+                      display: 'flex',
+                      gap: '15px',
+                      alignItems: 'flex-start',
+                      boxShadow: anno.type === 'exam_code' ? '0 4px 12px rgba(249, 115, 22, 0.1)' : 'none'
+                    }}>
+                      <div style={{
+                        fontSize: '24px',
+                        backgroundColor: 'white',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {anno.type === 'exam_code' ? '🔓' : '🔔'}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{
+                            fontWeight: '700',
+                            fontSize: '15px',
+                            color: anno.type === 'exam_code' ? '#9a3412' : '#0f172a'
+                          }}>
+                            {anno.title}
+                          </span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>
+                            {new Date(anno.date || anno.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p style={{
+                          margin: 0,
+                          fontSize: '13px',
+                          color: anno.type === 'exam_code' ? '#9a3412' : '#475569',
+                          lineHeight: '1.5',
+                          fontWeight: anno.type === 'exam_code' ? '600' : 'normal'
+                        }}>
+                          {anno.message}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+                  <p>{t('noNotifications')}</p>
+                </div>
+              )}
             </div>
           </div>
         )}

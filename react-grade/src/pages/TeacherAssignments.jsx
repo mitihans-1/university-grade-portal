@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const TeacherAssignments = () => {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -61,7 +63,7 @@ const TeacherAssignments = () => {
             }
 
             await api.createAssignment(formData);
-            alert('Assignment created successfully!');
+            alert(t('assignmentCreatedSuccess'));
             setShowCreateModal(false);
             setNewAssignment({
                 title: '',
@@ -93,8 +95,8 @@ const TeacherAssignments = () => {
     };
 
     const handleGradeSubmission = async (submissionId) => {
-        const score = prompt('Enter score (0-100):');
-        const feedback = prompt('Enter feedback (optional):');
+        const score = prompt(`${t('score')} (0-100):`);
+        const feedback = prompt(`${t('remarks')} (${t('optional') || 'optional'}):`);
 
         if (score === null) return;
 
@@ -104,7 +106,7 @@ const TeacherAssignments = () => {
             if (feedback) formData.append('feedback', feedback);
 
             await api.gradeSubmission(submissionId, formData);
-            alert('Submission graded successfully!');
+            alert(t('submissionGradedSuccess'));
             viewSubmissions(selectedAssignment);
         } catch (error) {
             alert('Error grading submission: ' + error.message);
@@ -133,8 +135,8 @@ const TeacherAssignments = () => {
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
             <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h1 style={{ marginBottom: '10px' }}>📚 My Assignments</h1>
-                    <p style={{ color: '#666' }}>Create and manage assignments for your students</p>
+                    <h1 style={{ marginBottom: '10px' }}>📚 {t('myAssignments')}</h1>
+                    <p style={{ color: '#666' }}>{t('manageMyAssignments')}</p>
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
@@ -150,7 +152,7 @@ const TeacherAssignments = () => {
                         boxShadow: '0 4px 12px rgba(156, 39, 176, 0.3)'
                     }}
                 >
-                    ➕ Create Assignment
+                    ➕ {t('createAssignment')}
                 </button>
             </div>
 
@@ -173,9 +175,9 @@ const TeacherAssignments = () => {
                                 <p style={{ margin: '0 0 10px 0', color: '#666' }}>{assignment.description}</p>
                                 <div style={{ display: 'flex', gap: '15px', fontSize: '14px', color: '#888' }}>
                                     <span>📘 {assignment.courseName} ({assignment.courseCode})</span>
-                                    <span>📅 Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
-                                    <span>🎯 Max Score: {assignment.maxScore}</span>
-                                    <span>📚 Year {assignment.year}</span>
+                                    <span>📅 {t('date')}: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                                    <span>🎯 {t('score')}: {assignment.maxScore}</span>
+                                    <span>📚 {t('yearNumber').replace('{year}', assignment.year)}</span>
                                     <span>📆 {assignment.semester}</span>
                                 </div>
                             </div>
@@ -204,7 +206,7 @@ const TeacherAssignments = () => {
                                     fontWeight: 'bold'
                                 }}
                             >
-                                📊 View Submissions ({assignment.submissions?.length || 0})
+                                📊 {t('viewSubmissions')} ({assignment.submissions?.length || 0})
                             </button>
                             {assignment.attachmentPath && (
                                 <button
@@ -218,7 +220,7 @@ const TeacherAssignments = () => {
                                         cursor: 'pointer'
                                     }}
                                 >
-                                    📎 Download Instructions
+                                    📎 {t('downloadInstructions')}
                                 </button>
                             )}
                         </div>
@@ -228,8 +230,8 @@ const TeacherAssignments = () => {
                 {assignments.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '60px', backgroundColor: 'white', borderRadius: '10px' }}>
                         <div style={{ fontSize: '64px', marginBottom: '20px' }}>📚</div>
-                        <h3 style={{ color: '#666' }}>No assignments yet</h3>
-                        <p style={{ color: '#999' }}>Click "Create Assignment" to get started</p>
+                        <h3 style={{ color: '#666' }}>{t('noAssignmentsYet')}</h3>
+                        <p style={{ color: '#999' }}>{t('clickToCreateAssignment')}</p>
                     </div>
                 )}
             </div>
@@ -258,19 +260,19 @@ const TeacherAssignments = () => {
                         maxHeight: '90vh',
                         overflowY: 'auto'
                     }}>
-                        <h2 style={{ marginBottom: '20px' }}>Create New Assignment</h2>
+                        <h2 style={{ marginBottom: '20px' }}>{t('createNewAssignment')}</h2>
                         <form onSubmit={handleCreateAssignment}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                 <input
                                     type="text"
-                                    placeholder="Assignment Title *"
+                                    placeholder={`${t('assignmentTitle')} *`}
                                     value={newAssignment.title}
                                     onChange={(e) => setNewAssignment({ ...newAssignment, title: e.target.value })}
                                     required
                                     style={{ padding: '12px', border: '1px solid #ddd', borderRadius: '5px' }}
                                 />
                                 <textarea
-                                    placeholder="Description"
+                                    placeholder={t('remarks')}
                                     value={newAssignment.description}
                                     onChange={(e) => setNewAssignment({ ...newAssignment, description: e.target.value })}
                                     style={{ padding: '12px', border: '1px solid #ddd', borderRadius: '5px', minHeight: '80px' }}
@@ -278,7 +280,7 @@ const TeacherAssignments = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                     <input
                                         type="text"
-                                        placeholder="Course Code *"
+                                        placeholder={`${t('courseCode')} *`}
                                         value={newAssignment.courseCode}
                                         onChange={(e) => setNewAssignment({ ...newAssignment, courseCode: e.target.value })}
                                         required
@@ -286,7 +288,7 @@ const TeacherAssignments = () => {
                                     />
                                     <input
                                         type="text"
-                                        placeholder="Course Name *"
+                                        placeholder={`${t('courseName')} *`}
                                         value={newAssignment.courseName}
                                         onChange={(e) => setNewAssignment({ ...newAssignment, courseName: e.target.value })}
                                         required
@@ -303,7 +305,7 @@ const TeacherAssignments = () => {
                                     />
                                     <input
                                         type="number"
-                                        placeholder="Max Score"
+                                        placeholder={t('score')}
                                         value={newAssignment.maxScore}
                                         onChange={(e) => setNewAssignment({ ...newAssignment, maxScore: e.target.value })}
                                         style={{ padding: '12px', border: '1px solid #ddd', borderRadius: '5px' }}
@@ -333,10 +335,10 @@ const TeacherAssignments = () => {
                                         onChange={(e) => setNewAssignment({ ...newAssignment, year: e.target.value })}
                                         style={{ padding: '12px', border: '1px solid #ddd', borderRadius: '5px' }}
                                     >
-                                        <option value="1">Year 1</option>
-                                        <option value="2">Year 2</option>
-                                        <option value="3">Year 3</option>
-                                        <option value="4">Year 4</option>
+                                        <option value="1">{t('yearNumber').replace('{year}', 1)}</option>
+                                        <option value="2">{t('yearNumber').replace('{year}', 2)}</option>
+                                        <option value="3">{t('yearNumber').replace('{year}', 3)}</option>
+                                        <option value="4">{t('yearNumber').replace('{year}', 4)}</option>
                                     </select>
                                 </div>
                                 <textarea
@@ -368,7 +370,7 @@ const TeacherAssignments = () => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        Create Assignment
+                                        {t('createAssignment')}
                                     </button>
                                     <button
                                         type="button"
@@ -384,7 +386,7 @@ const TeacherAssignments = () => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        Cancel
+                                        {t('cancel')}
                                     </button>
                                 </div>
                             </div>
@@ -420,16 +422,16 @@ const TeacherAssignments = () => {
                         <h2 style={{ marginBottom: '20px' }}>Submissions for: {selectedAssignment.title}</h2>
 
                         {submissions.length === 0 ? (
-                            <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>No submissions yet</p>
+                            <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>{t('noSubmissionsYet') || 'No submissions yet'}</p>
                         ) : (
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ backgroundColor: '#f5f5f5' }}>
-                                        <th style={{ padding: '12px', textAlign: 'left' }}>Student</th>
-                                        <th style={{ padding: '12px', textAlign: 'left' }}>Submitted</th>
-                                        <th style={{ padding: '12px', textAlign: 'left' }}>Status</th>
-                                        <th style={{ padding: '12px', textAlign: 'left' }}>Score</th>
-                                        <th style={{ padding: '12px', textAlign: 'left' }}>Actions</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>{t('student')}</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>{t('published')}</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>{t('status')}</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>{t('score')}</th>
+                                        <th style={{ padding: '12px', textAlign: 'left' }}>{t('actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -472,7 +474,7 @@ const TeacherAssignments = () => {
                                                             fontSize: '12px'
                                                         }}
                                                     >
-                                                        📥 Download
+                                                        📥 {t('downloadReport')}
                                                     </button>
                                                     <button
                                                         onClick={() => handleGradeSubmission(sub.id)}
@@ -486,7 +488,7 @@ const TeacherAssignments = () => {
                                                             fontSize: '12px'
                                                         }}
                                                     >
-                                                        ✏️ Grade
+                                                        ✏️ {t('grade')}
                                                     </button>
                                                 </div>
                                             </td>
@@ -509,7 +511,7 @@ const TeacherAssignments = () => {
                                 fontWeight: 'bold'
                             }}
                         >
-                            Close
+                            {t('cancel')}
                         </button>
                     </div>
                 </div>

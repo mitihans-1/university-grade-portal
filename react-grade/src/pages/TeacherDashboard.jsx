@@ -16,7 +16,9 @@ const TeacherDashboard = () => {
         approved: 0,
         published: 0
     });
+    const [schedules, setSchedules] = useState([]);
     const [systemSettings, setSystemSettings] = useState(null);
+    const [announcements, setAnnouncements] = useState([]);
 
     useEffect(() => {
         const fetchGradesAndSettings = async () => {
@@ -46,6 +48,22 @@ const TeacherDashboard = () => {
                 }, { pending: 0, approved: 0, published: 0 });
 
                 setStats(counts);
+
+                // Fetch schedules
+                const scheduleData = await api.getSchedules({
+                    department: user.department,
+                    semester: settings ? settings.current_semester : '1'
+                });
+                setSchedules(scheduleData || []);
+
+                // Fetch Announcements
+                try {
+                    const notifyData = await api.getNotifications();
+                    setAnnouncements(Array.isArray(notifyData) ? notifyData.filter(n => ['broadcast', 'exam_code'].includes(n.type)).slice(0, 3) : []);
+                } catch (e) {
+                    console.error('Error fetching teacher announcements:', e);
+                }
+
             } catch (error) {
                 console.error('Error fetching teacher data:', error);
             } finally {
@@ -108,8 +126,45 @@ const TeacherDashboard = () => {
                             transition: 'all 0.2s'
                         }}
                     >
-                        <Upload size={18} /> {t('uploadGrades') || 'Upload Grades'}
+                        <Upload size={18} /> {t('uploadGrades')}
                     </Link>
+                </div>
+            </div>
+
+            <div style={{
+                background: 'linear-gradient(135deg, #fdf4ff 0%, #f5d0fe 100%)',
+                padding: '24px',
+                borderRadius: '16px',
+                border: '1px solid #f0abfc',
+                marginBottom: '30px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '15px'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#701a75' }}>
+                    <div style={{ fontSize: '24px' }}>🏫</div>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        Assigned Faculty Records
+                    </h3>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
+                    <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Faculty / Department</div>
+                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.department || 'Not Assigned'}</div>
+                    </div>
+                    <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Primary Subject</div>
+                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.subject || 'Flexible'}</div>
+                    </div>
+                    <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Specialization</div>
+                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.specialization || 'General'}</div>
+                    </div>
+                    <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Hired Since</div>
+                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.year || '2025'}</div>
+                    </div>
                 </div>
             </div>
 
@@ -126,7 +181,7 @@ const TeacherDashboard = () => {
                 }}>
                     <p style={{ margin: '0 0 5px 0', color: '#666', fontSize: '14px' }}>{t('pending')}</p>
                     <h2 style={{ margin: 0, color: '#ed6c02' }}>{stats.pending}</h2>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#888' }}>Waiting for admin review</p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#888' }}>{t('waitingForAdminReview')}</p>
                 </div>
                 <div style={{
                     backgroundColor: 'white',
@@ -137,7 +192,7 @@ const TeacherDashboard = () => {
                 }}>
                     <p style={{ margin: '0 0 5px 0', color: '#666', fontSize: '14px' }}>{t('approved')}</p>
                     <h2 style={{ margin: 0, color: '#1976d2' }}>{stats.approved}</h2>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#888' }}>Ready to be published</p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#888' }}>{t('readyToBePublished')}</p>
                 </div>
                 <div style={{
                     backgroundColor: 'white',
@@ -148,11 +203,166 @@ const TeacherDashboard = () => {
                 }}>
                     <p style={{ margin: '0 0 5px 0', color: '#666', fontSize: '14px' }}>{t('published')}</p>
                     <h2 style={{ margin: 0, color: '#4caf50' }}>{stats.published}</h2>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#888' }}>Visible to students & parents</p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#888' }}>{t('visibleToStudentsParents')}</p>
                 </div>
+                <Link to="/teacher/exams/create" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '10px',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                        borderLeft: '4px solid #6366f1',
+                        height: '100%',
+                        transition: 'transform 0.2s',
+                        cursor: 'pointer'
+                    }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                        <p style={{ margin: '0 0 5px 0', color: '#666', fontSize: '14px' }}>{t('onlineExams')}</p>
+                        <h2 style={{ margin: 0, color: '#6366f1' }}>📝</h2>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#888' }}>{t('createOnlineExam')}</p>
+                    </div>
+                </Link>
+                <Link to="/schedule" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '10px',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                        borderLeft: '4px solid #a855f7',
+                        height: '100%',
+                        transition: 'transform 0.2s',
+                        cursor: 'pointer'
+                    }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                        <p style={{ margin: '0 0 5px 0', color: '#666', fontSize: '14px' }}>{t('classSchedule')}</p>
+                        <h2 style={{ margin: 0, color: '#a855f7' }}>📅</h2>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#888' }}>{t('viewTeachingTimetable')}</p>
+                    </div>
+                </Link>
             </div>
 
 
+
+            {/* Class Schedule Section */}
+            <div style={{
+                backgroundColor: 'white',
+                padding: '25px',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                marginBottom: '30px',
+                border: '1px solid #f1f5f9'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '24px' }}>📅</span> {t('weeklySchedule')}
+                    </h3>
+                    <Link to="/schedule" style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 'bold', textDecoration: 'none' }}>
+                        {t('viewFullSchedule')} →
+                    </Link>
+                </div>
+
+                {schedules.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px' }}>
+                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
+                            const dayClasses = schedules.filter(s => s.dayOfWeek === day);
+                            const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day;
+
+                            return (
+                                <div key={day} style={{
+                                    backgroundColor: isToday ? '#f0f9ff' : '#f8fafc',
+                                    padding: '15px',
+                                    borderRadius: '12px',
+                                    border: isToday ? '1px solid #bae6fd' : '1px solid #e2e8f0',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    <div style={{
+                                        fontWeight: '800',
+                                        fontSize: '12px',
+                                        color: isToday ? '#0369a1' : '#64748b',
+                                        marginBottom: '10px',
+                                        textTransform: 'uppercase',
+                                        display: 'flex',
+                                        justifyContent: 'space-between'
+                                    }}>
+                                        {t(day.toLowerCase())}
+                                        {isToday && <span style={{ fontSize: '10px', backgroundColor: '#3b82f6', color: 'white', padding: '1px 6px', borderRadius: '4px' }}>{t('today').toUpperCase()}</span>}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {dayClasses.length > 0 ? dayClasses.map(cls => (
+                                            <div key={cls.id} style={{
+                                                backgroundColor: 'white',
+                                                padding: '10px',
+                                                borderRadius: '8px',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+                                                borderLeft: `4px solid ${cls.type === 'lecture' ? '#3b82f6' : cls.type === 'lab' ? '#8b5cf6' : '#f43f5e'}`
+                                            }}>
+                                                <div style={{ fontWeight: '700', fontSize: '14px', color: '#0f172a' }}>{cls.courseName}</div>
+                                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                                                    {cls.startTime} - {cls.endTime} • {cls.room || 'TBA'}
+                                                </div>
+                                            </div>
+                                        )) : (
+                                            <div style={{ fontSize: '12px', color: '#cbd5e1', fontStyle: 'italic', padding: '10px' }}>
+                                                {t('noClasses')}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+                        <p>{t('noScheduleAvailableForDept')}</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Announcements Section */}
+            <div style={{
+                backgroundColor: 'white',
+                padding: '25px',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                marginBottom: '30px',
+                borderLeft: '6px solid #f59e0b'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '24px' }}>📢</span> {t('notifications') || 'Announcements'}
+                    </h3>
+                    <Link to="/messages" style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 'bold', textDecoration: 'none' }}>
+                        {t('viewAll') || 'View All'} →
+                    </Link>
+                </div>
+
+                {announcements.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {announcements.map(anno => (
+                            <div key={anno.id} style={{
+                                padding: '15px',
+                                backgroundColor: '#fffbeb',
+                                borderRadius: '12px',
+                                border: '1px solid #fef3c7',
+                                display: 'flex',
+                                gap: '15px',
+                                alignItems: 'flex-start'
+                            }}>
+                                <div style={{ fontSize: '24px', opacity: 0.7 }}>🔔</div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                        <span style={{ fontWeight: '700', fontSize: '15px', color: '#92400e' }}>{anno.title}</span>
+                                        <span style={{ fontSize: '12px', color: '#b45309' }}>{new Date(anno.date || anno.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '13px', color: '#b45309', lineHeight: '1.5' }}>{anno.message}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+                        <p>{t('noNotifications') || 'No announcements yet'}</p>
+                    </div>
+                )}
+            </div>
 
             <div style={{
                 backgroundColor: 'white',
@@ -160,7 +370,7 @@ const TeacherDashboard = () => {
                 borderRadius: '10px',
                 boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}>
-                <h3 style={{ marginBottom: '20px' }}>{t('recentUploads') || 'My Recent Uploads'}</h3>
+                <h3 style={{ marginBottom: '20px' }}>{t('recentUploads')}</h3>
                 {myGrades.length > 0 ? (
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -222,7 +432,7 @@ const TeacherDashboard = () => {
                                                         maxWidth: '200px',
                                                         lineHeight: '1.2'
                                                     }}>
-                                                        <strong>Note:</strong> {grade.rejectionReason}
+                                                        <strong>{t('note')}:</strong> {grade.rejectionReason}
                                                     </div>
                                                 )}
                                             </div>
@@ -234,7 +444,7 @@ const TeacherDashboard = () => {
                     </div>
                 ) : (
                     <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
-                        No grades uploaded yet. Start by clicking "Upload Grades".
+                        {t('noGradesUploadedYet')}
                     </p>
                 )}
             </div>

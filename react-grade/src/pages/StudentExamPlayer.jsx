@@ -80,21 +80,41 @@ const StudentExamPlayer = () => {
             }
 
             if (data.attempt.status === 'started' && data.attempt.createdAt) {
-                // Calculate remaining time
-                const startTime = new Date(data.attempt.startTime).getTime();
+                // Resume or Sync with Global Time
                 const now = new Date().getTime();
-                const elapsedSeconds = Math.floor((now - startTime) / 1000);
-                const totalSeconds = examInfo.duration * 60;
-                const remaining = totalSeconds - elapsedSeconds;
+                let remaining;
+
+                if (examInfo.status === 'active' && examInfo.endTime) {
+                    const globalEndTime = new Date(examInfo.endTime).getTime();
+                    remaining = Math.floor((globalEndTime - now) / 1000);
+                } else {
+                    const startTime = new Date(data.attempt.startTime).getTime();
+                    const totalSeconds = examInfo.duration * 60;
+                    const elapsedSeconds = Math.floor((now - startTime) / 1000);
+                    remaining = totalSeconds - elapsedSeconds;
+                }
 
                 if (remaining <= 0) {
-                    // Auto submit if resuming after time expired
                     handleSubmit();
                     return;
                 }
                 setTimeLeft(remaining);
             } else {
-                setTimeLeft(examInfo.duration * 60);
+                // Initial Start
+                if (examInfo.status === 'active' && examInfo.endTime) {
+                    const now = new Date().getTime();
+                    const globalEndTime = new Date(examInfo.endTime).getTime();
+                    const remaining = Math.floor((globalEndTime - now) / 1000);
+
+                    if (remaining <= 0) {
+                        alert('This exam session has already ended.');
+                        return;
+                    }
+                    setTimeLeft(remaining);
+                } else {
+                    // Start individual timer for 'published' or non-global 'active'
+                    setTimeLeft(examInfo.duration * 60);
+                }
             }
 
             setCurrentIdx(data.attempt.currentQuestionIndex || 0);
@@ -257,23 +277,48 @@ const StudentExamPlayer = () => {
                         <form onSubmit={handleStartGame} style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
                             <div style={{ width: '100%', maxWidth: '300px' }}>
                                 <label style={{ display: 'block', textAlign: 'left', marginBottom: '5px', color: '#475569', fontWeight: '600' }}>Enter Secret Code</label>
-                                <input
-                                    type="text"
-                                    value={entryCode}
-                                    onChange={(e) => setEntryCode(e.target.value)}
-                                    placeholder="e.g. 1234"
-                                    style={{
-                                        width: '100%',
-                                        padding: '15px',
-                                        fontSize: '18px',
-                                        textAlign: 'center',
-                                        letterSpacing: '5px',
-                                        borderRadius: '8px',
-                                        border: '2px solid #e2e8f0',
-                                        outline: 'none',
-                                        fontWeight: 'bold'
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type="text"
+                                        value={entryCode}
+                                        onChange={(e) => setEntryCode(e.target.value)}
+                                        placeholder="e.g. 1234"
+                                        style={{
+                                            width: '100%',
+                                            padding: '15px',
+                                            fontSize: '18px',
+                                            textAlign: 'center',
+                                            letterSpacing: '5px',
+                                            borderRadius: '8px',
+                                            border: '2px solid #e2e8f0',
+                                            outline: 'none',
+                                            fontWeight: 'bold'
+                                        }}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            const res = await api.requestCode(id);
+                                            alert(res.msg || 'Code sent to your dashboard!');
+                                        } catch (err) {
+                                            alert('Failed to send code.');
+                                        }
                                     }}
-                                />
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#3b82f6',
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        marginTop: '10px',
+                                        textDecoration: 'underline'
+                                    }}
+                                >
+                                    Send code to my notifications 📢
+                                </button>
                             </div>
 
                             {error && <p style={{ color: '#ef4444', margin: '0' }}>{error}</p>}

@@ -112,6 +112,17 @@ EMAIL_PASS=your_email_app_password
 CLIENT_URL=http://localhost:5173
 ```
 
+## 📚 Project Documentation
+
+For in-depth information on specific systems and workflows, refer to our consolidated documentation:
+
+- **[Detailed Feature Documentation (API_DOCUMENTATION.md)](API_DOCUMENTATION.md)**: 
+    - 🔒 **Grade Approval Workflow**: Review process for teacher submissions.
+    - 👨‍👩‍👧‍👦 **Family Monitoring**: Parent alerts and student risk assessment.
+    - 🏫 **Multi-Department System**: Handling teachers with cross-department assignments.
+    - 🧹 **Data Integrity**: Automatic cleanup of orphan links and deletion cascades.
+    - 🛠️ **Backend API**: Comprehensive list of server endpoints.
+
 ---
 
 ## 📖 Usage Guide
@@ -133,6 +144,8 @@ CLIENT_URL=http://localhost:5173
 2. Go to **Grade Approvals**.
 3. Review pending grades submitted by teachers.
 4. Click **Approve & Publish**. Only then will parents/students be notified.
+
+> **Detailed Documentation**: For comprehensive workflows, features, role guides, and data cleanup systems, please see [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
 
 ---
 

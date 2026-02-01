@@ -24,14 +24,18 @@ router.get('/check/:studentId', async (req, res) => {
         }
 
         if (idRecord.isUsed) {
-            return res.status(400).json({ msg: 'This Student ID has already been registered' });
+            // Double check if the user actually exists (in case it was deleted but flag wasn't reset)
+            const actualStudent = await Student.findOne({ where: { studentId: idRecord.studentId } });
+            if (!actualStudent) {
+                // Flag was stale, reset it on the fly
+                await idRecord.update({ isUsed: false });
+            } else {
+                return res.status(400).json({ msg: 'This Student ID has already been registered' });
+            }
         }
 
         res.json({
-            valid: true,
-            department: idRecord.department,
-            year: idRecord.year,
-            semester: idRecord.semester
+            valid: true
         });
     } catch (err) {
         console.error(err.message);
@@ -53,14 +57,17 @@ router.get('/check-teacher/:teacherId', async (req, res) => {
         }
 
         if (idRecord.isUsed) {
-            return res.status(400).json({ msg: 'This Teacher ID has already been registered' });
+            // Double check if the teacher actually exists
+            const actualTeacher = await Teacher.findOne({ where: { teacherId: idRecord.teacherId } });
+            if (!actualTeacher) {
+                await idRecord.update({ isUsed: false });
+            } else {
+                return res.status(400).json({ msg: 'This Teacher ID has already been registered' });
+            }
         }
 
         res.json({
-            valid: true,
-            department: idRecord.department,
-            subject: idRecord.subject,
-            specialization: idRecord.specialization
+            valid: true
         });
     } catch (err) {
         console.error(err.message);
