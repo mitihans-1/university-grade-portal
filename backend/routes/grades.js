@@ -537,8 +537,11 @@ router.post('/upload-bulk', upload.single('file'), auth, async (req, res) => {
           continue;
         }
 
+        const published = req.user.role === 'admin';
+        const approvalStatus = req.user.role === 'teacher' ? 'pending_approval' : 'published';
+
         // Create grade record
-        await Grade.create({
+        const gradeDoc = await Grade.create({
           studentId: row.StudentID,
           courseCode: row.CourseCode,
           courseName: row.CourseName || row.CourseCode,
@@ -548,104 +551,109 @@ router.post('/upload-bulk', upload.single('file'), auth, async (req, res) => {
           semester: row.Semester || 'Spring 2025',
           academicYear: row.AcademicYear || '2024',
           remarks: row.Remarks || '',
-          uploadedBy: req.user.teacherId || String(req.user.id)
+          uploadedBy: req.user.teacherId || String(req.user.id),
+          published: published,
+          approvalStatus: approvalStatus
         });
 
         successCount++;
 
-        // Find linked parents to notify
-        const linkedParents = await ParentStudentLink.findAll({
-          where: { studentId: row.StudentID, status: 'approved' }
-        });
+        // Only send notifications if the grade is published (i.e., uploaded by admin)
+        if (published) {
+          // Find linked parents to notify
+          const linkedParents = await ParentStudentLink.findAll({
+            where: { studentId: row.StudentID, status: 'approved' }
+          });
 
-        // Create notification for student
-        const isLowGradeRow = row.Grade === 'F' || row.Grade === 'D' || (parseFloat(row.Score) < 60);
-        const studentMessageRow = isLowGradeRow
-          ? `You received ${row.Grade} in ${row.CourseName || row.CourseCode}. You need to perform better in your next assessments to ensure you can continue your studies in the university.`
-          : `Your grade for ${row.CourseName || row.CourseCode} has been posted: ${row.Grade}`;
+          // Create notification for student
+          const isLowGradeRow = row.Grade === 'F' || row.Grade === 'D' || (parseFloat(row.Score) < 60);
+          const studentMessageRow = isLowGradeRow
+            ? `You received ${row.Grade} in ${row.CourseName || row.CourseCode}. You need to perform better in your next assessments to ensure you can continue your studies in the university.`
+            : `Your grade for ${row.CourseName || row.CourseCode} has been posted: ${row.Grade}`;
 
-        await Notification.create({
-          studentId: row.StudentID,
-          type: isLowGradeRow ? 'warning' : 'grade_update',
-          title: isLowGradeRow ? 'Academic Warning' : 'New Grade Posted',
-          message: studentMessageRow,
-          is_read: false,
-          sentVia: 'app'
-        });
+          await Notification.create({
+            studentId: row.StudentID,
+            type: isLowGradeRow ? 'warning' : 'grade_update',
+            title: isLowGradeRow ? 'Academic Warning' : 'New Grade Posted',
+            message: studentMessageRow,
+            is_read: false,
+            sentVia: 'app'
+          });
 
-        // Create notifications for linked parents and send real emails
-        for (const link of linkedParents) {
-          try {
-            // Get parent email for sending real email
-            const parent = await Parent.findByPk(link.parentId);
+          // Create notifications for linked parents and send real emails
+          for (const link of linkedParents) {
+            try {
+              // Get parent email for sending real email
+              const parent = await Parent.findByPk(link.parentId);
 
-            await Notification.create({
-              parentId: link.parentId,
-              studentId: row.StudentID,
-              type: 'grade_update',
-              title: 'New Grade Published',
-              message: `Your child ${student.name} received ${row.Grade} in ${row.CourseName || row.CourseCode}`,
-              is_read: false,
-              sentVia: 'email,app'
-            });
-
-            // Create alert based on grade performance
-            const Alert = require('../models/Alert');
-            const isLowGradeRow = row.Grade === 'F' || row.Grade === 'D' || (parseFloat(row.Score) < 60);
-            const isFailingRow = row.Grade === 'F' || (parseFloat(row.Score) < 50);
-
-            if (isFailingRow) {
-              await Alert.create({
-                studentId: row.StudentID,
+              await Notification.create({
                 parentId: link.parentId,
-                type: 'failing',
-                severity: 'critical',
-                title: '⚠️ Failing Grade Alert',
-                message: `Your child ${student.name} received a failing grade (${row.Grade}) in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%`,
-                courseCode: row.CourseCode,
-                sentVia: 'app,email'
+                studentId: row.StudentID,
+                type: 'grade_update',
+                title: 'New Grade Published',
+                message: `Your child ${student.name} received ${row.Grade} in ${row.CourseName || row.CourseCode}`,
+                is_read: false,
+                sentVia: 'email,app'
               });
 
-              // Send real email for failing grades
-              if (parent) {
-                await sendAcademicAlert(parent, student.name, 'Failing Grade', `Your child ${student.name} received a failing grade (${row.Grade}) in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%. Please take immediate action to help your child improve their performance.`);
-              }
-            } else if (isLowGradeRow) {
-              await Alert.create({
-                studentId: row.StudentID,
-                parentId: link.parentId,
-                type: 'low_grade',
-                severity: 'high',
-                title: '⚠️ Low Grade Alert',
-                message: `Your child ${student.name} received a low grade (${row.Grade}) in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%`,
-                courseCode: row.CourseCode,
-                sentVia: 'app,email'
-              });
+              // Create alert based on grade performance
+              const Alert = require('../models/Alert');
+              const isLowGradeRow = row.Grade === 'F' || row.Grade === 'D' || (parseFloat(row.Score) < 60);
+              const isFailingRow = row.Grade === 'F' || (parseFloat(row.Score) < 50);
 
-              // Send real email for low grades
-              if (parent) {
-                await sendAcademicAlert(parent, student.name, 'Low Grade', `Your child ${student.name} received a low grade (${row.Grade}) in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%. Please consider additional support for your child.`);
-              }
-            } else {
-              await Alert.create({
-                studentId: row.StudentID,
-                parentId: link.parentId,
-                type: 'new_grade',
-                severity: 'low',
-                title: '📊 New Grade Published',
-                message: `Your child ${student.name} received ${row.Grade} in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%`,
-                courseCode: row.CourseCode,
-                sentVia: 'app'
-              });
+              if (isFailingRow) {
+                await Alert.create({
+                  studentId: row.StudentID,
+                  parentId: link.parentId,
+                  type: 'failing',
+                  severity: 'critical',
+                  title: '⚠️ Failing Grade Alert',
+                  message: `Your child ${student.name} received a failing grade (${row.Grade}) in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%`,
+                  courseCode: row.CourseCode,
+                  sentVia: 'app,email'
+                });
 
-              // Send real email for new grades
-              if (parent) {
-                await sendGradeNotification(parent, student.name, row.Grade, row.CourseName || row.CourseCode);
+                // Send real email for failing grades
+                if (parent) {
+                  await sendAcademicAlert(parent, student.name, 'Failing Grade', `Your child ${student.name} received a failing grade (${row.Grade}) in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%. Please take immediate action to help your child improve their performance.`);
+                }
+              } else if (isLowGradeRow) {
+                await Alert.create({
+                  studentId: row.StudentID,
+                  parentId: link.parentId,
+                  type: 'low_grade',
+                  severity: 'high',
+                  title: '⚠️ Low Grade Alert',
+                  message: `Your child ${student.name} received a low grade (${row.Grade}) in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%`,
+                  courseCode: row.CourseCode,
+                  sentVia: 'app,email'
+                });
+
+                // Send real email for low grades
+                if (parent) {
+                  await sendAcademicAlert(parent, student.name, 'Low Grade', `Your child ${student.name} received a low grade (${row.Grade}) in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%. Please consider additional support for your child.`);
+                }
+              } else {
+                await Alert.create({
+                  studentId: row.StudentID,
+                  parentId: link.parentId,
+                  type: 'new_grade',
+                  severity: 'low',
+                  title: '📊 New Grade Published',
+                  message: `Your child ${student.name} received ${row.Grade} in ${row.CourseName || row.CourseCode}. Score: ${row.Score || 0}%`,
+                  courseCode: row.CourseCode,
+                  sentVia: 'app'
+                });
+
+                // Send real email for new grades
+                if (parent) {
+                  await sendGradeNotification(parent, student.name, row.Grade, row.CourseName || row.CourseCode);
+                }
               }
+            } catch (notificationErr) {
+              console.error('Error creating notification or alert:', notificationErr.message);
+              // Continue with the next parent instead of failing the entire operation
             }
-          } catch (notificationErr) {
-            console.error('Error creating notification or alert:', notificationErr.message);
-            // Continue with the next parent instead of failing the entire operation
           }
         }
       } catch (gradeErr) {

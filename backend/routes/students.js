@@ -12,9 +12,47 @@ const { sendVerificationEmail, sendApprovalEmail } = require('../utils/notifier'
 const crypto = require('crypto');
 const router = express.Router();
 
-// @route   POST api/students/register
-// @desc    Register a student
-// @access  Public
+/**
+ * @swagger
+ * /api/students/register:
+ *   post:
+ *     summary: Register a new student
+ *     tags: [Students]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - studentId
+ *               - name
+ *               - email
+ *               - password
+ *               - phone
+ *             properties:
+ *               studentId:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               department:
+ *                 type: string
+ *               year:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: The student was successfully registered
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
 router.post('/register', async (req, res) => {
   try {
     const { studentId, name, email, password, phone, department, year, nationalId } = req.body;
@@ -197,8 +235,8 @@ router.get('/:studentId/grades', auth, async (req, res) => {
 });
 
 // @route   GET api/students/:studentId
-// @desc    Get student by ID (must be after /my-grades to avoid route conflict)
-// @access  Public
+// @desc    Get student by ID (Public with restricted info, Private with full info)
+// @access  Public (Restricted) / Private
 router.get('/:studentId', async (req, res) => {
   try {
     // Prevent conflict with /my-grades route
@@ -206,26 +244,82 @@ router.get('/:studentId', async (req, res) => {
       return res.status(404).json({ msg: 'Not found' });
     }
 
+    // 1. Check for optional authentication manually
+    const token = req.header('x-auth-token');
+    let requestor = null;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'defaultSecret');
+        const { userId, role } = decoded;
+
+        // Basic user resolution (simplified compared to auth middleware)
+        if (role === 'admin') requestor = { role: 'admin', id: userId };
+        else if (role === 'parent') {
+          const p = await models.Parent.findByPk(userId);
+          if (p) requestor = { role: 'parent', id: userId, studentId: p.studentId }; // Note: p.studentId is the *primary* child, but we check links later for multi-child
+        }
+        else if (role === 'student') {
+          const s = await Student.findByPk(userId);
+          if (s) requestor = { role: 'student', id: userId, studentId: s.studentId };
+        }
+      } catch (err) {
+        // Invalid token - treat as public
+        console.log('Ignored invalid token in public route');
+      }
+    }
+
     const student = await Student.findOne({
       where: { studentId: req.params.studentId },
-      where: { studentId: req.params.studentId },
-      attributes: ['id', 'studentId', 'name', 'department', 'year', 'semester'] // Only return non-sensitive info
+      attributes: ['id', 'studentId', 'name', 'department', 'year', 'semester', 'email', 'phone', 'advisor', 'advisorEmail']
     });
 
     if (!student) {
       return res.status(404).json({ msg: 'Student not found' });
     }
 
-    // Check if student is already linked to ANY parent
+    // Check link status
     const existingLink = await ParentStudentLink.findOne({
       where: { studentId: req.params.studentId }
     });
 
-    // Convert to plain object to add property
-    const studentData = student.toJSON();
-    studentData.isLinked = !!existingLink;
+    const isLinked = !!existingLink;
 
-    res.json(studentData);
+    // 2. Determine visibility
+    let showFullInfo = false;
+
+    if (requestor) {
+      if (requestor.role === 'admin') {
+        showFullInfo = true;
+      } else if (requestor.role === 'student' && requestor.studentId === student.studentId) {
+        showFullInfo = true;
+      } else if (requestor.role === 'parent') {
+        // Check if THIS parent is linked to THIS student
+        const isParentLinked = await ParentStudentLink.findOne({
+          where: {
+            parentId: requestor.id,
+            studentId: student.studentId
+          }
+        });
+        if (isParentLinked) showFullInfo = true;
+      }
+    }
+
+    // 3. Construct response
+    if (showFullInfo) {
+      const studentData = student.toJSON();
+      studentData.isLinked = isLinked;
+      res.json(studentData);
+    } else {
+      // Public / Unlinked view: MASK sensitive info
+      res.json({
+        exists: true,
+        isLinked: isLinked,
+        // Do NOT return name, department, year, etc.
+        msg: 'Student Verified' // Helper message
+      });
+    }
+
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Server error' });
@@ -257,9 +351,33 @@ router.get('/pending', auth, async (req, res) => {
   }
 });
 
-// @route   GET api/students
-// @desc    Get all students (admin only)
-// @access  Private
+/**
+ * @swagger
+ * /api/students:
+ *   get:
+ *     summary: Returns the list of all students
+ *     tags: [Students]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: The list of students
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   department:
+ *                     type: string
+ */
 router.get('/', auth, async (req, res) => {
   try {
     if (!req.user.permissions.includes('manage_users') && !req.user.permissions.includes('view_students')) {

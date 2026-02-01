@@ -343,9 +343,6 @@ const ParentRegistration = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <strong style={{ color: '#2e7d32' }}>✅ {t('studentVerified')}</strong>
-                    <p style={{ margin: '5px 0 0 0', color: '#334155', fontSize: '0.9rem' }}>
-                      {studentFound.name} • {studentFound.department} • {t('year')} {studentFound.year}
-                    </p>
                   </div>
                 </div>
               </div>

@@ -137,11 +137,15 @@ app.use(hpp());
 const seedAdmin = require('./utils/seedAdmin');
 
 // Connect to DB and seed admin
+// Connect to DB and seed admin
 connectDB().then(() => {
   seedAdmin();
 });
 
-
+// Swagger Documentation
+const swaggerUi = require('swagger-ui-express');
+const specs = require('./config/swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Routes
 app.use('/api/auth', authLimiter, require('./routes/auth'));
