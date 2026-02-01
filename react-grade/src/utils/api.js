@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Get token from localStorage
 const getToken = () => localStorage.getItem('token');
@@ -23,6 +23,50 @@ export const api = {
     return response.json();
   },
 
+  verifyMfa: async (mfaData) => {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-mfa`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(mfaData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `Verification error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  checkStudentId: async (studentId) => {
+    const response = await fetch(`${API_BASE_URL}/ids/check/${encodeURIComponent(studentId)}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  checkTeacherId: async (teacherId) => {
+    const response = await fetch(`${API_BASE_URL}/ids/check-teacher/${encodeURIComponent(teacherId)}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  getCaptcha: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/captcha`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
   forgotPassword: async (email) => {
     const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
       method: 'POST',
@@ -31,22 +75,34 @@ export const api = {
       },
       body: JSON.stringify({ email }),
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
-  resetPassword: async (token, password) => {
-    const response = await fetch(`${API_BASE_URL}/auth/reset-password/${token}`, {
+  resetPassword: async (email, code, password) => {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ email, code, password }),
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
   verifyEmail: async (token, role) => {
     const response = await fetch(`${API_BASE_URL}/auth/verify-email/${token}?role=${role}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
@@ -145,6 +201,10 @@ export const api = {
         'x-auth-token': token,
       },
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
@@ -156,6 +216,10 @@ export const api = {
         'x-auth-token': token,
       },
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
@@ -168,6 +232,10 @@ export const api = {
         'x-auth-token': token,
       },
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
@@ -180,6 +248,10 @@ export const api = {
         'x-auth-token': token,
       },
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
@@ -194,6 +266,10 @@ export const api = {
       },
       body: JSON.stringify(gradeData),
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
@@ -206,6 +282,10 @@ export const api = {
       },
       body: JSON.stringify(studentData),
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
     return response.json();
   },
 
@@ -218,6 +298,39 @@ export const api = {
       },
       body: JSON.stringify(parentData),
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  // Get all students linked to the parent
+  getLinkedStudents: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/parents/linked-students`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  // Request to link an additional student
+  addStudentLink: async (studentId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/parents/add-student`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify({ studentId }),
+    });
     return response.json();
   },
 
@@ -229,6 +342,20 @@ export const api = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(teacherData),
+    });
+    return response.json();
+  },
+
+  // Register an admin (Admin only)
+  registerAdmin: async (adminData) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/admins/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify(adminData),
     });
     return response.json();
   },
@@ -435,6 +562,21 @@ export const api = {
   getDashboardStats: async () => {
     const token = getToken();
     const response = await fetch(`${API_BASE_URL}/stats/dashboard`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  // Get university health (departmental analytics)
+  getUniversityHealth: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/stats/health`, {
       headers: {
         'x-auth-token': token,
       },
@@ -726,7 +868,6 @@ export const api = {
     return response.json();
   },
 
-  // Notifications Broadcast & Direct
   // Notifications Broadcast & Direct
   sendBroadcast: async (broadcastData) => {
     const token = getToken();
@@ -1138,5 +1279,199 @@ export const api = {
     });
     return response.json();
   },
+
+  // ID Management
+  getStudentIDs: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/students`, {
+      headers: { 'x-auth-token': token },
+    });
+    return response.json();
+  },
+
+  addStudentID: async (data) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/students`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  },
+
+  updateStudentID: async (id, data) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/students/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  },
+
+  deleteStudentID: async (id) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/students/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-auth-token': token },
+    });
+    return response.json();
+  },
+
+  getTeacherIDs: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/teachers`, {
+      headers: { 'x-auth-token': token },
+    });
+    return response.json();
+  },
+
+  addTeacherID: async (data) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/teachers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  },
+
+  updateTeacherID: async (id, data) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/teachers/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  },
+
+  deleteTeacherID: async (id) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/teachers/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-auth-token': token },
+    });
+    return response.json();
+  },
+
+  // Batch upload IDs
+  batchUploadIDs: async (formData) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ids/upload`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+        // Content-Type is handled automatically for FormData
+      },
+      body: formData
+    });
+    return response.json();
+  },
+
+  // Get pending teacher registrations (admin)
+  getPendingTeachers: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/teachers/pending`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.msg || 'Failed to fetch pending teachers');
+    }
+    return response.json();
+  },
+
+  // Approve teacher registration (admin)
+  approveTeacher: async (id) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/teachers/${id}/approve`, {
+      method: 'PUT',
+      headers: {
+        'x-auth-token': token,
+      },
+      body: JSON.stringify({}),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.msg || 'Failed to approve teacher');
+    }
+    return response.json();
+  },
+
+  // Approve parent registration (admin)
+  approveParent: async (id) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/parents/${id}/approve`, {
+      method: 'PUT',
+      headers: {
+        'x-auth-token': token,
+      },
+      body: JSON.stringify({}),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.msg || 'Failed to approve parent');
+    }
+    return response.json();
+  },
+
+  // Get pending parent registrations (admin)
+  getPendingParents: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/parents/pending`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.msg || 'Failed to fetch pending parents');
+    }
+    return response.json();
+  },
+
+  // System Settings
+  getSettings: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/settings`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    return response.json();
+  },
+
+  updateSetting: async (key, value) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/settings/${key}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify({ value }),
+    });
+    return response.json();
+  },
+
+  getPublicSettings: async () => {
+    const response = await fetch(`${API_BASE_URL}/settings/public`);
+    return response.json();
+  }
 };
 

@@ -107,14 +107,25 @@ const authLimiter = rateLimit({
 });
 
 // Other middleware
-// Strict CORS Configuration
+// CORS Configuration - More permissive for mobile testing on same Wi-Fi
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174", "http://localhost:5175", "http://127.0.0.1:5175"],
+  origin: true, // Reflects the request origin, allowing any local IP to connect
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 };
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// HTTPS Enforcement in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      res.redirect(`https://${req.header('host')}${req.url}`);
+    } else {
+      next();
+    }
+  });
+}
 
 // Data Sanitization against XSS
 app.use(xss());
@@ -134,9 +145,11 @@ connectDB().then(() => {
 
 // Routes
 app.use('/api/auth', authLimiter, require('./routes/auth'));
+app.use('/api/settings', require('./routes/settings'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/parents', require('./routes/parents'));
 app.use('/api/teachers', require('./routes/teachers'));
+app.use('/api/admins', require('./routes/admins'));
 app.use('/api/grades', require('./routes/grades'));
 app.use('/api/links', require('./routes/links'));
 app.use('/api/notifications', require('./routes/notifications'));
@@ -156,6 +169,8 @@ app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/exams', require('./routes/exams'));
+app.use('/api/ids', require('./routes/ids'));
+app.use('/api/teacher-assignments', require('./routes/teacherAssignments'));
 app.use('/uploads/announcements', express.static('uploads/announcements'));
 app.use('/uploads/fees', express.static('uploads/fees'));
 
@@ -165,7 +180,7 @@ app.get('/', (req, res) => {
 });
 
 // Check email configuration
-if (process.env.GMAIL_USER && process.env.APP_PASSWORD) {
+if (process.env.GMAIL_USER && process.env.EMAIL_PASS) {
   console.log('Email service configured with: ' + process.env.GMAIL_USER);
 } else {
   console.log('WARNING: Email credentials missing in .env');

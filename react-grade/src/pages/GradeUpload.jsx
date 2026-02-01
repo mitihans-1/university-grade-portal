@@ -14,6 +14,8 @@ const GradeUpload = () => {
     immediateNotification: true,
     weeklySummary: true
   });
+  const [systemSettings, setSystemSettings] = useState(null);
+  const [isSubmissionOpen, setIsSubmissionOpen] = useState(true);
 
   // New single grade form
   const [newGrade, setNewGrade] = useState({
@@ -24,27 +26,38 @@ const GradeUpload = () => {
     score: '',
     creditHours: '3',
     semester: '',
-    academicYear: '2024',
+    academicYear: '',
     remarks: ''
   });
 
-  // Load students and grades from API
+  // Load students, grades, and system settings
   useEffect(() => {
-    const fetchStudentsAndGrades = async () => {
+    const fetchData = async () => {
       try {
-        // Fetch all grades for the admin
+        // Fetch public system settings first
+        const settings = await api.getPublicSettings();
+        setSystemSettings(settings);
+        if (settings) {
+          if (settings.grade_submission_open === 'false') {
+            setIsSubmissionOpen(false);
+          }
+          setNewGrade(prev => ({
+            ...prev,
+            academicYear: settings.current_year || '2024',
+            semester: settings.current_semester || '1'
+          }));
+        }
+
+        // Fetch all grades
         const gradesData = await api.getGrades();
-        setGrades(gradesData);
-        
-        // Also fetch all students to populate the dropdown
-        // We'll use the students from the grades data for now
-        // In a real implementation, you would fetch students separately
+        setGrades(gradesData || []);
+
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
-    
-    fetchStudentsAndGrades();
+
+    fetchData();
   }, []);
 
   const handleFileChange = (e) => {
@@ -57,6 +70,10 @@ const GradeUpload = () => {
   };
 
   const handleBulkUpload = async () => {
+    if (!isSubmissionOpen) {
+      alert('Grade submission is currently closed by administration.');
+      return;
+    }
     if (!file) {
       alert('Please select a file first');
       return;
@@ -66,13 +83,9 @@ const GradeUpload = () => {
     setUploadProgress(0);
 
     try {
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('file', file);
-
       // Send file to backend for processing using API utility
       const result = await api.bulkUploadGrades(file);
-      
+
       if (result.success) {
         setUploadProgress(100);
         alert(`Successfully uploaded ${file.name}! ${result.count || 'multiple'} grades added.`);
@@ -83,18 +96,21 @@ const GradeUpload = () => {
       // Fetch all grades to update the table
       const updatedGrades = await api.getGrades();
       setGrades(updatedGrades);
-      
+
       setIsUploading(false);
       setFile(null);
-      alert(`Successfully uploaded ${file.name}! ${successCount} grades added.`);
     } catch (error) {
       console.error('Error during bulk upload:', error);
       setIsUploading(false);
-      alert('An error occurred during bulk upload');
+      alert(error.message || 'An error occurred during bulk upload');
     }
   };
 
   const handleSingleUpload = async () => {
+    if (!isSubmissionOpen) {
+      alert('Grade submission is currently closed by administration.');
+      return;
+    }
     if (!newGrade.studentId || !newGrade.courseCode || !newGrade.grade) {
       alert('Please fill all required fields');
       return;
@@ -113,10 +129,10 @@ const GradeUpload = () => {
         academicYear: newGrade.academicYear,
         remarks: newGrade.remarks
       };
-      
+
       // Call the API to upload the grade
       const result = await api.uploadGrade(gradeData);
-      
+
       if (result && result.grade) {
         // Add the new grade to the current grades list immediately
         const newGradeRecord = result.grade;
@@ -129,8 +145,8 @@ const GradeUpload = () => {
           // If grade already exists, update it
           return prevGrades.map(g => g.id === newGradeRecord.id ? newGradeRecord : g);
         });
-        
-        // Reset form
+
+        // Reset form to defaults from settings
         setNewGrade({
           studentId: '',
           courseCode: '',
@@ -138,17 +154,17 @@ const GradeUpload = () => {
           grade: '',
           score: '',
           creditHours: '3',
-          semester: '',
-          academicYear: '2024',
+          semester: systemSettings?.current_semester || '',
+          academicYear: systemSettings?.current_year || '',
           remarks: ''
         });
-        
+
         // Also fetch all grades to ensure consistency (in background)
         setTimeout(async () => {
           const updatedGrades = await api.getGrades();
           setGrades(updatedGrades || []);
         }, 1000); // Update from server after 1 second
-        
+
         alert('Grade added successfully!');
       } else {
         alert(result.msg || 'Error uploading grade');
@@ -166,24 +182,24 @@ const GradeUpload = () => {
     try {
       // Update grade status via API
       const response = await api.updateGrade(id, { status: 'published' });
-      
+
       if (response.success) {
         // Update the grade in the current grades list immediately
-        setGrades(prevGrades => 
-          prevGrades.map(g => 
+        setGrades(prevGrades =>
+          prevGrades.map(g =>
             g.id === id ? { ...g, status: 'published', notified: true } : g
           )
         );
-        
+
         // Send notification to parent
         sendParentNotification(grade);
-        
+
         // Also fetch all grades to ensure consistency (in background)
         setTimeout(async () => {
           const updatedGrades = await api.getGrades();
           setGrades(updatedGrades || []);
         }, 1000); // Update from server after 1 second
-        
+
         alert('Grade published and parents notified!');
       } else {
         alert(response.msg || 'Error publishing grade');
@@ -209,19 +225,19 @@ const GradeUpload = () => {
       try {
         // Delete grade via API
         const response = await api.deleteGrade(id);
-        
+
         if (response.success) {
           // Remove the grade from the current grades list immediately
-          setGrades(prevGrades => 
+          setGrades(prevGrades =>
             prevGrades.filter(g => g.id !== id)
           );
-          
+
           // Also fetch all grades to ensure consistency (in background)
           setTimeout(async () => {
             const updatedGrades = await api.getGrades();
             setGrades(updatedGrades || []);
           }, 1000); // Update from server after 1 second
-          
+
           alert('Grade record deleted.');
         } else {
           alert(response.msg || 'Error deleting grade');
@@ -260,8 +276,8 @@ const GradeUpload = () => {
         </p>
 
         {/* Stats */}
-        <div style={{ 
-          display: 'grid', 
+        <div style={{
+          display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
           gap: '20px'
         }}>
@@ -331,10 +347,48 @@ const GradeUpload = () => {
           </button>
         </div>
 
+        {!isSubmissionOpen && (
+          <div style={{
+            backgroundColor: '#fff1f2',
+            border: '1px solid #fecaca',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            color: '#991b1b'
+          }}>
+            <span style={{ fontSize: '24px' }}>🔒</span>
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Grade Submission Closed</div>
+              <div style={{ fontSize: '14px' }}>The administration has locked grade submissions for the current period. You can still view existing records.</div>
+            </div>
+          </div>
+        )}
+
+        {isSubmissionOpen && systemSettings && (
+          <div style={{
+            backgroundColor: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            borderRadius: '8px',
+            padding: '12px 15px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#166534',
+            fontSize: '14px'
+          }}>
+            <span style={{ fontSize: '18px' }}>📅</span>
+            <span>Submitting for <strong>{systemSettings.current_year} {systemSettings.current_semester}</strong></span>
+          </div>
+        )}
+
         {/* Notification Settings */}
-        <div style={{ 
-          backgroundColor: '#f0f7ff', 
-          padding: '15px', 
+        <div style={{
+          backgroundColor: '#f0f7ff',
+          padding: '15px',
           borderRadius: '8px',
           marginBottom: '20px'
         }}>
@@ -395,7 +449,7 @@ const GradeUpload = () => {
             borderRadius: '8px'
           }}>
             <h3 style={{ margin: '0 0 15px 0' }}>Add Single Grade</h3>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
@@ -404,7 +458,7 @@ const GradeUpload = () => {
                 <input
                   type="text"
                   value={newGrade.studentId}
-                  onChange={(e) => setNewGrade({...newGrade, studentId: e.target.value})}
+                  onChange={(e) => setNewGrade({ ...newGrade, studentId: e.target.value })}
                   list="studentList"
                   style={{
                     width: '100%',
@@ -430,7 +484,7 @@ const GradeUpload = () => {
                 <input
                   type="text"
                   value={newGrade.courseCode}
-                  onChange={(e) => setNewGrade({...newGrade, courseCode: e.target.value})}
+                  onChange={(e) => setNewGrade({ ...newGrade, courseCode: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -449,7 +503,7 @@ const GradeUpload = () => {
               <input
                 type="text"
                 value={newGrade.courseName}
-                onChange={(e) => setNewGrade({...newGrade, courseName: e.target.value})}
+                onChange={(e) => setNewGrade({ ...newGrade, courseName: e.target.value })}
                 style={{
                   width: '100%',
                   padding: '10px',
@@ -467,7 +521,7 @@ const GradeUpload = () => {
                 </label>
                 <select
                   value={newGrade.grade}
-                  onChange={(e) => setNewGrade({...newGrade, grade: e.target.value})}
+                  onChange={(e) => setNewGrade({ ...newGrade, grade: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -495,7 +549,7 @@ const GradeUpload = () => {
                 <input
                   type="number"
                   value={newGrade.score}
-                  onChange={(e) => setNewGrade({...newGrade, score: e.target.value})}
+                  onChange={(e) => setNewGrade({ ...newGrade, score: e.target.value })}
                   min="0"
                   max="100"
                   style={{
@@ -514,7 +568,7 @@ const GradeUpload = () => {
                 </label>
                 <select
                   value={newGrade.creditHours}
-                  onChange={(e) => setNewGrade({...newGrade, creditHours: e.target.value})}
+                  onChange={(e) => setNewGrade({ ...newGrade, creditHours: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -539,7 +593,7 @@ const GradeUpload = () => {
                 <input
                   type="text"
                   value={newGrade.semester}
-                  onChange={(e) => setNewGrade({...newGrade, semester: e.target.value})}
+                  onChange={(e) => setNewGrade({ ...newGrade, semester: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -557,7 +611,7 @@ const GradeUpload = () => {
                 <input
                   type="text"
                   value={newGrade.academicYear}
-                  onChange={(e) => setNewGrade({...newGrade, academicYear: e.target.value})}
+                  onChange={(e) => setNewGrade({ ...newGrade, academicYear: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -575,7 +629,7 @@ const GradeUpload = () => {
               </label>
               <textarea
                 value={newGrade.remarks}
-                onChange={(e) => setNewGrade({...newGrade, remarks: e.target.value})}
+                onChange={(e) => setNewGrade({ ...newGrade, remarks: e.target.value })}
                 style={{
                   width: '100%',
                   padding: '10px',
@@ -613,7 +667,7 @@ const GradeUpload = () => {
             borderRadius: '8px'
           }}>
             <h3 style={{ margin: '0 0 15px 0' }}>Bulk Upload Grades</h3>
-            
+
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '10px', fontWeight: '500' }}>
                 Select CSV or Excel File
@@ -739,30 +793,30 @@ const GradeUpload = () => {
                 }
                 if (window.confirm(`Publish ${pendingGrades.length} pending grades and notify parents?`)) {
                   // Update the grades in the current grades list immediately
-                  setGrades(prevGrades => 
-                    prevGrades.map(grade => 
-                      grade.status === 'pending' 
+                  setGrades(prevGrades =>
+                    prevGrades.map(grade =>
+                      grade.status === 'pending'
                         ? (() => {
-                            sendParentNotification(grade);
-                            return { ...grade, status: 'published', notified: true };
-                          })()
+                          sendParentNotification(grade);
+                          return { ...grade, status: 'published', notified: true };
+                        })()
                         : grade
                     )
                   );
-                  
+
                   // Publish all pending grades
-                  const publishPromises = pendingGrades.map(grade => 
+                  const publishPromises = pendingGrades.map(grade =>
                     api.updateGrade(grade.id, { status: 'published' })
                   );
-                  
+
                   await Promise.all(publishPromises);
-                  
+
                   // Also fetch all grades to ensure consistency (in background)
                   setTimeout(async () => {
                     const updatedGrades = await api.getGrades();
                     setGrades(updatedGrades || []);
                   }, 1000); // Update from server after 1 second
-                  
+
                   alert(`Published ${pendingGrades.length} grades! Parents notified.`);
                 }
               }}

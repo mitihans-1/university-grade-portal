@@ -96,11 +96,13 @@ const sanitizeUser = (user, role) => {
     email: user.email,
     role: role, // Restore role for backward compatibility
     permissions: permissions, // Keep permissions for forward compatibility
+    profileImage: user.profileImage,
     // Role-specific fields
     ...(role === 'student' && {
       studentId: user.studentId,
       department: user.department,
-      year: user.year
+      year: user.year,
+      semester: user.semester
     }),
     ...(role === 'parent' && {
       phone: user.phone,
@@ -110,9 +112,11 @@ const sanitizeUser = (user, role) => {
       studentId: user.studentId
     }),
     ...(role === 'teacher' && {
-      employeeId: user.employeeId,
+      teacherId: user.teacherId,
       department: user.department,
-      subject: user.subject
+      subject: user.subject,
+      year: user.year,
+      semester: user.semester
     }),
     ...(role === 'admin' && {
       department: user.department

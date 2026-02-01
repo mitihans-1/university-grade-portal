@@ -30,6 +30,8 @@ const AdminUpload = () => {
   // Batch entry state
   const [batchInfo, setBatchInfo] = useState({
     course: '',
+    subject: '',
+    department: 'All',
     academicYear: '2024',
     semester: 'Fall 2024'
   });
@@ -44,6 +46,9 @@ const AdminUpload = () => {
     academicYear: '2024',
     semester: 'Fall 2024'
   });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [systemSettings, setSystemSettings] = useState(null);
 
   useEffect(() => {
     const fetchGrades = async () => {
@@ -73,13 +78,42 @@ const AdminUpload = () => {
       }
     };
 
-    // Only fetch data if user is an admin
-    if (user && user.role === 'admin') {
-      console.log('User is admin, fetching data...', user);
+    const fetchSettings = async () => {
+      try {
+        const data = await api.getPublicSettings();
+        setSystemSettings(data);
+      } catch (e) { console.error('Error fetching settings:', e); }
+    };
+
+    // Only fetch data if user has permission to enter grades (Admin or Teacher)
+    const canEnterGrades = user && (user.role === 'admin' || user.permissions?.includes('enter_grades'));
+
+    if (canEnterGrades) {
+      console.log('User has grade entry permission, fetching data...', user);
       fetchGrades();
       fetchStudents();
+      fetchSettings();
+
+      // Pre-fill filters for teachers
+      if (user.role === 'teacher') {
+        if (user.department) setSelectedDepartment(user.department);
+        if (user.year) setSelectedYear(user.year);
+        if (user.semester) setSelectedSemester(user.semester);
+
+        // Also update batch and single entry defaults
+        setBatchInfo(prev => ({
+          ...prev,
+          academicYear: String(user.year || prev.academicYear),
+          semester: user.semester || prev.semester
+        }));
+        setNewGrade(prev => ({
+          ...prev,
+          academicYear: String(user.year || prev.academicYear),
+          semester: user.semester || prev.semester
+        }));
+      }
     } else {
-      console.log('User is not admin or not logged in', user);
+      console.log('User does not have required permissions', user);
     }
   }, [user]);
 
@@ -162,7 +196,7 @@ const AdminUpload = () => {
         const gradeData = {
           studentId: student.studentId,
           courseCode: batchInfo.course,
-          courseName: batchInfo.course,
+          courseName: batchInfo.subject || batchInfo.course,
           grade: batchGrades[student.studentId].grade,
           score: parseFloat(batchGrades[student.studentId].score) || 0,
           creditHours: 3,
@@ -311,16 +345,40 @@ const AdminUpload = () => {
   };
 
   const gradesArray = Array.isArray(grades) ? grades : [];
-  const pendingGrades = gradesArray.filter(g => (g.status === 'pending' || g.status === 'Pending'));
-  const publishedGrades = gradesArray.filter(g => (g.status === 'published' || g.status === 'Published'));
 
-  const years = ['All', ...Array.from(new Set(students.map(s => s.year))).sort((a, b) => a - b)];
-  const departments = ['All', ...Array.from(new Set(students.map(s => s.department))).sort()];
+  // Get catalogs from settings or fallback to data-derived values
+  const departments = systemSettings?.departments ? JSON.parse(systemSettings.departments) :
+    ['All', ...Array.from(new Set(students.map(s => s.department))).sort()];
+  if (!departments.includes('All')) departments.unshift('All');
+
+  const years = systemSettings?.academic_years ? JSON.parse(systemSettings.academic_years) :
+    ['All', ...Array.from(new Set(students.map(s => s.year))).sort((a, b) => a - b)];
+  if (!years.includes('All')) years.unshift('All');
+
+  const semesters = systemSettings?.semesters ? JSON.parse(systemSettings.semesters) :
+    ['All', ...Array.from(new Set(students.map(s => s.semester))).sort()];
+  if (!semesters.includes('All')) semesters.unshift('All');
+
+  const coursesCatalog = systemSettings?.courses ? JSON.parse(systemSettings.courses) : [];
+
+  // Filter grades for teachers to only show their own submissions
+  const filteredGradeList = user?.role === 'teacher'
+    ? gradesArray.filter(g => g.uploadedBy === user?.teacherId)
+    : gradesArray;
+
+  const pendingGrades = filteredGradeList.filter(g => (g.status === 'pending' || g.status === 'Pending' || g.approvalStatus === 'pending_approval'));
+  const publishedGrades = filteredGradeList.filter(g => (g.status === 'published' || g.status === 'Published'));
 
   const filteredStudents = students.filter(s => {
-    const yearMatch = selectedYear === 'All' || s.year === selectedYear;
+    const yearMatch = selectedYear === 'All' || String(s.year) === String(selectedYear);
     const deptMatch = selectedDepartment === 'All' || s.department === selectedDepartment;
-    return yearMatch && deptMatch;
+    const semesterMatch = selectedSemester === 'All' || s.semester === selectedSemester;
+    const query = searchQuery.toLowerCase();
+    const searchMatch = !query ||
+      s.name?.toLowerCase().includes(query) ||
+      s.studentId?.toLowerCase().includes(query);
+
+    return yearMatch && deptMatch && semesterMatch && searchMatch;
   });
 
   const loadGradesForStudent = async (studentId) => {
@@ -407,6 +465,7 @@ const AdminUpload = () => {
     }
   };
 
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header Stats */}
@@ -417,9 +476,13 @@ const AdminUpload = () => {
         marginBottom: '25px',
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
-        <h1 style={{ margin: '0 0 20px 0', color: '#333' }}>Grade Management Portal</h1>
+        <h1 style={{ margin: '0 0 20px 0', color: '#333' }}>
+          {user?.role === 'admin' ? 'Administrative Grade Portal' : 'Teacher Grade Submission Portal'}
+        </h1>
         <p style={{ color: '#666', marginBottom: '20px' }}>
-          Upload and manage student grades. Parents receive automatic notifications when grades are published.
+          {user?.role === 'admin'
+            ? 'Access all student grades, perform bulk uploads, and publish results to parents and students.'
+            : 'Submit and manage course grades for your students. All entries require administrative approval before publishing.'}
         </p>
 
         <div style={{
@@ -429,9 +492,9 @@ const AdminUpload = () => {
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
-              {gradesArray.length}
+              {filteredGradeList.length}
             </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>Total Grades</div>
+            <div style={{ color: '#666', fontSize: '14px' }}>{user?.role === 'admin' ? 'Total Grades' : 'My Submissions'}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#ff9800', marginBottom: '5px' }}>
@@ -447,7 +510,7 @@ const AdminUpload = () => {
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#2196f3', marginBottom: '5px' }}>
-              {gradesArray.filter(g => g.notified).length}
+              {filteredGradeList.filter(g => g.notified).length}
             </div>
             <div style={{ color: '#666', fontSize: '14px' }}>Notifications Sent</div>
           </div>
@@ -648,37 +711,90 @@ const AdminUpload = () => {
               <h2 style={{ margin: 0, color: '#333' }}>Batch Group Entry</h2>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Course Code/Name</label>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Department</label>
+                <select
+                  value={batchInfo.department}
+                  onChange={(e) => {
+                    const dept = e.target.value;
+                    setBatchInfo({ ...batchInfo, department: dept });
+                    setSelectedDepartment(dept); // Sync with main filter
+                  }}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                >
+                  {departments.map((d) => (
+                    <option key={d} value={d}>{d === 'All' ? 'All Departments' : d}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Course Code</label>
                 <input
                   type="text"
                   value={batchInfo.course}
-                  onChange={(e) => setBatchInfo({ ...batchInfo, course: e.target.value })}
+                  list="course-codes"
+                  onChange={(e) => {
+                    const code = e.target.value.toUpperCase();
+                    const course = coursesCatalog.find(c => c.code === code);
+                    setBatchInfo({
+                      ...batchInfo,
+                      course: code,
+                      subject: course ? course.name : batchInfo.subject
+                    });
+                  }}
                   placeholder="e.g. CS101"
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 />
               </div>
               <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Subject Name</label>
+                <input
+                  type="text"
+                  value={batchInfo.subject}
+                  list="course-names"
+                  onChange={(e) => setBatchInfo({ ...batchInfo, subject: e.target.value })}
+                  placeholder="e.g. Introduction to Programming"
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                />
+              </div>
+
+              <datalist id="course-codes">
+                {coursesCatalog.map(c => <option key={c.code} value={c.code} />)}
+              </datalist>
+              <datalist id="course-names">
+                {coursesCatalog.map(c => <option key={c.code} value={c.name} />)}
+              </datalist>
+              <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Academic Year</label>
                 <select
                   value={batchInfo.academicYear}
-                  onChange={(e) => setBatchInfo({ ...batchInfo, academicYear: e.target.value })}
+                  onChange={(e) => {
+                    const year = e.target.value === 'All' ? 'All' : parseInt(e.target.value);
+                    setBatchInfo({ ...batchInfo, academicYear: String(year) });
+                    setSelectedYear(year); // Sync with main filter
+                  }}
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 >
-                  <option value="2024">2024</option>
-                  <option value="2025">2025</option>
+                  {years.map((y) => (
+                    <option key={y} value={y}>{y === 'All' ? 'Select Year' : `Year ${y}`}</option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Semester</label>
                 <select
                   value={batchInfo.semester}
-                  onChange={(e) => setBatchInfo({ ...batchInfo, semester: e.target.value })}
+                  onChange={(e) => {
+                    const sem = e.target.value;
+                    setBatchInfo({ ...batchInfo, semester: sem });
+                    setSelectedSemester(sem); // Sync with main filter
+                  }}
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 >
-                  <option value="Fall 2024">Fall 2024</option>
-                  <option value="Spring 2025">Spring 2025</option>
+                  {semesters.map((s) => (
+                    <option key={s} value={s}>{s === 'All' ? 'Select Semester' : s}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -791,11 +907,13 @@ const AdminUpload = () => {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Course</label>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Course Code / Name</label>
                 <input
                   type="text"
                   value={newGrade.course}
+                  list="course-names"
                   onChange={(e) => setNewGrade({ ...newGrade, course: e.target.value })}
+                  placeholder="Select or type course..."
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 />
               </div>
@@ -844,7 +962,9 @@ const AdminUpload = () => {
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: '#333' }}>Grade Records</h2>
+          <h2 style={{ margin: 0, color: '#333' }}>
+            {user?.role === 'admin' ? 'All Grade Records' : 'My Grade Submissions'}
+          </h2>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={async () => {
@@ -900,12 +1020,57 @@ const AdminUpload = () => {
                   <option key={y} value={y}>{y === 'All' ? 'All Years' : `Year ${y}`}</option>
                 ))}
               </select>
+              <select
+                value={selectedSemester}
+                onChange={(e) => setSelectedSemester(e.target.value)}
+                style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: 'white' }}
+              >
+                {semesters.map((s) => (
+                  <option key={s} value={s}>{s === 'All' ? 'All Semesters' : s}</option>
+                ))}
+              </select>
               <button
                 onClick={handleShowAll}
                 style={{ padding: '8px 12px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
               >
                 Show All Grades
               </button>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="🔍 Search student by ID or Name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 15px',
+                  borderRadius: '8px',
+                  border: '1px solid #ddd',
+                  fontSize: '15px'
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: '15px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: '#999',
+                    cursor: 'pointer',
+                    fontSize: '18px'
+                  }}
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
 
@@ -947,7 +1112,7 @@ const AdminUpload = () => {
               </tr>
             </thead>
             <tbody>
-              {gradesArray.map((grade) => (
+              {filteredGradeList.map((grade) => (
                 <tr key={grade.id}>
                   <td style={{ fontWeight: 'bold' }}>{grade.studentId}</td>
                   <td>{grade.studentName || 'N/A'}</td>
@@ -987,21 +1152,23 @@ const AdminUpload = () => {
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: '5px' }}>
-                      <button
-                        onClick={() => handlePublish(grade.id)}
-                        disabled={grade.status === 'published'}
-                        style={{
-                          padding: '5px 10px',
-                          backgroundColor: grade.status === 'published' ? '#ccc' : '#4caf50',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '3px',
-                          cursor: grade.status === 'published' ? 'not-allowed' : 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        {grade.status === 'published' ? 'Published' : 'Publish'}
-                      </button>
+                      {user?.role === 'admin' && (
+                        <button
+                          onClick={() => handlePublish(grade.id)}
+                          disabled={grade.status === 'published'}
+                          style={{
+                            padding: '5px 10px',
+                            backgroundColor: grade.status === 'published' ? '#ccc' : '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '3px',
+                            cursor: grade.status === 'published' ? 'not-allowed' : 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          {grade.status === 'published' ? 'Published' : 'Publish'}
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(grade.id)}
                         style={{
@@ -1024,33 +1191,34 @@ const AdminUpload = () => {
           </table>
         </div>
 
-        {/* "Publish All" Button under table as requested */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '15px', marginBottom: '15px' }}>
-          <button
-            onClick={async () => {
-              const result = await publishAllPendingGrades();
-              if (!result.success) {
-                alert('Error publishing grades: ' + result.error);
-              }
-            }}
-            disabled={pendingGrades.length === 0}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: pendingGrades.length > 0 ? '#4caf50' : '#ccc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: pendingGrades.length > 0 ? 'pointer' : 'not-allowed',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-            }}
-          >
-            Publish All Pending Grades ({pendingGrades.length})
-          </button>
-        </div>
+        {user?.role === 'admin' && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '15px', marginBottom: '15px' }}>
+            <button
+              onClick={async () => {
+                const result = await publishAllPendingGrades();
+                if (!result.success) {
+                  alert('Error publishing grades: ' + result.error);
+                }
+              }}
+              disabled={pendingGrades.length === 0}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: pendingGrades.length > 0 ? '#4caf50' : '#ccc',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: pendingGrades.length > 0 ? 'pointer' : 'not-allowed',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+              }}
+            >
+              Publish All Pending Grades ({pendingGrades.length})
+            </button>
+          </div>
+        )}
 
-        {selectedStudentId && pendingGrades.length > 0 && (
+        {user?.role === 'admin' && selectedStudentId && pendingGrades.length > 0 && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
             <button
               onClick={publishAllForSelected}

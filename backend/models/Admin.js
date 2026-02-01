@@ -47,10 +47,22 @@ const Admin = sequelize.define('Admin', {
     resetPasswordExpires: {
         type: DataTypes.DATE,
         allowNull: true
+    },
+    mfaToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    mfaExpires: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    profileImage: {
+        type: DataTypes.TEXT,
+        allowNull: true
     }
 }, {
     tableName: 'admins',
-    timestamps: true
+    timestamps: false
 });
 
 module.exports = Admin;

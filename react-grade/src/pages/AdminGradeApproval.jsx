@@ -109,6 +109,34 @@ const AdminGradeApproval = () => {
                 <p style={{ color: '#666' }}>Review and approve grades submitted by teachers before they are published to students and parents.</p>
             </div>
 
+            {pendingGrades.length > 0 && (
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '15px',
+                    marginBottom: '25px'
+                }}>
+                    {Object.entries(
+                        pendingGrades.reduce((acc, g) => {
+                            const dept = g.department || 'Other';
+                            acc[dept] = (acc[dept] || 0) + 1;
+                            return acc;
+                        }, {})
+                    ).map(([dept, count]) => (
+                        <div key={dept} style={{
+                            backgroundColor: 'white',
+                            padding: '15px',
+                            borderRadius: '10px',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                            borderLeft: '4px solid #1976d2'
+                        }}>
+                            <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', fontWeight: 'bold' }}>{dept}</div>
+                            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#333' }}>{count} <span style={{ fontSize: '14px', fontWeight: 'normal' }}>pending</span></div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
             {pendingGrades.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
                     <div style={{ fontSize: '64px', marginBottom: '20px' }}>✅</div>

@@ -5,7 +5,7 @@ const sequelize = new Sequelize(
   process.env.DB_NAME || 'gradeportal',
   process.env.DB_USER || 'root',
   process.env.DB_PASSWORD || '',
-  
+
   {
     host: process.env.DB_HOST || 'localhost',
     dialect: 'mysql',
@@ -25,7 +25,7 @@ const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('MySQL database connected successfully');
-    
+
     // Simple sync without altering to avoid constraint issues
     await sequelize.sync({ force: false });
     console.log('Database tables synchronized');

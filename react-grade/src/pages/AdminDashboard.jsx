@@ -7,18 +7,21 @@ import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalParents: 0,
     totalGrades: 0,
     pendingLinks: 0,
+    pendingTeachers: [],
+    pendingParents: [],
     recentGrades: []
   });
   const [error, setError] = useState(null);
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [hiddenGradeIds, setHiddenGradeIds] = useState([]);
+  const [healthStats, setHealthStats] = useState({ studentsByDept: [], teachersByDept: [] });
 
   // Load hidden grades from database on mount
   useEffect(() => {
@@ -57,13 +60,13 @@ const AdminDashboard = () => {
       : stats.recentGrades;
 
     if (gradesToRemove.length === 0) {
-      alert('No grades selected to remove.');
+      alert(t('noGradesSelectedToRemove'));
       return;
     }
 
     const confirmMessage = selectedGrades.length > 0
-      ? `Remove ${selectedGrades.length} selected grade(s) from recent grades display?`
-      : `Remove all ${stats.recentGrades.length} recent grades from display?`;
+      ? t('confirmRemoveGrades').replace('{count}', selectedGrades.length)
+      : t('confirmRemoveAllGrades');
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -81,10 +84,10 @@ const AdminDashboard = () => {
       // Clear selected grades
       setSelectedGrades([]);
 
-      alert(`Successfully removed ${gradesToRemove.length} grade(s) from recent display.`);
+      alert(t('successfullyRemoved').replace('{count}', gradesToRemove.length));
     } catch (error) {
       console.error('Error removing grades from display:', error);
-      alert('Failed to remove grades. Please try again.');
+      alert(t('failedToRemove'));
     }
   };
 
@@ -93,7 +96,13 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         setError(null);
-        const statsData = await api.getDashboardStats();
+        const [statsData, pendingTeachers, pendingParents, pendingGradeApprovals, healthData] = await Promise.all([
+          api.getDashboardStats(),
+          api.getPendingTeachers(),
+          api.getPendingParents(),
+          api.getPendingGradesForApproval(),
+          api.getUniversityHealth()
+        ]);
 
         if (statsData) {
           // Filter out hidden grades
@@ -106,11 +115,18 @@ const AdminDashboard = () => {
             totalParents: statsData.totalParents || 0,
             totalGrades: statsData.totalGrades || 0,
             pendingLinks: statsData.pendingLinks || 0,
+            pendingTeachers: pendingTeachers || [],
+            pendingParents: pendingParents || [],
+            pendingGradeApprovals: pendingGradeApprovals || [],
             recentGrades: visibleRecentGrades
           });
         }
+
+        if (healthData) {
+          setHealthStats(healthData);
+        }
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error('Error fetching dashboard data:', error);
         setError(error.message || 'Failed to fetch dashboard statistics');
       } finally {
         setLoading(false);
@@ -119,6 +135,23 @@ const AdminDashboard = () => {
 
     fetchStats();
   }, [hiddenGradeIds]);
+
+  const handleApprove = async (id, type) => {
+    try {
+      if (type === 'teacher') {
+        await api.approveTeacher(id);
+      } else if (type === 'parent') {
+        await api.approveParent(id);
+      }
+
+      alert(`${type.charAt(0).toUpperCase() + type.slice(1)} approved successfully!`);
+      // Refresh stats
+      window.location.reload();
+    } catch (error) {
+      console.error(`Error approving ${type}:`, error);
+      alert(`Failed to approve ${type}: ${error.message || 'Server error'}`);
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner fullScreen />;
@@ -135,7 +168,7 @@ const AdminDashboard = () => {
           marginBottom: '20px',
           border: '1px solid #ef5350'
         }}>
-          <h3>Error Loading Dashboard</h3>
+          <h3>{t('errorLoadingDashboard')}</h3>
           <p>{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -149,7 +182,7 @@ const AdminDashboard = () => {
               cursor: 'pointer'
             }}
           >
-            Retry
+            {t('retry')}
           </button>
         </div>
       </div>
@@ -179,11 +212,11 @@ const AdminDashboard = () => {
       link: '/admin/upload'
     },
     {
-      title: t('pendingRequests'),
-      value: stats.pendingLinks,
-      icon: '⏳',
-      color: '#9c27b0',
-      link: '/admin/link-requests'
+      title: 'Pending Grade Approvals',
+      value: stats.pendingGradeApprovals?.length || 0,
+      icon: '📋',
+      color: '#d32f2f',
+      link: '/admin/grade-approval'
     }
   ];
 
@@ -194,8 +227,50 @@ const AdminDashboard = () => {
           <h1 style={{ marginBottom: '8px', fontSize: '2rem', fontWeight: '800', color: '#1a237e' }}>{t('adminDashboard')}</h1>
           <p style={{ color: '#64748b', fontSize: '1.1rem' }}>{t('welcomeBack')}, <span style={{ fontWeight: '600', color: '#0f172a' }}>{user?.name}</span></p>
         </div>
-        <div style={{ backgroundColor: '#e3f2fd', padding: '10px 20px', borderRadius: '30px', color: '#1565c0', fontWeight: '600', fontSize: '14px', border: '1px solid #bbdefb' }}>
-          📅 {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          <div style={{
+            display: 'flex',
+            backgroundColor: '#fff',
+            padding: '10px 15px',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            gap: '20px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Workflow Health</div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                <div title="Pending Registrations" style={{ color: (stats.pendingTeachers.length + stats.pendingParents.length) > 0 ? '#f59e0b' : '#10b981', fontWeight: '800' }}>
+                  👤 {stats.pendingTeachers.length + stats.pendingParents.length}
+                </div>
+                <div title="Pending Grades" style={{ color: (stats.pendingGradeApprovals?.length || 0) > 0 ? '#ef4444' : '#10b981', fontWeight: '800' }}>
+                  📋 {stats.pendingGradeApprovals?.length || 0}
+                </div>
+                <div title="Link Requests" style={{ color: stats.pendingLinks > 0 ? '#3b82f6' : '#10b981', fontWeight: '800' }}>
+                  🔗 {stats.pendingLinks}
+                </div>
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/admin/add-admin"
+            style={{
+              backgroundColor: '#1a237e',
+              color: 'white',
+              padding: '10px 20px',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              fontWeight: '700',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 12px rgba(26, 35, 126, 0.2)',
+              transition: 'all 0.2s'
+            }}
+          >
+            <span>➕</span> {t('addAdministrator')}
+          </Link>
         </div>
       </div>
 
@@ -274,8 +349,150 @@ const AdminDashboard = () => {
       </div>
 
       <div style={{ marginTop: '30px' }}>
+        {/* University Health Snapshot */}
+        <div className="stagger-item" style={{
+          backgroundColor: 'white',
+          padding: '25px',
+          borderRadius: '16px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+          border: '1px solid rgba(0,0,0,0.05)',
+          marginBottom: '30px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', color: '#1e293b' }}>University Population by Department</h3>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>Operational Balance</div>
+          </div>
 
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '30px'
+          }}>
+            {/* Students Distribution */}
+            <div>
+              <h4 style={{ fontSize: '14px', color: '#64748b', marginBottom: '15px', textTransform: 'uppercase' }}>Student Distribution</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {healthStats.studentsByDept.length > 0 ? healthStats.studentsByDept.map(dept => (
+                  <div key={dept.department}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+                      <span style={{ fontWeight: '600' }}>{dept.department}</span>
+                      <span>{dept.count} students</span>
+                    </div>
+                    <div style={{ height: '6px', backgroundColor: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        backgroundColor: '#3b82f6',
+                        width: `${(dept.count / stats.totalStudents) * 100}%`,
+                        transition: 'width 1s ease-in-out'
+                      }} />
+                    </div>
+                  </div>
+                )) : <p style={{ fontSize: '13px', color: '#94a3b8' }}>No departmental data available</p>}
+              </div>
+            </div>
 
+            {/* Teachers Distribution */}
+            <div>
+              <h4 style={{ fontSize: '14px', color: '#64748b', marginBottom: '15px', textTransform: 'uppercase' }}>Teacher Workload</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {healthStats.teachersByDept.length > 0 ? healthStats.teachersByDept.map(dept => (
+                  <div key={dept.department}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+                      <span style={{ fontWeight: '600' }}>{dept.department}</span>
+                      <span>{dept.count} teachers</span>
+                    </div>
+                    <div style={{ height: '6px', backgroundColor: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        backgroundColor: '#10b981',
+                        width: `${(dept.count / (healthStats.teachersByDept.reduce((a, b) => a + parseInt(b.count), 0) || 1)) * 100}%`,
+                        transition: 'width 1s ease-in-out'
+                      }} />
+                    </div>
+                  </div>
+                )) : <p style={{ fontSize: '13px', color: '#94a3b8' }}>No teacher data available</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Approvals Section */}
+        {(stats.pendingTeachers.length > 0 || stats.pendingParents.length > 0) && (
+          <div className="stagger-item" style={{
+            backgroundColor: '#fffbeb',
+            padding: '25px',
+            borderRadius: '16px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            border: '1px solid #fde68a',
+            marginBottom: '30px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+              <span style={{ fontSize: '24px' }}>🔔</span>
+              <h3 style={{ margin: 0, fontSize: '18px', color: '#92400e' }}>Pending Approval Notifications</h3>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {stats.pendingTeachers.map((teacher) => (
+                <div key={`pending-t-${teacher.id}`} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: 'white',
+                  padding: '15px 20px',
+                  borderRadius: '12px',
+                  border: '1px solid #fef3c7'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '40px', height: '40px', backgroundColor: '#ecfdf5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👨‍🏫</div>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: '700', color: '#1e293b' }}>{teacher.name}</p>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+                        Teacher Registration • ID: {teacher.teacherId} • {teacher.department || 'General'}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8' }}>
+                        Assigned: Year {teacher.year || 'N/A'} • Semester {teacher.semester || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleApprove(teacher.id, 'teacher')}
+                    className="modern-btn"
+                    style={{ padding: '8px 16px', fontSize: '13px', background: 'linear-gradient(45deg, #10b981, #34d399)' }}
+                  >
+                    Approve Teacher
+                  </button>
+                </div>
+              ))}
+
+              {stats.pendingParents.map((parent) => (
+                <div key={`pending-p-${parent.id}`} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: 'white',
+                  padding: '15px 20px',
+                  borderRadius: '12px',
+                  border: '1px solid #fef3c7'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '40px', height: '40px', backgroundColor: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👨‍👩‍👧</div>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: '700', color: '#1e293b' }}>{parent.name}</p>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>Parent Registration • Linking to Student {parent.studentId}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleApprove(parent.id, 'parent')}
+                    className="modern-btn"
+                    style={{ padding: '8px 16px', fontSize: '13px', background: 'linear-gradient(45deg, #3b82f6, #60a5fa)' }}
+                  >
+                    Approve Parent
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="stagger-item" style={{
           backgroundColor: 'white',
@@ -296,7 +513,7 @@ const AdminDashboard = () => {
           }}>
             <div>
               <h3 style={{ margin: 0, fontSize: '18px', color: '#1e293b' }}>{t('recentGrades')}</h3>
-              <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '13px' }}>Manage the latest grade submissions</p>
+              <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '13px' }}>{t('manageRecentGrades')}</p>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -316,7 +533,7 @@ const AdminDashboard = () => {
                       transition: 'all 0.2s'
                     }}
                   >
-                    {selectedGrades.length === stats.recentGrades.length ? 'Deselect All' : 'Select All'}
+                    {selectedGrades.length === stats.recentGrades.length ? t('deselectAll') : t('selectAll')}
                   </button>
                   <button
                     onClick={handleDeleteRecentGrades}
@@ -336,7 +553,7 @@ const AdminDashboard = () => {
                       gap: '8px'
                     }}
                   >
-                    🗑️ Remove {selectedGrades.length > 0 ? `(${selectedGrades.length})` : ''}
+                    🗑️ {t('remove')} {selectedGrades.length > 0 ? `(${selectedGrades.length})` : ''}
                   </button>
                 </>
               )}
@@ -393,7 +610,7 @@ const AdminDashboard = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                         <span style={{ fontSize: '13px', color: '#64748b' }}>{grade.studentName}</span>
                         <span style={{ fontSize: '13px', color: '#cbd5e1' }}>•</span>
-                        <span style={{ fontSize: '13px', color: '#64748b' }}>Semester {grade.semester}</span>
+                        <span style={{ fontSize: '13px', color: '#64748b' }}>{t('semester')} {grade.semester}</span>
                       </div>
                     </div>
                   </div>

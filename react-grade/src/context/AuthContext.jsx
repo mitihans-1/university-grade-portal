@@ -56,6 +56,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await api.login(email, password);
 
+      if (result.mfaRequired) {
+        return { success: true, mfaRequired: true, email: result.email, role: result.role };
+      }
+
       if (result.token && result.user) {
         // Save token to localStorage
         localStorage.setItem('token', result.token);
@@ -66,7 +70,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.warn('Login attempt failed:', error);
-      return { success: false, message: 'An error occurred during login' };
+      return { success: false, message: error.message || 'An error occurred during login' };
     }
   };
 
@@ -83,18 +87,48 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const updatedUser = await api.updateProfile(profileData);
+      if (updatedUser) {
+        setUser(updatedUser);
+        return { success: true };
+      }
+      return { success: false, message: 'Failed to update profile' };
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return { success: false, message: error.message || 'An error occurred' };
+    }
+  };
+
+  const verifyMfa = async (mfaData) => {
+    try {
+      const result = await api.verifyMfa(mfaData);
+      if (result.token && result.user) {
+        localStorage.setItem('token', result.token);
+        setUser(result.user);
+        return { success: true, user: result.user };
+      } else {
+        return { success: false, message: result.msg || 'Verification failed' };
+      }
+    } catch (error) {
+      console.warn('MFA Verification failed:', error);
+      return { success: false, message: error.message || 'An error occurred' };
+    }
+  };
+
   const updateUser = (updatedData) => {
-    const updatedUser = { ...user, ...updatedData };
-    setUser(updatedUser);
-    // Note: In a real implementation, you would update the user via an API call
+    setUser(prev => ({ ...prev, ...updatedData }));
   };
 
   return (
     <AuthContext.Provider value={{
       user,
       login,
+      verifyMfa,
       logout,
       updateUser,
+      updateProfile,
       loading,
       hasPermission,
       hasAnyPermission,

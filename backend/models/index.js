@@ -24,4 +24,8 @@ Object.keys(models).forEach(modelName => {
   }
 });
 
+// Export sequelize instance along with models
+models.sequelize = sequelize;
+models.Sequelize = Sequelize;
+
 module.exports = models;

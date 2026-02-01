@@ -28,121 +28,155 @@ const ParentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
   const [attendanceSummary, setAttendanceSummary] = useState(null);
+  const [linkedStudents, setLinkedStudents] = useState([]);
+  const [selectedStudentId, setSelectedStudentId] = useState(user?.studentId || '');
+  const [showAddChildModal, setShowAddChildModal] = useState(false);
+  const [newChildId, setNewChildId] = useState('');
+  const [submittingLink, setSubmittingLink] = useState(false);
+  const [familyOverview, setFamilyOverview] = useState([]);
+
+  useEffect(() => {
+    const fetchLinkedStudents = async () => {
+      try {
+        const data = await api.getLinkedStudents();
+        let studentsList = [];
+        if (Array.isArray(data) && data.length > 0) {
+          studentsList = data;
+          setLinkedStudents(data);
+          if (!selectedStudentId) setSelectedStudentId(data[0].studentId);
+        } else if (user?.studentId) {
+          studentsList = [{
+            studentId: user.studentId,
+            name: user.name || 'Child',
+            department: user.department || 'N/A',
+            year: user.year || 'N/A'
+          }];
+          setLinkedStudents(studentsList);
+          setSelectedStudentId(user.studentId);
+        }
+
+        // Fetch overview data (GPA) for all students in parallel
+        if (studentsList.length > 0) {
+          const overviewPromises = studentsList.map(async (s) => {
+            try {
+              const analytics = await api.getStudentAnalytics(s.studentId);
+              return {
+                ...s,
+                gpa: analytics?.overallGPA || 0,
+                attendance: 0 // Could fetch this too if needed
+              };
+            } catch (e) {
+              return { ...s, gpa: 0 };
+            }
+          });
+          const overviewData = await Promise.all(overviewPromises);
+          setFamilyOverview(overviewData);
+        }
+      } catch (error) {
+        console.error('Error fetching linked students:', error);
+      }
+    };
+
+    if (user) fetchLinkedStudents();
+  }, [user]);
 
   useEffect(() => {
     const fetchParentData = async () => {
+      if (!selectedStudentId) return;
+
       try {
         setLoading(true);
 
-        // Initialize student info with user data first
-        if (user) {
-          setStudentInfo(prev => ({
-            ...prev,
-            name: user.name || prev.name,
-            id: user.studentId || prev.id,
-            email: user.email || prev.email
-          }));
-        }
-
-        // Fetch notifications for the parent
+        // Fetch notifications and alerts (these are parent-level, usually)
         try {
           const notificationsData = await api.getNotifications();
           setNotifications(Array.isArray(notificationsData) ? notificationsData : []);
-        } catch (error) {
-          console.error('Error fetching notifications:', error);
-          setNotifications([]);
-        }
-
-        // Fetch unread alerts count
-        try {
           const unreadAlerts = await api.getUnreadAlerts();
           setUnreadAlertsCount(Array.isArray(unreadAlerts) ? unreadAlerts.length : 0);
-        } catch (error) {
-          console.error('Error fetching alerts:', error);
-          setUnreadAlertsCount(0);
-        }
+        } catch (e) { console.error(e); }
 
-        // Get linked student information
-        // In a real implementation, we would fetch student details based on the link
-        // For now, we'll use the user's linked studentId to get grades
-        if (user && user.studentId) {
-          // Fetch grades for the linked student
-          try {
-            const gradesData = await api.getStudentGrades(user.studentId);
-            setGrades(Array.isArray(gradesData) ? gradesData : []);
-          } catch (error) {
-            console.error('Error fetching grades:', error);
-            setGrades([]);
-          }
-
-          // Fetch student details
-          try {
-            const studentData = await api.getStudentById(user.studentId);
-            if (studentData && studentData.msg !== 'Student not found') {
-              setStudentInfo(prev => ({
-                ...prev,
-                name: studentData.name || prev.name,
-                id: studentData.studentId || prev.id,
-                department: studentData.department || prev.department,
-                year: studentData.year || prev.year,
-                email: studentData.email || prev.email,
-                phone: studentData.phone || prev.phone,
-                advisor: studentData.advisor || prev.advisor,
-                advisorEmail: studentData.advisorEmail || prev.advisorEmail
-              }));
-            }
-          } catch (error) {
-            console.error('Error fetching student details:', error);
-          }
-
-          // Calculate GPA based on grades
+        // Fetch grades for the selected student
+        try {
+          const gradesData = await api.getStudentGrades(selectedStudentId);
+          setGrades(Array.isArray(gradesData) ? gradesData : []);
           const gpa = calculateGPA(gradesData || []);
           setStudentInfo(prev => ({ ...prev, gpa: gpa.toFixed(2) }));
-
-          // Fetch attendance summary
-          try {
-            const attendanceData = await api.getAttendanceSummary(user.studentId);
-            setAttendanceSummary(attendanceData);
-          } catch (error) {
-            console.error('Error fetching attendance summary:', error);
-          }
-
-          // Fetch Analytics for Performance History (GPA Trend)
-          try {
-            const analyticsData = await api.getStudentAnalytics(user.studentId);
-            if (analyticsData && analyticsData.semesterGPAs) {
-              setPerformanceHistory(analyticsData.semesterGPAs.map(item => ({
-                semester: item.semester,
-                gpa: item.gpa
-              })));
-
-              // Update student info with GPA from analytics if available
-              setStudentInfo(prev => ({
-                ...prev,
-                gpa: analyticsData.overallGPA || prev.gpa,
-                totalCredits: analyticsData.totalCredits,
-                totalCourses: analyticsData.totalCourses
-              }));
-            }
-          } catch (error) {
-            console.error('Error fetching analytics:', error);
-          }
+        } catch (error) {
+          console.error('Error fetching grades:', error);
+          setGrades([]);
         }
+
+        // Fetch student details
+        try {
+          const studentData = await api.getStudentById(selectedStudentId);
+          if (studentData && studentData.msg !== 'Student not found') {
+            setStudentInfo({
+              name: studentData.name,
+              id: studentData.studentId,
+              department: studentData.department,
+              year: studentData.year,
+              email: studentData.email,
+              phone: studentData.phone,
+              advisor: studentData.advisor || 'Not Assigned',
+              advisorEmail: studentData.advisorEmail || '',
+              gpa: studentInfo.gpa // Keep previously calculated GPA
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching student details:', error);
+        }
+
+        // Fetch attendance summary
+        try {
+          const attendanceData = await api.getAttendanceSummary(selectedStudentId);
+          setAttendanceSummary(attendanceData);
+        } catch (e) { console.error(e); }
+
+        // Fetch Analytics
+        try {
+          const analyticsData = await api.getStudentAnalytics(selectedStudentId);
+          if (analyticsData && analyticsData.semesterGPAs) {
+            setPerformanceHistory(analyticsData.semesterGPAs.map(item => ({
+              semester: item.semester,
+              gpa: item.gpa
+            })));
+            setStudentInfo(prev => ({
+              ...prev,
+              gpa: analyticsData.overallGPA || prev.gpa
+            }));
+          }
+        } catch (e) { console.error(e); }
+
       } catch (error) {
-        console.error('Error fetching parent data:', error);
-        // Set empty arrays in case of error
-        setGrades([]);
-        setNotifications([]);
-        setPerformanceHistory([]);
+        console.error('Error in fetchParentData:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (user) {
+    if (user && selectedStudentId) {
       fetchParentData();
     }
-  }, [user]);
+  }, [user, selectedStudentId]);
+
+  const handleAddChild = async (e) => {
+    e.preventDefault();
+    if (!newChildId.trim()) return;
+
+    setSubmittingLink(true);
+    try {
+      const result = await api.addStudentLink(newChildId);
+      alert(result.msg || 'Request sent');
+      if (!result.error) {
+        setNewChildId('');
+        setShowAddChildModal(false);
+      }
+    } catch (error) {
+      alert('Failed to request link: ' + error.message);
+    } finally {
+      setSubmittingLink(false);
+    }
+  };
 
   const calculateGPA = (gradesList) => {
     const gradePoints = {
@@ -222,6 +256,80 @@ const ParentDashboard = () => {
       {/* Main Content */}
       <div className="fade-in">
         <div>
+          {/* Family Academic Overview - Only show if multiple children */}
+          {familyOverview.length > 1 && (
+            <div className="stagger-item" style={{ marginBottom: '25px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1a531b', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>🏠</span> Family Academic Overview
+                </h2>
+                <span style={{ fontSize: '0.9rem', color: '#666', backgroundColor: '#e8f5e9', padding: '4px 12px', borderRadius: '15px' }}>
+                  {familyOverview.length} Children Linked
+                </span>
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '20px'
+              }}>
+                {familyOverview.map(child => (
+                  <div
+                    key={child.studentId}
+                    onClick={() => setSelectedStudentId(child.studentId)}
+                    style={{
+                      backgroundColor: 'white',
+                      borderRadius: '12px',
+                      padding: '15px',
+                      boxShadow: selectedStudentId === child.studentId ? '0 4px 15px rgba(46, 125, 50, 0.2)' : '0 2px 8px rgba(0,0,0,0.05)',
+                      border: selectedStudentId === child.studentId ? '2px solid #2e7d32' : '2px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {selectedStudentId === child.studentId && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        backgroundColor: '#2e7d32',
+                        color: 'white',
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        fontSize: '10px',
+                        fontWeight: 'bold'
+                      }}>SELECTED</div>
+                    )}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        backgroundColor: '#f1f8e9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '20px'
+                      }}>
+                        {child.gpa >= 3.5 ? '🌟' : child.gpa >= 3.0 ? '📚' : '📖'}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#333' }}>{child.name}</h3>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>{child.department}</p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#666', fontWeight: 'bold' }}>GPA</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: '800', color: child.gpa >= 3.0 ? '#2e7d32' : '#f44336' }}>
+                          {child.gpa ? child.gpa.toFixed(2) : '0.00'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Student Info Card */}
           <div className="stagger-item" style={{
@@ -247,10 +355,41 @@ const ParentDashboard = () => {
                     justifyContent: 'center',
                     fontSize: '30px'
                   }}>
-                    👨‍🎓
+                    {loading ? '⏳' : '👨‍🎓'}
                   </div>
-                  <div>
-                    <h1 style={{ margin: '0 0 5px 0', color: '#333' }}>{loading ? t('loading') : studentInfo.name}</h1>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <h1 style={{ margin: '0 0 5px 0', color: '#333' }}>
+                        {loading ? t('loading') : studentInfo.name}
+                      </h1>
+                      {linkedStudents.length > 1 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontSize: '10px', color: '#2e7d32', fontWeight: 'bold', textTransform: 'uppercase' }}>Switch Child</span>
+                          <select
+                            value={selectedStudentId}
+                            onChange={(e) => setSelectedStudentId(e.target.value)}
+                            style={{
+                              padding: '5px 12px',
+                              borderRadius: '20px',
+                              border: '2px solid #2e7d32',
+                              fontSize: '0.85rem',
+                              backgroundColor: 'white',
+                              color: '#2e7d32',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              outline: 'none',
+                              boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                            }}
+                          >
+                            {linkedStudents.map(s => (
+                              <option key={s.studentId} value={s.studentId}>
+                                {s.name} ({s.studentId})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
                     <p style={{ margin: 0, color: '#666' }}>
                       {user?.relationship || t('parent')} • ID: {loading ? t('loading') : studentInfo.id}
                     </p>
@@ -321,6 +460,25 @@ const ParentDashboard = () => {
                   <span>📄</span>
                   {t('downloadReport')}
                 </button>
+                <button
+                  onClick={() => setShowAddChildModal(true)}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '16px',
+                    marginTop: '5px'
+                  }}
+                >
+                  <span>➕</span>
+                  Link Another Child
+                </button>
               </div>
             </div>
           </div>
@@ -349,144 +507,7 @@ const ParentDashboard = () => {
             </div>
           )}
 
-          {/* Quick Actions Card */}
-          <div className="stagger-item" style={{
-            backgroundColor: 'white',
-            borderRadius: '10px',
-            padding: '25px',
-            marginBottom: '25px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span>⚡</span> {t('quickActions')}
-            </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '15px'
-            }}>
-              <Link
-                to="/parent/grades"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '15px',
-                  backgroundColor: '#f1f8e9',
-                  color: '#2e7d32',
-                  textDecoration: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <span style={{ fontSize: '20px' }}>📚</span> {t('viewChildGrades')}
-              </Link>
-              <Link
-                to="/parent/notifications"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '15px',
-                  backgroundColor: '#fff3e0',
-                  color: '#ef6c00',
-                  textDecoration: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <span style={{ fontSize: '20px' }}>🔔</span> {t('notifications')}
-              </Link>
-              <Link
-                to="/parent/link-student"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '15px',
-                  backgroundColor: '#e3f2fd',
-                  color: '#1565c0',
-                  textDecoration: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <span style={{ fontSize: '20px' }}>🔗</span> {t('linkNewStudent')}
-              </Link>
-              <Link
-                to="/student/attendance"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '15px',
-                  backgroundColor: '#e8f5e9',
-                  color: '#2e7d32',
-                  textDecoration: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <span style={{ fontSize: '20px' }}>📅</span> {t('attendance')}
-              </Link>
-              <Link
-                to="/messages"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '15px',
-                  backgroundColor: '#e3f2fd',
-                  color: '#1976d2',
-                  textDecoration: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <span style={{ fontSize: '20px' }}>💬</span> Messages
-              </Link>
-              <Link
-                to="/settings"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '15px',
-                  backgroundColor: '#f5f5f5',
-                  color: '#424242',
-                  textDecoration: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <span style={{ fontSize: '20px' }}>⚙️</span> {t('settings')}
-              </Link>
-            </div>
-          </div>
+
 
           <div style={{
             display: 'grid',
@@ -533,6 +554,7 @@ const ParentDashboard = () => {
                       <thead>
                         <tr style={{ backgroundColor: '#f5f5f5' }}>
                           <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>{t('courseName')}</th>
+                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Lecturer</th>
                           <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>{t('grade')}</th>
                           <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>{t('score')}</th>
                           <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>{t('status')}</th>
@@ -542,6 +564,9 @@ const ParentDashboard = () => {
                         {grades.map((item, index) => (
                           <tr key={item.id || index} style={{ borderBottom: '1px solid #eee' }}>
                             <td style={{ padding: '12px', fontWeight: 'bold' }}>{item.courseName || 'N/A'}</td>
+                            <td style={{ padding: '12px', fontSize: '13px', color: '#666' }}>
+                              {item.Teacher ? item.Teacher.name : 'University Admin'}
+                            </td>
                             <td style={{ padding: '12px' }}>
                               <span style={{
                                 backgroundColor: getGradeColor(item.grade),
@@ -776,6 +801,70 @@ const ParentDashboard = () => {
                   {t('sendMessage')}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Child Modal */}
+        {showAddChildModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '12px',
+              maxWidth: '400px',
+              width: '100%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+            }}>
+              <h3 style={{ margin: '0 0 15px 0', fontSize: '1.25rem', color: '#1f2937' }}>Link Another Child</h3>
+              <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '20px' }}>
+                Enter your child's official university ID to request an academic link.
+              </p>
+
+              <form onSubmit={handleAddChild}>
+                <div className="modern-input-group">
+                  <label className="modern-input-label">Student ID *</label>
+                  <input
+                    type="text"
+                    value={newChildId}
+                    onChange={(e) => setNewChildId(e.target.value)}
+                    className="modern-input"
+                    placeholder="e.g. UGR/1234/14"
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddChildModal(false)}
+                    className="modern-btn"
+                    style={{ flex: 1, backgroundColor: '#94a3b8' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="modern-btn"
+                    disabled={submittingLink}
+                    style={{ flex: 1, backgroundColor: '#2e7d32' }}
+                  >
+                    {submittingLink ? 'Sending...' : 'Request Link'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

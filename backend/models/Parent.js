@@ -68,6 +68,10 @@ const Parent = sequelize.define('Parent', {
   isEmailVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  profileImage: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
 }, {
   tableName: 'parents',
