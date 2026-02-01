@@ -4,9 +4,15 @@ const IdentityCard = () => {
     const { user } = useAuth();
     const { t } = useLanguage();
 
-    if (!user || !(user.permissions?.includes('view_own_grades') && !user.permissions?.includes('view_child_grades'))) {
+    if (!user || user.role === 'admin') {
         return <div style={{ padding: '20px' }}>Access Denied</div>;
     }
+
+    const isTeacher = user.role === 'teacher';
+    const roleColor = isTeacher ? '#9c27b0' : '#1e3c72';
+    const backgroundGradient = isTeacher
+        ? 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)'
+        : 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)';
 
     const handlePrint = () => {
         window.print();
@@ -14,9 +20,10 @@ const IdentityCard = () => {
 
     // Prepare QR data
     const qrData = JSON.stringify({
-        role: 'student',
-        id: user.id || user.studentId,
+        role: user.role,
+        id: user.id || user.studentId || user.teacherId,
         studentId: user.studentId,
+        teacherId: user.teacherId,
         name: user.name,
         department: user.department,
         year: user.year,
@@ -27,14 +34,14 @@ const IdentityCard = () => {
         <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
             <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                 <div>
-                    <h1 style={{ margin: '0 0 10px 0' }}>🪪 {t('studentIdCard') || 'Student ID Card'}</h1>
+                    <h1 style={{ margin: '0 0 10px 0' }}>🪪 {isTeacher ? (t('teacherIdCard') || 'Teacher ID Card') : (t('studentIdCard') || 'Student ID Card')}</h1>
                     <p style={{ color: '#666' }}>Your official digital notification of identity.</p>
                 </div>
                 <button
                     onClick={handlePrint}
                     style={{
                         padding: '10px 20px',
-                        backgroundColor: '#2196f3',
+                        backgroundColor: roleColor,
                         color: 'white',
                         border: 'none',
                         borderRadius: '5px',
@@ -54,7 +61,7 @@ const IdentityCard = () => {
                     width: '450px',
                     height: '280px',
                     borderRadius: '15px',
-                    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                    background: backgroundGradient,
                     color: 'white',
                     padding: '25px',
                     boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
@@ -79,14 +86,14 @@ const IdentityCard = () => {
                                 borderRadius: '50%',
                                 display: 'flex', justifyContent: 'center', alignItems: 'center'
                             }}>
-                                <Award color="#1e3c72" size={24} />
+                                <Award color={roleColor} size={24} />
                             </div>
                             <div>
                                 <div style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>University Portal</div>
-                                <div style={{ fontSize: '10px', opacity: 0.8 }}>Official Student ID</div>
+                                <div style={{ fontSize: '10px', opacity: 0.8 }}>Official {isTeacher ? 'Teacher' : 'Student'} ID</div>
                             </div>
                         </div>
-                        {user.isVerified && (
+                        {(user.isVerified || user.status === 'active') && (
                             <div style={{
                                 backgroundColor: '#4caf50',
                                 color: 'white',
@@ -133,7 +140,7 @@ const IdentityCard = () => {
                         <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '2px' }}>{user.name}</div>
                             <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '12px', color: '#ffd700', fontWeight: 'bold' }}>
-                                ID: {user.studentId}
+                                ID: {isTeacher ? user.teacherId : user.studentId}
                             </div>
 
                             <div style={{ marginBottom: '12px' }}>
@@ -143,13 +150,17 @@ const IdentityCard = () => {
 
                             <div style={{ marginBottom: '12px' }}>
                                 <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Department</div>
-                                <div style={{ fontSize: '13px', fontWeight: '500' }}>{user.department}</div>
+                                <div style={{ fontSize: '13px', fontWeight: '500' }}>{user.department || 'General'}</div>
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <div>
-                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Year</div>
+                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>{isTeacher ? 'Assigned Year' : 'Year'}</div>
                                     <div style={{ fontSize: '12px' }}>{user.year || 'N/A'}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Semester</div>
+                                    <div style={{ fontSize: '12px' }}>{user.semester || 'N/A'}</div>
                                 </div>
                                 <div>
                                     <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Issued</div>

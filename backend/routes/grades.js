@@ -30,7 +30,7 @@ const upload = multer({ storage: storage });
 // @access  Private (admin only)
 router.post('/upload', auth, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!req.user.permissions.includes('manage_grades') && !req.user.permissions.includes('enter_grades')) {
       return res.status(403).json({ msg: 'Access denied' });
     }
 
@@ -64,7 +64,7 @@ router.post('/upload', auth, async (req, res) => {
       creditHours,
       semester,
       published: req.user.role === 'admin' ? published : false, // Teachers' grades not published until approved
-      uploadedBy: req.user.id,
+      uploadedBy: req.user.teacherId || String(req.user.id),
       approvalStatus,
       submittedDate: new Date()
     });
@@ -256,7 +256,7 @@ router.get('/my-grades', auth, async (req, res) => {
 // @access  Private (admin only)
 router.put('/:id', auth, async (req, res) => {
   try {
-    if (!req.user.permissions.includes('manage_grades')) {
+    if (!req.user.permissions.includes('manage_grades') && !req.user.permissions.includes('enter_grades')) {
       return res.status(403).json({ msg: 'Access denied' });
     }
 
@@ -418,7 +418,9 @@ router.get('/', auth, async (req, res) => {
           semester: grade.semester,
           academicYear: grade.academicYear || '2024',
           remarks: grade.remarks || '',
-          status: grade.published ? 'published' : 'pending',
+          status: grade.published ? 'published' : (grade.approvalStatus || 'pending'),
+          approvalStatus: grade.approvalStatus,
+          uploadedBy: grade.uploadedBy,
           notified: false, // This can be updated based on notification status
           uploadedDate: grade.uploadDate || new Date()
         });
@@ -436,7 +438,9 @@ router.get('/', auth, async (req, res) => {
           semester: grade.semester,
           academicYear: grade.academicYear || '2024',
           remarks: grade.remarks || '',
-          status: grade.published ? 'published' : 'pending',
+          status: grade.published ? 'published' : (grade.approvalStatus || 'pending'),
+          approvalStatus: grade.approvalStatus,
+          uploadedBy: grade.uploadedBy,
           notified: false,
           uploadedDate: grade.uploadDate || new Date()
         });
@@ -455,7 +459,7 @@ router.get('/', auth, async (req, res) => {
 // @access  Private (admin only)
 router.delete('/:id', auth, async (req, res) => {
   try {
-    if (!req.user.permissions.includes('manage_grades')) {
+    if (!req.user.permissions.includes('manage_grades') && !req.user.permissions.includes('enter_grades')) {
       return res.status(403).json({ msg: 'Access denied' });
     }
 
@@ -480,7 +484,7 @@ router.delete('/:id', auth, async (req, res) => {
 // @access  Private (admin only)
 router.post('/upload-bulk', upload.single('file'), auth, async (req, res) => {
   try {
-    if (!req.user.permissions.includes('manage_grades')) {
+    if (!req.user.permissions.includes('manage_grades') && !req.user.permissions.includes('enter_grades')) {
       return res.status(403).json({ msg: 'Access denied' });
     }
 
@@ -544,7 +548,7 @@ router.post('/upload-bulk', upload.single('file'), auth, async (req, res) => {
           semester: row.Semester || 'Spring 2025',
           academicYear: row.AcademicYear || '2024',
           remarks: row.Remarks || '',
-          uploadedBy: req.user.id
+          uploadedBy: req.user.teacherId || String(req.user.id)
         });
 
         successCount++;
@@ -683,7 +687,9 @@ router.get('/pending-approval', auth, async (req, res) => {
     for (const grade of pendingGrades) {
       const student = await Student.findOne({ where: { studentId: grade.studentId } });
       const Teacher = models.Teacher;
-      const teacher = await Teacher.findByPk(grade.uploadedBy);
+      const teacher = isNaN(grade.uploadedBy)
+        ? await Teacher.findOne({ where: { teacherId: grade.uploadedBy } })
+        : await Teacher.findByPk(grade.uploadedBy);
 
       formattedGrades.push({
         id: grade.id,

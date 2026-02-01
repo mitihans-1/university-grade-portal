@@ -49,14 +49,25 @@ const StudentDashboard = () => {
   const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [attendanceSummary, setAttendanceSummary] = useState(null);
+  const [systemSettings, setSystemSettings] = useState(null);
 
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
         setLoading(true);
+        // Fetch current system settings
+        const settings = await api.getPublicSettings();
+        setSystemSettings(settings);
+
         // Fetch student's grades
         const gradesData = await api.getMyGrades();
-        setGrades(Array.isArray(gradesData) ? gradesData : []);
+        const allGrades = Array.isArray(gradesData) ? gradesData : [];
+
+        // You could filter here for current semester if desired, 
+        // but often students want to see cumulative stats.
+        // For now, we'll keep allGrades for cumulative GPA, 
+        // but we might want a filtered list for "Current Semester" display.
+        setGrades(allGrades);
 
         // Fetch attendance summary
         try {
@@ -68,7 +79,6 @@ const StudentDashboard = () => {
       } catch (error) {
         console.error('Error fetching student data:', error);
         setGrades([]);
-        // Optionally show an error message to the user
       } finally {
         setLoading(false);
       }
@@ -138,16 +148,80 @@ const StudentDashboard = () => {
               marginBottom: '30px',
               boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
               borderLeft: '6px solid #1976d2',
-              background: 'linear-gradient(to right, #ffffff, #f8faff)'
+              background: 'linear-gradient(to right, #ffffff, #f8faff)',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
+              {systemSettings && (
+                <div style={{
+                  position: 'absolute',
+                  top: '15px',
+                  right: '15px',
+                  backgroundColor: '#e3f2fd',
+                  color: '#1565c0',
+                  padding: '5px 12px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  border: '1px solid #bbdefb'
+                }}>
+                  📅 {systemSettings.current_year} {systemSettings.current_semester}
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                 <div>
                   <h1 style={{ margin: '0 0 10px 0', color: '#1a237e', fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}>
                     {t('welcomeMessage').replace('{name}', user?.name || 'Student')}
                   </h1>
-                  <p style={{ margin: 0, color: '#546e7a', fontSize: '1rem' }}>
-                    <span style={{ fontWeight: '600' }}>{user?.studentId || 'UGR/1234/14'}</span> • {user?.department || t('computerScience')} • {t('yearNumber').replace('{year}', user?.year || '3')} • {t('semester')} {user?.semester || '1'}
-                  </p>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{
+                      backgroundColor: '#f1f5f9',
+                      padding: '4px 12px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      color: '#475569',
+                      fontWeight: '600',
+                      border: '1px solid #e2e8f0'
+                    }}>
+                      🆔 {user?.studentId}
+                    </div>
+                    <div style={{
+                      backgroundColor: '#e0f2fe',
+                      padding: '4px 12px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      color: '#0369a1',
+                      fontWeight: '600',
+                      border: '1px solid #bae6fd'
+                    }}>
+                      🏢 {user?.department || 'General Science'}
+                    </div>
+                    <div style={{
+                      backgroundColor: '#fef3c7',
+                      padding: '4px 12px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      color: '#b45309',
+                      fontWeight: '600',
+                      border: '1px solid #fde68a'
+                    }}>
+                      🎓 {t('yearNumber').replace('{year}', user?.year || '1')}
+                    </div>
+                    <div style={{
+                      backgroundColor: '#f3e8ff',
+                      padding: '4px 12px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      color: '#7e22ce',
+                      fontWeight: '600',
+                      border: '1px solid #e9d5ff'
+                    }}>
+                      📚 {t('semester')} {user?.semester || '1'}
+                    </div>
+                  </div>
                 </div>
                 <div style={{ textAlign: 'center', minWidth: '140px', padding: '15px', backgroundColor: '#e3f2fd', borderRadius: '12px', flex: '1 1 auto' }}>
                   <div style={{ fontSize: '14px', color: '#1565c0', marginBottom: '5px', fontWeight: 'bold' }}>{t('currentGPA')}</div>
@@ -184,71 +258,44 @@ const StudentDashboard = () => {
             )}
 
             <div className="grid-container" style={{
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              alignItems: 'start'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '20px'
             }}>
-              {/* Quick Actions */}
-              <div className="stagger-item" style={{
-                backgroundColor: 'white',
-                padding: '30px',
-                borderRadius: '16px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-              }}>
-                <h3 style={{ marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '12px', color: '#1a237e' }}>
-                  <span style={{ fontSize: '24px' }}>⚡</span> {t('quickActions')}
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <QuickActionLink to="/student/grades" icon="📚" label={t('viewMyGrades')} />
-                  <QuickActionLink to="/student/notifications" icon="🔔" label={t('notifications')} />
-                  <QuickActionLink to="/student/attendance" icon="📅" label={t('myAttendance')} />
-                  <QuickActionLink to="/student/assignments" icon="📝" label="My Assignments" />
-                  <QuickActionLink to="/messages" icon="💬" label="Messages" />
-                  <QuickActionLink to="/student/id-card" icon="🪪" label="My Digital ID" />
-                  <QuickActionLink to="/settings" icon="⚙️" label={t('settings')} />
-                </div>
+              <div className="stagger-item">
+                <SummaryCard
+                  to="/student/grades"
+                  icon="📖"
+                  value={Array.isArray(grades) ? grades.length : 0}
+                  label={t('coursesTaken')}
+                  color="#1976d2"
+                />
               </div>
-
-              {/* Summary Stats Grid */}
-              <div className="grid-container" style={{
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: '15px'
-              }}>
-                <div className="stagger-item">
-                  <SummaryCard
-                    to="/student/grades"
-                    icon="📖"
-                    value={Array.isArray(grades) ? grades.length : 0}
-                    label={t('coursesTaken')}
-                    color="#1976d2"
-                  />
-                </div>
-                <div className="stagger-item">
-                  <SummaryCard
-                    to="/student/grades"
-                    icon="🎓"
-                    value={Array.isArray(grades) ? grades.reduce((sum, g) => sum + (g.creditHours || 3), 0) : 0}
-                    label={t('totalCredits')}
-                    color="#2e7d32"
-                  />
-                </div>
-                <div className="stagger-item">
-                  <SummaryCard
-                    to="/student/grades"
-                    icon="✅"
-                    value={Array.isArray(grades) ? grades.filter(g => (g.score || 0) >= 50).length : 0}
-                    label={t('passedCourses')}
-                    color="#ed6c02"
-                  />
-                </div>
-                <div className="stagger-item">
-                  <SummaryCard
-                    to="/student/attendance"
-                    icon="📅"
-                    value={attendanceSummary ? `${attendanceSummary.percentage}%` : 'N/A'}
-                    label={t('attendanceRecord')}
-                    color="#9c27b0"
-                  />
-                </div>
+              <div className="stagger-item">
+                <SummaryCard
+                  to="/student/grades"
+                  icon="🎓"
+                  value={Array.isArray(grades) ? grades.reduce((sum, g) => sum + (g.creditHours || 3), 0) : 0}
+                  label={t('totalCredits')}
+                  color="#2e7d32"
+                />
+              </div>
+              <div className="stagger-item">
+                <SummaryCard
+                  to="/student/grades"
+                  icon="✅"
+                  value={Array.isArray(grades) ? grades.filter(g => (g.score || 0) >= 50).length : 0}
+                  label={t('passedCourses')}
+                  color="#ed6c02"
+                />
+              </div>
+              <div className="stagger-item">
+                <SummaryCard
+                  to="/student/attendance"
+                  icon="📅"
+                  value={attendanceSummary ? `${attendanceSummary.percentage}%` : 'N/A'}
+                  label={t('attendanceRecord')}
+                  color="#9c27b0"
+                />
               </div>
             </div>
           </div>

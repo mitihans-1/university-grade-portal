@@ -5,6 +5,7 @@ const Student = models.Student;
 const Parent = models.Parent;
 const Grade = models.Grade;
 const ParentStudentLink = models.ParentStudentLink;
+const SystemSetting = models.SystemSetting;
 const auth = require('../middleware/auth');
 const router = express.Router();
 
@@ -17,12 +18,27 @@ router.get('/dashboard', auth, async (req, res) => {
       return res.status(403).json({ msg: 'Access denied' });
     }
 
+    // Get current system settings
+    const settings = await SystemSetting.findAll();
+    const config = {};
+    settings.forEach(s => config[s.key] = s.value);
+
+    const activeYear = config.current_year;
+    const activeSemester = config.current_semester;
+
+    // Build filter for grades
+    const gradeFilter = {};
+    if (activeYear) gradeFilter.academicYear = activeYear;
+    if (activeSemester) gradeFilter.semester = activeSemester;
+
     // Execute count operations individually to handle potential errors
     const [
       totalStudentsResult,
       totalParentsResult,
       totalGradesResult,
       pendingLinksResult,
+      pendingTeachersResult,
+      pendingParentsResult,
       recentGradesDataResult
     ] = await Promise.all([
       Student.count().catch(err => {
@@ -33,7 +49,7 @@ router.get('/dashboard', auth, async (req, res) => {
         console.error('Error counting parents:', err.message);
         return 0;
       }),
-      Grade.count().catch(err => {
+      Grade.count({ where: gradeFilter }).catch(err => {
         console.error('Error counting grades:', err.message);
         return 0;
       }),
@@ -41,7 +57,16 @@ router.get('/dashboard', auth, async (req, res) => {
         console.error('Error counting pending links:', err.message);
         return 0;
       }),
+      models.Teacher.count({ where: { status: 'pending_verification' } }).catch(err => {
+        console.error('Error counting pending teachers:', err.message);
+        return 0;
+      }),
+      Parent.count({ where: { status: 'pending' } }).catch(err => {
+        console.error('Error counting pending parents:', err.message);
+        return 0;
+      }),
       Grade.findAll({
+        where: gradeFilter,
         limit: 10,
         order: [['uploadDate', 'DESC']],
         include: [{
@@ -74,10 +99,6 @@ router.get('/dashboard', auth, async (req, res) => {
           });
         } catch (err) {
           console.error('Error formatting recent grade:', err.message);
-          recentGrades.push({
-            ...grade.toJSON(),
-            studentName: 'Unknown'
-          });
         }
       }
     }
@@ -87,10 +108,49 @@ router.get('/dashboard', auth, async (req, res) => {
       totalParents: totalParentsResult,
       totalGrades: totalGradesResult,
       pendingLinks: pendingLinksResult,
+      pendingTeachers: pendingTeachersResult,
+      pendingParents: pendingParentsResult,
+      activePeriod: `${activeYear || ''} ${activeSemester || ''}`.trim(),
       recentGrades
     });
   } catch (err) {
     console.error(err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+// @route   GET api/stats/health
+// @desc    Get university health (departmental stats)
+// @access  Private (admin only)
+router.get('/health', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ msg: 'Access denied' });
+    }
+
+    const [studentDepts, teacherDepts] = await Promise.all([
+      Student.findAll({
+        attributes: [
+          'department',
+          [models.sequelize.fn('COUNT', models.sequelize.col('id')), 'count']
+        ],
+        group: ['department']
+      }),
+      models.Teacher.findAll({
+        attributes: [
+          'department',
+          [models.sequelize.fn('COUNT', models.sequelize.col('id')), 'count']
+        ],
+        group: ['department']
+      })
+    ]);
+
+    res.json({
+      studentsByDept: studentDepts,
+      teachersByDept: teacherDepts
+    });
+  } catch (err) {
+    console.error('Health Stats Error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 });

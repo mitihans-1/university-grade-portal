@@ -87,6 +87,7 @@ const Grade = sequelize.define('Grade', {
 
 Grade.associate = (models) => {
   Grade.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'Student' });
+  Grade.belongsTo(models.Teacher, { foreignKey: 'uploadedBy', targetKey: 'teacherId', as: 'Teacher' });
 };
 
 module.exports = Grade;

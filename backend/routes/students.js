@@ -8,7 +8,7 @@ const Grade = models.Grade;
 const ParentStudentLink = models.ParentStudentLink;
 const auth = require('../middleware/auth');
 const { createSecurePayload } = require('../utils/permissions');
-const { sendVerificationEmail } = require('../utils/notifier');
+const { sendVerificationEmail, sendApprovalEmail } = require('../utils/notifier');
 const crypto = require('crypto');
 const router = express.Router();
 
@@ -27,10 +27,10 @@ router.post('/register', async (req, res) => {
     // Normalize email (trim and lowercase) to match login behavior
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Password strength validation
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/;
+    // Password strength validation (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
     if (!passwordRegex.test(password)) {
-      return res.status(400).json({ msg: 'Password must contain at least 1 letter, 1 number, and 1 special character (@$!%*#?&), and be at least 6 characters long.' });
+      return res.status(400).json({ msg: 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character (@$!%*#?&), and be at least 8 characters long.' });
     }
 
     // Verify Student ID Format (Allow Letters, Numbers, /, -)
@@ -38,6 +38,31 @@ router.post('/register', async (req, res) => {
     const studentIdRegex = /^[a-zA-Z0-9\/\-]+$/;
     if (!studentIdRegex.test(studentId)) {
       return res.status(400).json({ msg: 'Invalid Student ID format. Only letters, numbers, slashes (/), and hyphens (-) are allowed.' });
+    }
+
+    // Check if studentId is a valid official University ID
+    const validID = await models.UniversityID.findOne({
+      where: { studentId: studentId }
+    });
+
+    if (!validID) {
+      return res.status(400).json({ msg: 'Registration failed: The student ID provided is not in the university official records.' });
+    }
+
+    if (validID.isUsed) {
+      // Small check: what if the person already exists in Students with THIS ID? 
+      // The below existingStudent check covers it, but we also want to ensure no double-usage of valid official IDs.
+      return res.status(400).json({ msg: 'This Student ID has already been registered.' });
+    }
+
+    // Verify National ID if it exists in the official record
+    if (validID.nationalId) {
+      if (!nationalId) {
+        return res.status(400).json({ msg: 'National ID is required for verification.' });
+      }
+      if (validID.nationalId.trim() !== nationalId.trim()) {
+        return res.status(400).json({ msg: 'National ID does not match our official records.' });
+      }
     }
 
     // Check if student already exists (email, studentId, phone, or nationalId)
@@ -73,21 +98,25 @@ router.post('/register', async (req, res) => {
       name,
       email: normalizedEmail,
       password: hashedPassword,
-      department: department || 'Undeclared', // Default department
-      year: year ? parseInt(year) : 1, // Default to year 1
-      semester: req.body.semester ? parseInt(req.body.semester) : 1,
+      department: validID.department || department || 'Undeclared',
+      year: validID.year || (year ? parseInt(year) : 1),
+      semester: validID.semester || (req.body.semester ? parseInt(req.body.semester) : 1),
       phone,
       nationalId,
-      status: 'pending_verification', // Require admin approval
-      isVerified: false, // Not verified yet
-      verificationToken
+      status: 'active', // Auto-active since we verified against National ID
+      isVerified: true, // Verified by system
+      isEmailVerified: true, // Assuming trust since ID proof provided
+      verificationToken: verificationToken
     });
 
-    // Send verification email
-    await sendVerificationEmail(normalizedEmail, name, 'student', verificationToken);
+    // Mark the official ID as used
+    await models.UniversityID.update({ isUsed: true }, { where: { studentId: studentId } });
+
+    // Send welcome/approval email immediately
+    await sendApprovalEmail(normalizedEmail, name);
 
     res.json({
-      msg: 'Registration successful! Please check your email to verify your account. Once verified, you will need admin approval to log in.',
+      msg: 'Registration successful! Your account has been verified and activated. You can now log in.',
       user: {
         id: student.id,
         name: student.name,
@@ -119,7 +148,14 @@ router.get('/my-grades', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Student not found' });
     }
 
-    const grades = await Grade.findAll({ where: { studentId: student.studentId } });
+    const grades = await Grade.findAll({
+      where: { studentId: student.studentId },
+      include: [{
+        model: models.Teacher,
+        as: 'Teacher',
+        attributes: ['name', 'department', 'email']
+      }]
+    });
     res.json(grades);
   } catch (err) {
     console.error(err.message);
@@ -145,7 +181,14 @@ router.get('/:studentId/grades', auth, async (req, res) => {
     }
     // Admins can access any student's grades
 
-    const grades = await Grade.findAll({ where: { studentId: req.params.studentId } });
+    const grades = await Grade.findAll({
+      where: { studentId: req.params.studentId },
+      include: [{
+        model: models.Teacher,
+        as: 'Teacher',
+        attributes: ['name', 'department', 'email']
+      }]
+    });
     res.json(grades);
   } catch (err) {
     console.error(err.message);
@@ -219,7 +262,7 @@ router.get('/pending', auth, async (req, res) => {
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!req.user.permissions.includes('manage_users') && !req.user.permissions.includes('view_students')) {
       return res.status(403).json({ msg: 'Access denied' });
     }
 
@@ -304,7 +347,15 @@ router.put('/:id/verify', auth, async (req, res) => {
       { where: { id: req.params.id } }
     );
 
-    res.json({ msg: 'Verification status updated' });
+    // If student was just verified/approved, send congratulations email
+    if (isVerified) {
+      const student = await Student.findByPk(req.params.id);
+      if (student) {
+        await sendApprovalEmail(student.email, student.name);
+      }
+    }
+
+    res.json({ msg: 'Verification status updated and congratulations email sent.' });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Server error' });

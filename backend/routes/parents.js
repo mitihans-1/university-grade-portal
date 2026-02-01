@@ -16,17 +16,29 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
   try {
     console.log('DEBUG: Parent registration request body:', req.body);
-    const { name, email, password, phone, studentId, relationship, notificationPreference, nationalId } = req.body;
+    const { name, email, password, phone, studentId, relationship, captchaAnswer, expectedCaptcha } = req.body;
 
-    // Validation - email is optional, but if provided must be valid
+    // Validation (email is optional)
     if (!name || !password || !studentId || !relationship) {
-      return res.status(400).json({ msg: 'Please enter all required fields' });
+      const missing = [];
+      if (!name) missing.push('name');
+      if (!password) missing.push('password');
+      if (!studentId) missing.push('studentId');
+      if (!relationship) missing.push('relationship');
+      return res.status(400).json({ msg: `Please enter all required fields: ${missing.join(', ')}` });
     }
 
-    // Password strength validation
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/;
+    // CAPTCHA Validation (skip if not provided - for testing)
+    if (captchaAnswer !== undefined && expectedCaptcha !== undefined) {
+      if (parseInt(captchaAnswer) !== parseInt(expectedCaptcha)) {
+        return res.status(400).json({ msg: 'Incorrect Human Verification answer. Please try again.' });
+      }
+    }
+
+    // Password strength validation (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
     if (!passwordRegex.test(password)) {
-      return res.status(400).json({ msg: 'Password must contain at least 1 letter, 1 number, and 1 special character (@$!%*#?&), and be at least 6 characters long.' });
+      return res.status(400).json({ msg: 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character (@$!%*#?&), and be at least 8 characters long.' });
     }
 
     // Handle optional email - if not provided, generate a placeholder
@@ -46,15 +58,11 @@ router.post('/register', async (req, res) => {
     // Check if phone or national ID number already exists
     const existingParentCheck = await Parent.findOne({
       where: {
-        [Op.or]: [
-          { phone },
-          ...(nationalId ? [{ nationalId }] : [])
-        ]
+        phone
       }
     });
 
     if (existingParentCheck) {
-      if (nationalId && existingParentCheck.nationalId === nationalId) return res.status(400).json({ msg: 'National ID is already registered' });
       // Removed strict phone check to allow parents to share phone with student if needed, or if re-registering
       // if (existingParentCheck.phone === phone) return res.status(400).json({ msg: 'Phone number is already registered' });
     }
@@ -68,12 +76,24 @@ router.post('/register', async (req, res) => {
 
     // Check if this student is already linked to ANY parent account
     // (One Student -> Max One Family)
+    // First, clean up any orphan links (where parent no longer exists)
     const existingLinkForStudent = await ParentStudentLink.findOne({
       where: { studentId }
     });
 
     if (existingLinkForStudent) {
-      return res.status(400).json({ msg: 'This student ID is already linked to a family account. Only one parent account can be linked to a student.' });
+      // Verify that the parent still exists
+      const parentExists = await Parent.findByPk(existingLinkForStudent.parentId);
+
+      if (!parentExists) {
+        // Parent was deleted but link remains - clean it up
+        console.log(`DEBUG: Cleaning up orphan link for StudentID ${studentId} -> ParentID ${existingLinkForStudent.parentId}`);
+        await existingLinkForStudent.destroy();
+        console.log('DEBUG: Orphan link removed, allowing new registration');
+      } else {
+        // Parent exists, so student is truly linked
+        return res.status(400).json({ msg: 'This student ID is already linked to a family account. Only one parent account can be linked to a student.' });
+      }
     }
 
     // Check if parent already exists with this email (only if it's a real email, not placeholder)
@@ -93,6 +113,7 @@ router.post('/register', async (req, res) => {
     const isPlaceholderEmail = normalizedEmail.includes('@noemail.local');
 
     // Create new parent
+    console.log('DEBUG: Creating parent record...');
     const parent = await Parent.create({
       name,
       email: normalizedEmail,
@@ -100,42 +121,47 @@ router.post('/register', async (req, res) => {
       phone: phone || 'Not Provided',
       studentId,
       relationship,
-      nationalId,
-      notificationPreference: notificationPreference || 'both',
+      notificationPreference: 'both',
       status: 'pending', // Set to pending initially
       verificationToken,
       isEmailVerified: isPlaceholderEmail // Auto-verify if no email provided
     });
+    console.log('DEBUG: Parent created with ID:', parent.id);
 
     // Create ParentStudentLink request automatically
-    await ParentStudentLink.create({
-      parentId: parent.id,
-      studentId: student.studentId,
-      linkedBy: 'System',
-      status: 'pending'
-    });
+    console.log('DEBUG: Creating parent-student link...');
+    try {
+      await ParentStudentLink.create({
+        parentId: parent.id,
+        studentId: student.studentId,
+        linkedBy: 'System',
+        status: 'pending'
+      });
+      console.log('DEBUG: Link created successfully');
+    } catch (linkError) {
+      console.error('DEBUG: Link creation failed:', linkError);
+      // Clean up parent creation if link fails
+      await parent.destroy();
+      throw linkError;
+    }
 
     // Send verification email if real email provided
     if (!isPlaceholderEmail) {
-      await sendVerificationEmail(normalizedEmail, name, 'parent', verificationToken);
-      return res.json({
-        msg: 'Registration successful! Please check your email to verify your account.',
-        user: {
-          id: parent.id,
-          name: parent.name,
-          email: parent.email,
-          role: 'parent',
-          studentId: parent.studentId,
-          relationship: parent.relationship,
-          status: parent.status
-        }
-      });
+      console.log('DEBUG: Sending verification email to:', normalizedEmail);
+      try {
+        await sendVerificationEmail(normalizedEmail, name, 'parent', verificationToken);
+        console.log('DEBUG: Email sent');
+      } catch (emailError) {
+        console.error('DEBUG: Email sending failed:', emailError);
+        // Don't fail registration just because email failed, but log it
+      }
     }
 
+    console.log('DEBUG: Sending response...');
     // If placeholder email, we can't send verification, so standard success
     res.json({
-      msg: 'Registration successful! Please save your generated email for future logins.',
-      generatedEmail: normalizedEmail,
+      msg: 'Registration successful! Your application has been received and is waiting for Administrator approval.',
+      generatedEmail: isPlaceholderEmail ? normalizedEmail : null,
       user: {
         id: parent.id,
         name: parent.name,
@@ -146,6 +172,34 @@ router.post('/register', async (req, res) => {
         status: parent.status
       }
     });
+  } catch (err) {
+    console.error('DEBUG: Registration route error:', err);
+    res.status(500).json({ msg: 'Server error', error: err.message });
+  }
+});
+
+// @route   PUT api/parents/:id/approve
+// @desc    Approve a parent registration (admin only)
+// @access  Private
+router.put('/:id/approve', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ msg: 'Access denied' });
+    }
+
+    const parent = await Parent.findByPk(req.params.id);
+
+    if (!parent) {
+      return res.status(404).json({ msg: 'Parent not found' });
+    }
+
+    await parent.update({ status: 'approved', isEmailVerified: true });
+
+    // Send congratulations email
+    const { sendApprovalEmail } = require('../utils/notifier');
+    await sendApprovalEmail(parent.email, parent.name);
+
+    res.json({ msg: 'Parent approved successfully', parent });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Server error' });

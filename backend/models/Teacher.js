@@ -29,6 +29,18 @@ const Teacher = sequelize.define('Teacher', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    subject: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    semester: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    year: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
     phone: {
         type: DataTypes.STRING,
         allowNull: false
@@ -36,6 +48,11 @@ const Teacher = sequelize.define('Teacher', {
     specialization: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    nationalId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true
     },
     registrationDate: {
         type: DataTypes.DATE,
@@ -57,9 +74,21 @@ const Teacher = sequelize.define('Teacher', {
         type: DataTypes.STRING,
         allowNull: true
     },
+    mfaToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    mfaExpires: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
     isEmailVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
+    },
+    profileImage: {
+        type: DataTypes.TEXT,
+        allowNull: true
     }
 }, {
     tableName: 'teachers',
@@ -68,6 +97,7 @@ const Teacher = sequelize.define('Teacher', {
 
 Teacher.associate = (models) => {
     Teacher.hasMany(models.Grade, { foreignKey: 'uploadedBy', sourceKey: 'teacherId', as: 'UploadedGrades' });
+    Teacher.hasMany(models.TeacherAssignment, { foreignKey: 'teacherId', sourceKey: 'teacherId', as: 'assignments' });
 };
 
 module.exports = Teacher;

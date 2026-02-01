@@ -1,49 +1,29 @@
-const { Sequelize } = require('sequelize');
-const dotenv = require('dotenv');
-const path = require('path');
-const { sequelize } = require('./config/db');
-const ParentStudentLink = require('./models/ParentStudentLink');
-const Parent = require('./models/Parent');
-
-// Load env vars
-dotenv.config({ path: path.join(__dirname, '.env') });
+const { connectDB } = require('./config/db');
+const models = require('./models');
+const Parent = models.Parent;
+const ParentStudentLink = models.ParentStudentLink;
 
 const cleanupOrphans = async () => {
     try {
-        console.log('Connecting to database...');
-        await sequelize.authenticate();
-        console.log('Database connected.');
+        await connectDB();
+        console.log('Cleaning up orphan Parent-Student Links...');
 
-        console.log('Fetching all links...');
         const links = await ParentStudentLink.findAll();
-        console.log(`Found ${links.length} links.`);
-
         let deletedCount = 0;
 
         for (const link of links) {
-            if (!link.parentId) {
-                console.log(`Link ${link.id} has no parentId, removing.`);
-                await link.destroy();
-                deletedCount++;
-                continue;
-            }
-
-            // Check if parent exists
             const parent = await Parent.findByPk(link.parentId);
-
             if (!parent) {
-                console.log(`Found orphaned link! Link ID: ${link.id}, ParentID: ${link.parentId} (Parent not found)`);
+                console.log(`Deleting orphan link (ID: ${link.id}) for StudentID: ${link.studentId} -> ParentID: ${link.parentId} (Parent does not exist)`);
                 await link.destroy();
                 deletedCount++;
-                console.log(`Deleted orphaned link ${link.id}`);
             }
         }
 
-        console.log('Cleanup complete.');
-        console.log(`Removed ${deletedCount} orphaned links.`);
+        console.log(`\nCleanup complete. Removed ${deletedCount} orphan links.`);
 
-    } catch (error) {
-        console.error('Error during cleanup:', error);
+    } catch (err) {
+        console.error('Error:', err);
     } finally {
         process.exit();
     }

@@ -194,6 +194,7 @@ const AdminLinkRequests = () => {
                       <th>{t('relationship')}</th>
                       <th>{t('requestDate')}</th>
                       <th>{t('contactInfo')}</th>
+                      <th>{t('source')}</th>
                       <th>{t('status')}</th>
                       <th>{t('actions')}</th>
                     </tr>
@@ -225,6 +226,19 @@ const AdminLinkRequests = () => {
                             <div style={{ fontSize: '12px', color: '#2e7d32', marginTop: '4px', fontStyle: 'italic' }}>
                               🔔 {t('notificationPreference')}: {parent.notificationPreference === 'both' ? t('bothEmailAndSms') : parent.notificationPreference === 'email' ? t('emailOnly') : t('smsOnly')}
                             </div>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <span style={{
+                              backgroundColor: link.linkedBy === 'System' ? '#e3f2fd' : '#f3e5f5',
+                              color: link.linkedBy === 'System' ? '#1976d2' : '#7b1fa2',
+                              padding: '4px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase'
+                            }}>
+                              {link.linkedBy === 'System' ? 'Registration' : 'Dashboard'}
+                            </span>
                           </td>
                           <td style={{ padding: '12px' }}>
                             <span style={{
@@ -298,6 +312,7 @@ const AdminLinkRequests = () => {
                       <th>{t('student')}</th>
                       <th>{t('relationship')}</th>
                       <th>{t('approvedDate')}</th>
+                      <th>{t('source')}</th>
                       <th>{t('status')}</th>
                     </tr>
                   </thead>
@@ -313,6 +328,19 @@ const AdminLinkRequests = () => {
                           <td style={{ padding: '12px' }}>{parent.relationship}</td>
                           <td style={{ padding: '12px' }}>
                             {new Date(link.approvedDate || link.linkDate).toLocaleDateString()}
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <span style={{
+                              backgroundColor: link.linkedBy === 'System' ? '#e3f2fd' : '#f3e5f5',
+                              color: link.linkedBy === 'System' ? '#1976d2' : '#7b1fa2',
+                              padding: '4px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase'
+                            }}>
+                              {link.linkedBy === 'System' ? 'Registration' : 'Dashboard'}
+                            </span>
                           </td>
                           <td style={{ padding: '12px' }}>
                             <span style={{

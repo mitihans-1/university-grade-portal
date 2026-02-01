@@ -74,6 +74,10 @@ const Student = sequelize.define('Student', {
   isEmailVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  profileImage: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
 }, {
   tableName: 'students',

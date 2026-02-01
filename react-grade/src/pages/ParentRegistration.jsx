@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PasswordStrengthMeter from '../components/common/PasswordStrengthMeter';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../utils/api';
@@ -78,13 +79,13 @@ const ParentRegistration = () => {
     if (!formData.password) {
       newErrors.password = t('passwordRequired');
     } else {
-      // Password validation: at least 6 characters, 1 letter, 1 number, 1 special character
-      if (formData.password.length < 6) {
-        newErrors.password = t('passwordLengthRequired');
+      // Password validation: at least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
+      if (formData.password.length < 8) {
+        newErrors.password = t('passwordLengthRequired') || 'Password must be at least 8 characters long.';
       } else {
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/;
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
         if (!passwordRegex.test(formData.password)) {
-          newErrors.password = 'Password must contain at least 1 letter, 1 number, and 1 special character.';
+          newErrors.password = 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.';
         }
       }
     }
@@ -105,7 +106,7 @@ const ParentRegistration = () => {
     const validationErrors = validateForm();
 
     // Client-side Password Validation
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
     if (!passwordRegex.test(formData.password)) {
       if (!validationErrors.password) {
         validationErrors.password = 'Password must contain at least 1 letter, 1 number, and 1 special character.';
@@ -239,6 +240,8 @@ const ParentRegistration = () => {
             {errors.email && <small style={{ color: '#f44336' }}>{t('validEmailRequiredOrLeaveEmpty')}</small>}
           </div>
 
+
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
             <div className="modern-input-group">
               <label className="modern-input-label">
@@ -260,10 +263,11 @@ const ParentRegistration = () => {
               />
               {focused.password && (
                 <div style={{ fontSize: '11px', color: '#2e7d32', marginTop: '5px' }}>
-                  ℹ️ Min 6 chars, 1 letter, 1 number, 1 special char.
+                  ℹ️ Min 8 chars, 1 letter, 1 number, 1 special char
                 </div>
               )}
-              {errors.password && <small style={{ color: '#f44336' }}>{t('passwordLengthRequired')}</small>}
+              <PasswordStrengthMeter password={formData.password} />
+              {errors.password && <small style={{ color: '#f44336' }}>{errors.password}</small>}
             </div>
 
             <div className="modern-input-group">
@@ -307,6 +311,7 @@ const ParentRegistration = () => {
                 }}
                 placeholder={t('studentIdPlaceholder')}
                 autoComplete="off"
+                name="studentId"
               />
               <button
                 type="button"
@@ -358,12 +363,13 @@ const ParentRegistration = () => {
               style={{
                 border: `1px solid ${errors.relationship ? '#f44336' : '#e2e8f0'}`,
               }}
+              name="relationship"
             >
               <option value="">{t('selectRelationship')}</option>
-              <option value={t('father')}>{t('father')}</option>
-              <option value={t('mother')}>{t('mother')}</option>
-              <option value={t('guardian')}>{t('guardian')}</option>
-              <option value={t('otherRelative')}>{t('otherRelative')}</option>
+              <option value="Father">{t('father')}</option>
+              <option value="Mother">{t('mother')}</option>
+              <option value="Guardian">{t('guardian')}</option>
+              <option value="Other Relative">{t('otherRelative')}</option>
             </select>
             {errors.relationship && <small style={{ color: '#f44336' }}>{errors.relationship}</small>}
           </div>

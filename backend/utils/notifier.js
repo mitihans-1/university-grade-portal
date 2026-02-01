@@ -1,17 +1,36 @@
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
+const os = require('os');
+
+// Get Local IP Address for mobile access
+const getLocalIP = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+};
+
+const serverIP = getLocalIP();
+const serverPort = process.env.PORT || 5000;
+const BASE_URL = `http://${serverIP}:${serverPort}`;
+const FRONTEND_URL = `http://${serverIP}:5173`;
 
 // Create a transporter using Gmail credentials from environment variables
 const createTransporter = () => {
   console.log('DEBUG: Creating transporter for user:', process.env.GMAIL_USER);
-  if (!process.env.GMAIL_USER || !process.env.APP_PASSWORD) {
+  if (!process.env.GMAIL_USER || !process.env.EMAIL_PASS) {
     console.error('ERROR: Missing email credentials in process.env');
   }
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.GMAIL_USER,
-      pass: process.env.APP_PASSWORD
+      pass: process.env.EMAIL_PASS
     }
   });
 };
@@ -149,28 +168,49 @@ const notifyParent = async (parent, notification) => {
 
 // Function to send verification email
 const sendVerificationEmail = async (email, name, role, token) => {
-  const verificationLink = `http://localhost:5173/verify-email?token=${token}&role=${role}`;
+  // Point directly to backend for instant verification
+  const verificationLink = `${BASE_URL}/api/auth/verify-email/${token}?role=${role}`;
   const emailSubject = 'Verify Your Email - University Grade Portal';
   const emailHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #f8fafc;">
       <h2 style="color: #4f46e5; text-align: center;">Welcome to University Grade Portal</h2>
       <p style="font-size: 16px; color: #334155;">Hello <strong>${name}</strong>,</p>
-      <p style="font-size: 16px; color: #334155;">Thank you for registering as a <strong>${role}</strong>. To complete your registration and secure your account, please click the button below to verify your email address:</p>
+      <p style="font-size: 16px; color: #334155;">Thank you for registering. To complete your registration and secure your account, please click the big button below to verify your email address:</p>
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${verificationLink}" style="display: inline-block; padding: 14px 28px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);">Verify Email Address</a>
+        <a href="${verificationLink}" style="display: inline-block; padding: 18px 36px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); text-transform: uppercase;">Verify Email Immediately</a>
       </div>
-      <p style="font-size: 14px; color: #64748b;">If the button doesn't work, you can copy and paste this link into your browser:</p>
-      <p style="font-size: 14px; color: #4f46e5; word-break: break-all;">${verificationLink}</p>
+      <p style="font-size: 14px; color: #64748b; text-align: center;">This will verify your account instantly without needing to open the app manually.</p>
+      <p style="font-size: 14px; color: #64748b;">If the button doesn't work, copy this link: ${verificationLink}</p>
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
       <p style="font-size: 12px; color: #94a3b8; text-align: center;">Admin Team<br>University Grade Portal</p>
     </div>
   `;
 
   console.log('---------------------------------------------------');
-  console.log('VERIFICATION LINK (Click if email fails):');
+  console.log('DIRECT VERIFICATION LINK:');
   console.log(verificationLink);
   console.log('---------------------------------------------------');
 
+  return await sendEmail(email, emailSubject, emailHtml);
+};
+
+// Function to send approval/congratulations email
+const sendApprovalEmail = async (email, name) => {
+  const emailSubject = 'Congratulations! Your Account is Verified';
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #f0fdf4;">
+      <h2 style="color: #10b981; text-align: center;">Registration Approved!</h2>
+      <p style="font-size: 16px; color: #1e293b;">Hello <strong>${name}</strong>,</p>
+      <p style="font-size: 16px; color: #1e293b;">Congratulations! Your registration has been officially verified and approved by the University Administrator.</p>
+      <p style="font-size: 16px; color: #1e293b;">Your account is now activated. You can log in to the portal and start accessing your dashboard immediately.</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${FRONTEND_URL}" style="display: inline-block; padding: 14px 28px; background-color: #10b981; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">Log in to Portal</a>
+      </div>
+      <p style="font-size: 14px; color: #64748b; text-align: center;">Welcome to our academic community!</p>
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; text-align: center;">Admin Team<br>University Grade Portal</p>
+    </div>
+  `;
   return await sendEmail(email, emailSubject, emailHtml);
 };
 
@@ -180,5 +220,6 @@ module.exports = {
   sendGradeNotification,
   sendAcademicAlert,
   notifyParent,
-  sendVerificationEmail
+  sendVerificationEmail,
+  sendApprovalEmail
 };
