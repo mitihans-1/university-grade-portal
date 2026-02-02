@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useLanguage } from '../context/LanguageContext';
 
 const AdminExamApproval = () => {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const [exams, setExams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [entryCodes, setEntryCodes] = useState({});

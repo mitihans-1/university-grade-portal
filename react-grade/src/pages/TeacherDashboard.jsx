@@ -144,25 +144,25 @@ const TeacherDashboard = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#701a75' }}>
                     <div style={{ fontSize: '24px' }}>🏫</div>
                     <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        Assigned Faculty Records
+                        {t('assignedFacultyRecords')}
                     </h3>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
                     <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
-                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Faculty / Department</div>
-                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.department || 'Not Assigned'}</div>
+                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>{t('facultyDepartment')}</div>
+                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.department || t('notAssigned')}</div>
                     </div>
                     <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
-                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Primary Subject</div>
-                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.subject || 'Flexible'}</div>
+                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>{t('primarySubject')}</div>
+                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.subject || t('flexible')}</div>
                     </div>
                     <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
-                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Specialization</div>
-                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.specialization || 'General'}</div>
+                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>{t('specialization')}</div>
+                        <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.specialization || t('general')}</div>
                     </div>
                     <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
-                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Hired Since</div>
+                        <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>{t('hiredSince')}</div>
                         <div style={{ fontWeight: '800', color: '#1f2937', fontSize: '15px' }}>{user?.year || '2025'}</div>
                     </div>
                 </div>

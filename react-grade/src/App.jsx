@@ -617,7 +617,7 @@ function AppLayout() {
             <Route path="/student/notifications" element={<ProtectedRoute allowedPermissions={['receive_notifications']}><StudentNotifications /></ProtectedRoute>} />
             <Route path="/student/assignments" element={<ProtectedRoute allowedPermissions={['view_own_grades']}><StudentAssignments /></ProtectedRoute>} />
             <Route path="/student/exams" element={<ProtectedRoute allowedPermissions={['view_own_grades']}><StudentExams /></ProtectedRoute>} />
-            <Route path="/student/exam/:id" element={<ProtectedRoute allowedPermissions={['view_own_grades']}><StudentExamPlayer /></ProtectedRoute>} />
+            <Route path="/student/exam/:id" element={<ProtectedRoute allowedPermissions={['view_own_grades', 'manage_users', 'enter_grades']}><StudentExamPlayer /></ProtectedRoute>} />
             <Route path="/student/id-card" element={<ProtectedRoute allowedPermissions={['view_own_grades']}><IdentityCard /></ProtectedRoute>} />
 
             {/* Parent Routes */}

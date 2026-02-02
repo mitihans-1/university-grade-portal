@@ -10,7 +10,9 @@ This document consolidates workflow guides and feature specifications into a sin
 3. [Teacher Assignment System](#3-teacher-assignment-system)
 4. [Role-Based Workflows](#4-role-based-workflows)
 5. [Data Integrity & Cleanup Systems](#5-data-integrity--cleanup-systems)
-6. [Backend API Endpoints](#6-backend-api-endpoints)
+7. [Online Exam System](#7-online-exam-system)
+8. [Performance & Caching](#8-performance--caching)
+
 
 ---
 
@@ -175,4 +177,46 @@ This is the backend API for the University Grade Portal application, built with 
 
 ---
 
-*Current Status: ✅ Fully Implemented and Verified*
+## 7. Online Exam System
+
+Secure, real-time exam platform with cheat prevention and role-based access.
+
+### 🔐 Security Architecture
+- **Hidden Answers**: Correct answers are stored securely in the database (`questions` table) and **NEVER** sent to the client during the exam.
+- **Server-Side Grading**: All answer comparisons happen on the server after submission.
+- **Entry Codes**: Exams are protected by a unique secret code set by the Admin.
+
+### 🔄 Exam Flow
+1. **Teacher**: Creates exam & selects correct answers (visually) → Saves to DB.
+2. **Admin**: Reviews exam → Sets Entry Code → Publishes.
+3. **Student**: Enters Code → Takes Exam (Simulated Timer) → Submits.
+4. **System**: Compares answers → Calculates Score → Notifies Student/Parent.
+
+### 🌐 Exam API Endpoints
+- `POST /api/exams/create` - Create new exam (Teacher)
+- `POST /api/exams/:id/publish` - Publish exam & set code (Admin)
+- `POST /api/exams/:id/start` - Start attempt (Student)
+- `POST /api/exams/attempt/:id/save-answer` - Auto-save answer (Student)
+- `POST /api/exams/attempt/:id/submit` - Submit & Grade (Student)
+- `GET /api/exams/:id/preview` - Preview exam content (Admin/Teacher)
+
+---
+
+## 8. Performance & Caching
+
+System-wide optimizations for speed and scalability.
+
+### 🚀 Caching Strategy
+- **Dashboard Stats**: The `/api/stats/dashboard` endpoint uses an in-memory cache with a **30-second TTL**.
+    - **Hit**: Returns cached JSON instantly (< 50ms).
+    - **Miss**: Queries DB, aggregates data, caches result, returns JSON (~2000ms).
+- **Client-Side**: Language preference is persisted in `localStorage` to prevent style recalculations on refetch.
+
+### ⚡ Optimization Features
+- **Parallel Queries**: Dashboard endpoints use `Promise.all` to fetch unrelated data concurrently.
+- **Request Cancellation**: Frontend uses `AbortController` to cancel stale requests when navigating away.
+- **Lazy Loading**: Exam questions are fetched only when the exam starts, not during listing.
+
+---
+
+*Last Updated: 2026-02-02*

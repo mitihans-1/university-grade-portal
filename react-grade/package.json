@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.20",
     "html5-qrcode": "^2.3.8",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
