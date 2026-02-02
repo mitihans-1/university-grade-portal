@@ -9,7 +9,8 @@
     "start:frontend": "cd react-grade && npm run dev",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd react-grade && npm run dev"
+    "dev:frontend": "cd react-grade && npm run dev",
+    "build": "cd react-grade && npm install && npm run build"
   },
   "keywords": [
     "university",
