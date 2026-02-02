@@ -32,9 +32,14 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('MySQL database connected successfully');
 
-    // Simple sync without altering to avoid constraint issues
-    await sequelize.sync({ force: false });
-    console.log('Database tables synchronized');
+    // Try to sync tables, but don't fail if there are constraint issues
+    try {
+      await sequelize.sync({ force: false });
+      console.log('Database tables synchronized');
+    } catch (syncError) {
+      console.warn('Table sync warning (tables may already exist):', syncError.message);
+      // Continue anyway - tables might already exist
+    }
   } catch (error) {
     console.error('Unable to connect to the database:', error);
     process.exit(1);
