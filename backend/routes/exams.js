@@ -312,11 +312,28 @@ router.post('/:id/notify-code', auth, async (req, res) => {
             console.log(`Bulk created ${studentNotifications.length} student notifications.`);
         }
 
+        // AUTO-START TIMER LOGIC
+        // When admin sends the code, we assume the exam should START now.
+        // If it's not already active, we activate it and set the timer.
+        if (exam.status !== 'active') {
+            const startTime = new Date();
+            const endTime = new Date(startTime.getTime() + exam.duration * 60000); // duration in minutes
+
+            await Exam.update({
+                status: 'active', // Mark as live
+                startTime: startTime,
+                endTime: endTime
+            }, {
+                where: { id: req.params.id }
+            });
+            console.log(`Exam ${exam.id} auto-started. Timer running until ${endTime}`);
+        }
+
         const msg = studentNotifications.length > 0
-            ? `Secret code sent to ${studentNotifications.length} students!`
+            ? `Code sent to ${studentNotifications.length} students & Timer Started!`
             : alreadyNotifiedCount > 0
-                ? `Code was already sent to all ${alreadyNotifiedCount} students.`
-                : `No students found for Year ${targetYearNum}.`;
+                ? `Code resent & Timer is running.`
+                : `No students found, but timer started.`;
 
         res.json({ msg });
     } catch (err) {
@@ -423,6 +440,38 @@ router.post('/:id/questions', auth, async (req, res) => {
     }
 });
 
+// @route   GET api/exams/:id/preview
+// @desc    Get questions for Admin/Teacher preview (Read-Only)
+router.get('/:id/preview', auth, async (req, res) => {
+    try {
+        // Allow Admins and Teachers
+        if (req.user.role !== 'admin' && req.user.role !== 'teacher') {
+            return res.status(403).json({ msg: 'Access denied. Preview for staff only.' });
+        }
+
+        const questions = await Question.findAll({
+            where: { examId: req.params.id },
+            order: [['order', 'ASC']]
+        });
+
+        // Transform to resemble "results" format for consistency with review mode
+        const results = questions.map(q => ({
+            questionId: q.id,
+            questionText: q.questionText,
+            options: q.options,
+            correctAnswer: q.correctAnswer, // Include correct answer for preview
+            marks: q.marks,
+            isCorrect: false, // Default
+            selectedAnswer: null
+        }));
+
+        res.json({ results, mode: 'preview' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/exams/available
 // @desc    Get available exams for students based on their year
 router.get('/available', auth, async (req, res) => {
@@ -467,8 +516,35 @@ router.post('/:id/start', auth, async (req, res) => {
         const existingAttempt = await ExamAttempt.findOne({
             where: { examId: req.params.id, studentId: req.user.studentId, status: 'submitted' }
         });
+
         if (existingAttempt) {
-            return res.status(400).json({ msg: 'You have already submitted this exam' });
+            // If already submitted, return RESULTS for review mode
+            const questions = await Question.findAll({
+                where: { examId: req.params.id },
+                order: [['order', 'ASC']]
+            });
+
+            const studentAnswers = existingAttempt.answers || {};
+
+            const results = questions.map(q => ({
+                questionId: q.id,
+                questionText: q.questionText,
+                options: q.options,
+                selectedAnswer: studentAnswers[q.id] || null,
+                correctAnswer: q.correctAnswer,
+                isCorrect: studentAnswers[q.id] === q.correctAnswer,
+                marks: q.marks,
+                // We don't have stored explanations easily here unless we saved them, 
+                // but we can at least show the correct/incorrect status.
+                explanation: null
+            }));
+
+            // Return validation success but with specific flag or data for frontend
+            return res.json({
+                attempt: existingAttempt,
+                results,
+                mode: 'review'
+            });
         }
 
         let attempt = await ExamAttempt.findOne({
@@ -484,9 +560,10 @@ router.post('/:id/start', auth, async (req, res) => {
             });
         }
 
+        // For ACTIVE attempt, do NOT send correct answers
         const questions = await Question.findAll({
             where: { examId: req.params.id },
-            attributes: ['id', 'questionText', 'questionType', 'options', 'marks', 'order'],
+            attributes: ['id', 'questionText', 'questionType', 'options', 'marks', 'order'], // Exclude correctAnswer
             order: [['order', 'ASC']]
         });
 
