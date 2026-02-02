@@ -9,6 +9,27 @@ const SystemSetting = models.SystemSetting;
 const auth = require('../middleware/auth');
 const router = express.Router();
 
+// Simple in-memory cache
+const cache = {
+  data: null,
+  timestamp: null,
+  ttl: 30000 // 30 seconds cache
+};
+
+const getCachedData = (key) => {
+  if (cache[key] && cache[key].timestamp && (Date.now() - cache[key].timestamp < cache.ttl)) {
+    return cache[key].data;
+  }
+  return null;
+};
+
+const setCachedData = (key, data) => {
+  cache[key] = {
+    data,
+    timestamp: Date.now()
+  };
+};
+
 // @route   GET api/stats/dashboard
 // @desc    Get dashboard statistics for admin
 // @access  Private (admin only)
@@ -16,6 +37,13 @@ router.get('/dashboard', auth, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ msg: 'Access denied' });
+    }
+
+    // Check cache first
+    const cacheKey = 'dashboard_stats';
+    const cachedStats = getCachedData(cacheKey);
+    if (cachedStats) {
+      return res.json(cachedStats);
     }
 
     // Get current system settings
@@ -103,7 +131,7 @@ router.get('/dashboard', auth, async (req, res) => {
       }
     }
 
-    res.json({
+    const statsData = {
       totalStudents: totalStudentsResult,
       totalParents: totalParentsResult,
       totalGrades: totalGradesResult,
@@ -112,7 +140,12 @@ router.get('/dashboard', auth, async (req, res) => {
       pendingParents: pendingParentsResult,
       activePeriod: `${activeYear || ''} ${activeSemester || ''}`.trim(),
       recentGrades
-    });
+    };
+
+    // Cache the data
+    setCachedData(cacheKey, statsData);
+
+    res.json(statsData);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Server error' });
