@@ -217,6 +217,20 @@ const AdminDashboard = () => {
       icon: '📋',
       color: '#d32f2f',
       link: '/admin/grade-approval'
+    },
+    {
+      title: t('examApprovals'),
+      value: '📝',
+      icon: '🛡️',
+      color: '#6366f1',
+      link: '/admin/exam-approval'
+    },
+    {
+      title: t('classSchedule'),
+      value: '📅',
+      icon: '⏰',
+      color: '#a855f7',
+      link: '/schedule'
     }
   ];
 

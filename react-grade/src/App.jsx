@@ -130,7 +130,7 @@ const NavigationLinks = ({ user, t, setIsMenuOpen, logout, onEditImage }) => {
     if (file) {
       // Check file size (2MB limit)
       if (file.size > 2 * 1024 * 1024) {
-        showToast('Image is too large. Please select an image smaller than 2MB.', 'error');
+        showToast(t('imageTooLarge'), 'error');
         return;
       }
 
@@ -147,12 +147,12 @@ const NavigationLinks = ({ user, t, setIsMenuOpen, logout, onEditImage }) => {
       const result = await updateProfile({ profileImage: croppedImage });
       if (result.success) {
         onEditImage(null);
-        showToast('Profile picture updated!', 'success');
+        showToast(t('profilePictureUpdated'), 'success');
       } else {
-        showToast(result.message || 'Failed to update profile picture', 'error');
+        showToast(result.message || t('failedToUpdateProfilePicture'), 'error');
       }
     } catch (error) {
-      showToast('An error occurred while saving profile picture', 'error');
+      showToast(t('errorSavingProfilePicture'), 'error');
     }
   };
 
@@ -296,10 +296,14 @@ const NavigationLinks = ({ user, t, setIsMenuOpen, logout, onEditImage }) => {
           </div>
         </div>
       </div>
-      <div style={sectionLabelStyle}>Main Menu</div>
+      <div style={sectionLabelStyle}>{t('mainMenu')}</div>
 
       <Link to={dashboardPath} onClick={handleLinkClick} style={getLinkStyle(dashboardPath)}>
         <LayoutDashboard size={20} color={getIconColor('dashboard', dashboardPath)} /> {t('dashboard')}
+      </Link>
+
+      <Link to="/schedule" onClick={handleLinkClick} style={getLinkStyle('/schedule')}>
+        <Clock size={20} color={getIconColor('schedule', '/schedule')} /> {t('classSchedule')}
       </Link>
 
       {user.permissions?.includes('view_own_grades') && !user.permissions?.includes('view_child_grades') && (
@@ -307,6 +311,7 @@ const NavigationLinks = ({ user, t, setIsMenuOpen, logout, onEditImage }) => {
           <Link to="/student/attendance" onClick={handleLinkClick} style={getLinkStyle('/student/attendance')}><CalendarCheck size={20} color={getIconColor('attendance', '/student/attendance')} /> {t('attendance')}</Link>
           <Link to="/student/grades" onClick={handleLinkClick} style={getLinkStyle('/student/grades')}><GraduationCap size={20} color={getIconColor('grades', '/student/grades')} /> {t('myGrades')}</Link>
           <Link to="/student/assignments" onClick={handleLinkClick} style={getLinkStyle('/student/assignments')}><BookOpen size={20} color={getIconColor('assignments', '/student/assignments')} /> {t('myAssignments')}</Link>
+          <Link to="/student/exams" onClick={handleLinkClick} style={getLinkStyle('/student/exams')}><ShieldCheck size={20} color={getIconColor('exams', '/student/exams')} /> {t('onlineExams')}</Link>
           <Link to="/messages" onClick={handleLinkClick} style={getLinkStyle('/messages')}><MessageSquare size={20} color={getIconColor('messages', '/messages')} /> {t('messages')}</Link>
           <Link to="/student/id-card" onClick={handleLinkClick} style={getLinkStyle('/student/id-card')}><IdCard size={20} color={getIconColor('idcard', '/student/id-card')} /> {t('idCard')}</Link>
         </>
@@ -323,18 +328,19 @@ const NavigationLinks = ({ user, t, setIsMenuOpen, logout, onEditImage }) => {
 
       {user.permissions?.includes('manage_users') && (
         <>
-          <div style={sectionLabelStyle}>Administrative</div>
+          <div style={sectionLabelStyle}>{t('administrative')}</div>
           <Link to="/admin/students" onClick={handleLinkClick} style={getLinkStyle('/admin/students')}><Users size={20} color={getIconColor('users', '/admin/students')} /> {t('manageStudents')}</Link>
-          <Link to="/admin/ids" onClick={handleLinkClick} style={getLinkStyle('/admin/ids')}><IdCard size={20} color={getIconColor('idcard', '/admin/ids')} /> ID Management</Link>
+          <Link to="/admin/ids" onClick={handleLinkClick} style={getLinkStyle('/admin/ids')}><IdCard size={20} color={getIconColor('idcard', '/admin/ids')} /> {t('idManagement')}</Link>
           <Link to="/admin/upload" onClick={handleLinkClick} style={getLinkStyle('/admin/upload')}><GraduationCap size={20} color={getIconColor('upload', '/admin/upload')} /> {t('uploadGrades')}</Link>
           <Link to="/admin/grade-approval" onClick={handleLinkClick} style={getLinkStyle('/admin/grade-approval')}><ShieldCheck size={20} color={getIconColor('grades', '/admin/grade-approval')} /> {t('gradeApprovals')}</Link>
           <Link to="/admin/report-card" onClick={handleLinkClick} style={getLinkStyle('/admin/report-card')}><Star size={20} color={getIconColor('reports', '/admin/report-card')} /> {t('reportCardGen')}</Link>
+          <Link to="/admin/exam-approval" onClick={handleLinkClick} style={getLinkStyle('/admin/exam-approval')}><ShieldCheck size={20} color={getIconColor('exams', '/admin/exam-approval')} /> {t('onlineExamsAdmin')}</Link>
           <Link to="/admin/link-requests" onClick={handleLinkClick} style={getLinkStyle('/admin/link-requests')}><UserCheck size={20} color={getIconColor('users', '/admin/link-requests')} /> {t('linkRequests')}</Link>
 
-          <div style={sectionLabelStyle}>System</div>
+          <div style={sectionLabelStyle}>{t('system')}</div>
           <Link to="/admin/analytics" onClick={handleLinkClick} style={getLinkStyle('/admin/analytics')}><BarChart2 size={20} color={getIconColor('analytics', '/admin/analytics')} /> {t('analytics')}</Link>
           <Link to="/admin/audit" onClick={handleLinkClick} style={getLinkStyle('/admin/audit')}><ShieldCheck size={20} color={getIconColor('audit', '/admin/audit')} /> {t('auditLogs')}</Link>
-          <Link to="/admin/settings" onClick={handleLinkClick} style={getLinkStyle('/admin/settings')}><Settings size={20} color={getIconColor('settings', '/admin/settings')} /> System Settings</Link>
+          <Link to="/admin/settings" onClick={handleLinkClick} style={getLinkStyle('/admin/settings')}><Settings size={20} color={getIconColor('settings', '/admin/settings')} /> {t('systemSettings')}</Link>
         </>
       )}
 
@@ -342,12 +348,13 @@ const NavigationLinks = ({ user, t, setIsMenuOpen, logout, onEditImage }) => {
         <>
           <Link to="/teacher/upload" onClick={handleLinkClick} style={getLinkStyle('/teacher/upload')}><GraduationCap size={20} color={getIconColor('upload', '/teacher/upload')} /> {t('uploadGrades')}</Link>
           <Link to="/teacher/assignments" onClick={handleLinkClick} style={getLinkStyle('/teacher/assignments')}><BookOpen size={20} color={getIconColor('assignments', '/teacher/assignments')} /> {t('myAssignments')}</Link>
+          <Link to="/teacher/exams/create" onClick={handleLinkClick} style={getLinkStyle('/teacher/exams/create')}><ShieldCheck size={20} color={getIconColor('exams', '/teacher/exams/create')} /> {t('onlineExams')}</Link>
           <Link to="/messages" onClick={handleLinkClick} style={getLinkStyle('/messages')}><MessageSquare size={20} color={getIconColor('messages', '/messages')} /> {t('messages')}</Link>
           <Link to="/admin/attendance" onClick={handleLinkClick} style={getLinkStyle('/admin/attendance')}><CalendarCheck size={20} color={getIconColor('attendance', '/admin/attendance')} /> {t('attendance')}</Link>
         </>
       )}
 
-      <div style={sectionLabelStyle}>Personal</div>
+      <div style={sectionLabelStyle}>{t('personal')}</div>
       <Link to="/settings" onClick={handleLinkClick} style={getLinkStyle('/settings')}>
         <Settings size={20} color={getIconColor('settings', '/settings')} /> {t('editProfile')}
       </Link>
@@ -389,12 +396,12 @@ function AppLayout() {
       const result = await updateProfile({ profileImage: croppedImage });
       if (result.success) {
         setEditingImage(null);
-        showToast('Profile picture updated!', 'success');
+        showToast(t('profilePictureUpdated'), 'success');
       } else {
-        showToast(result.message || 'Failed to update profile picture', 'error');
+        showToast(result.message || t('failedToUpdateProfilePicture'), 'error');
       }
     } catch (error) {
-      showToast('An error occurred while saving profile picture', 'error');
+      showToast(t('errorSavingProfilePicture'), 'error');
     } finally {
       setIsSaving(false);
     }

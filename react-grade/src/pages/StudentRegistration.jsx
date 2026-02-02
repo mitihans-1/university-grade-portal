@@ -111,12 +111,6 @@ const StudentRegistration = () => {
       const result = await api.checkStudentId(id);
       if (result.valid) {
         setIdVerifiedStatus('valid');
-        setFormData(prev => ({
-          ...prev,
-          department: result.department || prev.department,
-          year: result.year || prev.year,
-          semester: result.semester || prev.semester
-        }));
       } else {
         setIdVerifiedStatus('invalid');
       }
@@ -202,10 +196,8 @@ const StudentRegistration = () => {
         }
       } catch (error) {
         console.error('Student registration error:', error);
-        alert(t('studentRegistrationError'));
+        alert(error.message || t('studentRegistrationError') || 'Registration failed. Please try again.');
       }
-    } else {
-      setErrors(validationErrors);
     }
   };
 
@@ -362,41 +354,12 @@ const StudentRegistration = () => {
               {errors.studentId && <small style={{ color: '#f44336' }}>{t('studentIdRequired')}</small>}
               {idVerifiedStatus === 'valid' && (
                 <div style={{ fontSize: '11px', color: '#4caf50', marginTop: '2px', fontWeight: 'bold' }}>
-                  Official Record Found! Pre-filling department & year.
+                  ✅ Official Record Found! Verified.
                 </div>
               )}
             </div>
           </div>
 
-          {idVerifiedStatus === 'valid' && (
-            <div style={{
-              background: '#f0f9ff',
-              padding: '20px',
-              borderRadius: '12px',
-              border: '1px solid #bae6fd',
-              marginBottom: '25px',
-              animation: 'slideDown 0.3s ease-out'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0369a1', marginBottom: '12px' }}>
-                <span style={{ fontSize: '18px' }}>📋</span>
-                <span style={{ fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Official Placement Records</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Department</div>
-                  <div style={{ fontWeight: '700', color: '#0f172a' }}>{formData.department || 'General Science'}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Academic Year</div>
-                  <div style={{ fontWeight: '700', color: '#0f172a' }}>Year {formData.year}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Semester</div>
-                  <div style={{ fontWeight: '700', color: '#0f172a' }}>Semester {formData.semester || '1'}</div>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="modern-input-group">
             <label className="modern-input-label">National ID (FIN)</label>

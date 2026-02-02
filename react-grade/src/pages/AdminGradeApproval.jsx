@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
+import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const AdminGradeApproval = () => {
+    const { t } = useLanguage();
     const [pendingGrades, setPendingGrades] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -29,13 +30,13 @@ const AdminGradeApproval = () => {
     };
 
     const handleApprove = async (gradeId) => {
-        if (!window.confirm('Are you sure you want to approve this grade? It will be published to students and parents.')) {
+        if (!window.confirm(t('confirmApproveGrade'))) {
             return;
         }
 
         try {
             await api.approveGrade(gradeId);
-            alert('Grade approved and published successfully!');
+            alert(t('gradeApprovedSuccess'));
             fetchPendingGrades(); // Refresh the list
         } catch (error) {
             console.error('Error approving grade:', error);
@@ -51,13 +52,13 @@ const AdminGradeApproval = () => {
 
     const handleRejectSubmit = async () => {
         if (!rejectionReason.trim()) {
-            alert('Please provide a reason for rejection');
+            alert(t('pleaseProvideRejectionReason'));
             return;
         }
 
         try {
             await api.rejectGrade(selectedGradeId, rejectionReason);
-            alert('Grade rejected successfully. Teacher will be notified.');
+            alert(t('gradeRejectedSuccess'));
             setShowRejectModal(false);
             setSelectedGradeId(null);
             setRejectionReason('');
@@ -71,7 +72,7 @@ const AdminGradeApproval = () => {
     const handleApproveAll = async () => {
         if (pendingGrades.length === 0) return;
 
-        if (!window.confirm(`Are you sure you want to approve ALL ${pendingGrades.length} pending grades? This will publish them to all respective students and parents.`)) {
+        if (!window.confirm(t('confirmApproveAllGrades', { count: pendingGrades.length }))) {
             return;
         }
 
@@ -79,7 +80,7 @@ const AdminGradeApproval = () => {
             setLoading(true);
             const gradeIds = pendingGrades.map(g => g.id);
             const result = await api.approveGradesBulk(gradeIds);
-            alert(result.msg || 'Batch approval successful!');
+            alert(result.msg || t('batchApprovalSuccess'));
             fetchPendingGrades();
         } catch (error) {
             console.error('Error in batch approval:', error);
@@ -95,9 +96,9 @@ const AdminGradeApproval = () => {
     if (error) {
         return (
             <div style={{ maxWidth: '1200px', margin: '20px auto', padding: '20px', backgroundColor: '#ffebee', color: '#c62828', borderRadius: '8px', border: '1px solid #ef5350', textAlign: 'center' }}>
-                <h3>Error Loading Pending Grades</h3>
+                <h3>{t('errorLoadingPendingGrades')}</h3>
                 <p>{error}</p>
-                <button onClick={fetchPendingGrades} style={{ padding: '8px 16px', background: '#c62828', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}>Retry</button>
+                <button onClick={fetchPendingGrades} style={{ padding: '8px 16px', background: '#c62828', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}>{t('retry')}</button>
             </div>
         );
     }
@@ -105,8 +106,8 @@ const AdminGradeApproval = () => {
     return (
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
             <div style={{ marginBottom: '30px' }}>
-                <h1 style={{ marginBottom: '10px', fontSize: '2rem' }}>📋 Teacher Grade Approvals</h1>
-                <p style={{ color: '#666' }}>Review and approve grades submitted by teachers before they are published to students and parents.</p>
+                <h1 style={{ marginBottom: '10px', fontSize: '2rem' }}>📋 {t('teacherGradeApprovals')}</h1>
+                <p style={{ color: '#666' }}>{t('teacherGradeApprovalsDescription')}</p>
             </div>
 
             {pendingGrades.length > 0 && (
@@ -131,7 +132,7 @@ const AdminGradeApproval = () => {
                             borderLeft: '4px solid #1976d2'
                         }}>
                             <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', fontWeight: 'bold' }}>{dept}</div>
-                            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#333' }}>{count} <span style={{ fontSize: '14px', fontWeight: 'normal' }}>pending</span></div>
+                            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#333' }}>{count} <span style={{ fontSize: '14px', fontWeight: 'normal' }}>{t('pending')}</span></div>
                         </div>
                     ))}
                 </div>
@@ -140,13 +141,13 @@ const AdminGradeApproval = () => {
             {pendingGrades.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
                     <div style={{ fontSize: '64px', marginBottom: '20px' }}>✅</div>
-                    <h3 style={{ color: '#2e7d32', marginBottom: '10px' }}>All Caught Up!</h3>
-                    <p style={{ color: '#666' }}>There are no pending grade submissions to review.</p>
+                    <h3 style={{ color: '#2e7d32', marginBottom: '10px' }}>{t('allCaughtUp')}</h3>
+                    <p style={{ color: '#666' }}>{t('noPendingGradesToReview')}</p>
                 </div>
             ) : (
                 <div style={{ backgroundColor: 'white', borderRadius: '10px', padding: '25px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
                     <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ margin: 0 }}>Pending Approvals ({pendingGrades.length})</h3>
+                        <h3 style={{ margin: 0 }}>{t('pendingApprovals')} ({pendingGrades.length})</h3>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button
                                 onClick={handleApproveAll}
@@ -161,10 +162,10 @@ const AdminGradeApproval = () => {
                                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                 }}
                             >
-                                ✅ Approve All Pending
+                                ✅ {t('approveAllPending')}
                             </button>
                             <button onClick={fetchPendingGrades} style={{ padding: '8px 16px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-                                🔄 Refresh
+                                🔄 {t('refresh')}
                             </button>
                         </div>
                     </div>
@@ -173,14 +174,14 @@ const AdminGradeApproval = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ backgroundColor: '#f5f5f5', textAlign: 'left' }}>
-                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Student</th>
-                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Course</th>
-                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Grade</th>
-                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Score</th>
-                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Semester</th>
-                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Teacher</th>
-                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Submitted</th>
-                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Actions</th>
+                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>{t('student')}</th>
+                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>{t('courses')}</th>
+                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>{t('grade')}</th>
+                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>{t('score')}</th>
+                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>{t('semester')}</th>
+                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>{t('teacher')}</th>
+                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>{t('submitted')}</th>
+                                    <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>{t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -238,7 +239,7 @@ const AdminGradeApproval = () => {
                                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#45a049'}
                                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4caf50'}
                                                 >
-                                                    ✓ Approve
+                                                    ✓ {t('approve')}
                                                 </button>
                                                 <button
                                                     onClick={() => handleRejectClick(grade.id)}
@@ -255,7 +256,7 @@ const AdminGradeApproval = () => {
                                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#da190b'}
                                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f44336'}
                                                 >
-                                                    ✗ Reject
+                                                    ✗ {t('reject')}
                                                 </button>
                                             </div>
                                         </td>
@@ -289,12 +290,12 @@ const AdminGradeApproval = () => {
                         width: '90%',
                         boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
                     }}>
-                        <h3 style={{ marginBottom: '20px' }}>Reject Grade Submission</h3>
-                        <p style={{ marginBottom: '15px', color: '#666' }}>Please provide a reason for rejecting this grade. The teacher will be notified.</p>
+                        <h3 style={{ marginBottom: '20px' }}>{t('rejectGradeSubmission')}</h3>
+                        <p style={{ marginBottom: '15px', color: '#666' }}>{t('provideRejectionReasonDescription')}</p>
                         <textarea
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
-                            placeholder="Enter rejection reason..."
+                            placeholder={t('enterRejectionReasonPlaceholder')}
                             style={{
                                 width: '100%',
                                 minHeight: '100px',
@@ -323,7 +324,7 @@ const AdminGradeApproval = () => {
                                     fontWeight: 'bold'
                                 }}
                             >
-                                Cancel
+                                {t('cancel')}
                             </button>
                             <button
                                 onClick={handleRejectSubmit}
@@ -337,7 +338,7 @@ const AdminGradeApproval = () => {
                                     fontWeight: 'bold'
                                 }}
                             >
-                                Confirm Rejection
+                                {t('confirmRejection')}
                             </button>
                         </div>
                     </div>

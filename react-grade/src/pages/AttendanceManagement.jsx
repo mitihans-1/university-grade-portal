@@ -113,11 +113,11 @@ const AttendanceManagement = () => {
                                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                                     <thead>
                                         <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
-                                            <th style={thStyle}>Date</th>
-                                            <th style={thStyle}>Student</th>
-                                            <th style={thStyle}>Course</th>
-                                            <th style={thStyle}>Status</th>
-                                            <th style={thStyle}>Remarks</th>
+                                            <th style={thStyle}>{t('date')}</th>
+                                            <th style={thStyle}>{t('student')}</th>
+                                            <th style={thStyle}>{t('courses')}</th>
+                                            <th style={thStyle}>{t('status')}</th>
+                                            <th style={thStyle}>{t('remarks')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -157,7 +157,7 @@ const AttendanceManagement = () => {
                                         ) : (
                                             <tr>
                                                 <td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-                                                    No attendance records found.
+                                                    {t('noAttendanceRecordsFound')}
                                                 </td>
                                             </tr>
                                         )}

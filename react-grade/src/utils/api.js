@@ -1201,6 +1201,30 @@ export const api = {
     return response.json();
   },
 
+  generateAIQuestions: async (data) => {
+    const token = getToken();
+    const isFormData = data instanceof FormData;
+
+    const headers = {
+      'x-auth-token': token,
+    };
+
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const response = await fetch(`${API_BASE_URL}/exams/generate-ai`, {
+      method: 'POST',
+      headers,
+      body: isFormData ? data : JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || 'AI generation failed');
+    }
+    return response.json();
+  },
+
   addExamQuestions: async (examId, questions) => {
     const token = getToken();
     const response = await fetch(`${API_BASE_URL}/exams/${examId}/questions`, {
@@ -1287,6 +1311,77 @@ export const api = {
         'x-auth-token': token,
       },
     });
+    return response.json();
+  },
+
+  requestCode: async (examId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/exams/${examId}/request-code`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    return response.json();
+  },
+
+  startExamGlobal: async (examId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/exams/${examId}/start-global`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    return response.json();
+  },
+
+  notifyExamCode: async (examId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/exams/${examId}/notify-code`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    return response.json();
+  },
+
+  deleteExam: async (examId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/exams/${examId}`, {
+      method: 'DELETE',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) throw new Error('Failed to delete exam');
+    return response.json();
+  },
+
+  stopExam: async (examId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/exams/${examId}/stop`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) throw new Error('Failed to stop exam');
+    return response.json();
+  },
+
+  addExamTime: async (examId, minutes) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/exams/${examId}/add-time`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify({ minutes }),
+    });
+    if (!response.ok) throw new Error('Failed to add time');
     return response.json();
   },
 
@@ -1481,6 +1576,72 @@ export const api = {
 
   getPublicSettings: async () => {
     const response = await fetch(`${API_BASE_URL}/settings/public`);
+    return response.json();
+  },
+
+  // Grade Approvals (Admin)
+  getPendingGradesForApproval: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/grades/pending-approval`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) {
+      // Handle 404 specially if no grades found or endpoint issue
+      if (response.status === 404) return [];
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || 'Failed to fetch pending grades');
+    }
+    return response.json();
+  },
+
+  approveGrade: async (gradeId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/grades/${gradeId}/approve`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || 'Failed to approve grade');
+    }
+    return response.json();
+  },
+
+  rejectGrade: async (gradeId, reason) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/grades/${gradeId}/reject`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token
+      },
+      body: JSON.stringify({ reason })
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || 'Failed to reject grade');
+    }
+    return response.json();
+  },
+
+  approveGradesBulk: async (gradeIds) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/grades/approve-bulk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token
+      },
+      body: JSON.stringify({ gradeIds })
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || 'Failed to approve grades');
+    }
     return response.json();
   }
 };

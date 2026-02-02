@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../utils/api';
 
 const sendParentNotification = async (studentId, notificationData) => {
@@ -16,6 +17,7 @@ const sendParentNotification = async (studentId, notificationData) => {
 
 const AdminUpload = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [uploadType, setUploadType] = useState('single'); // 'single', 'bulk', or 'batch'
   const [grades, setGrades] = useState([]);
   const [students, setStudents] = useState([]);
@@ -463,12 +465,12 @@ const AdminUpload = () => {
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
         <h1 style={{ margin: '0 0 20px 0', color: '#333' }}>
-          {user?.role === 'admin' ? 'Administrative Grade Portal' : 'Teacher Grade Submission Portal'}
+          {user?.role === 'admin' ? t('adminGradePortal') : t('teacherGradePortal')}
         </h1>
         <p style={{ color: '#666', marginBottom: '20px' }}>
           {user?.role === 'admin'
-            ? 'Access all student grades, perform bulk uploads, and publish results to parents and students.'
-            : 'Submit and manage course grades for your students. All entries require administrative approval before publishing.'}
+            ? t('adminPortalDescription')
+            : t('teacherPortalDescription')}
         </p>
 
         <div style={{
@@ -480,25 +482,25 @@ const AdminUpload = () => {
             <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
               {filteredGradeList.length}
             </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>{user?.role === 'admin' ? 'Total Grades' : 'My Submissions'}</div>
+            <div style={{ color: '#666', fontSize: '14px' }}>{user?.role === 'admin' ? t('totalGrades') : t('mySubmissions')}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#ff9800', marginBottom: '5px' }}>
               {pendingGrades.length}
             </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>Pending</div>
+            <div style={{ color: '#666', fontSize: '14px' }}>{t('pending')}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#4caf50', marginBottom: '5px' }}>
               {publishedGrades.length}
             </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>Published</div>
+            <div style={{ color: '#666', fontSize: '14px' }}>{t('published')}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#2196f3', marginBottom: '5px' }}>
               {filteredGradeList.filter(g => g.notified).length}
             </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>Notifications Sent</div>
+            <div style={{ color: '#666', fontSize: '14px' }}>{t('notificationsSent')}</div>
           </div>
         </div>
       </div>
@@ -522,7 +524,7 @@ const AdminUpload = () => {
               fontWeight: '600'
             }}
           >
-            📝 Single Entry
+            {t('singleEntry')}
           </button>
           <button
             onClick={() => setUploadType('batch')}
@@ -536,7 +538,7 @@ const AdminUpload = () => {
               fontWeight: '600'
             }}
           >
-            👥 Batch Group Entry
+            {t('batchGroupEntry')}
           </button>
           <button
             onClick={() => setUploadType('bulk')}
@@ -550,7 +552,7 @@ const AdminUpload = () => {
               fontWeight: '600'
             }}
           >
-            📁 CSV/Excel Bulk
+            {t('bulkUpload')}
           </button>
         </div>
 
@@ -578,12 +580,12 @@ const AdminUpload = () => {
               }}>
                 📤
               </div>
-              <h2 style={{ margin: 0, color: '#333' }}>Bulk Upload</h2>
+              <h2 style={{ margin: 0, color: '#333' }}>{t('bulkUpload')}</h2>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '10px', color: '#555' }}>
-                Select CSV or Excel File
+                {t('bulkUploadDescription')}
               </label>
               <div
                 onClick={() => document.getElementById('fileInput').click()}
@@ -608,10 +610,10 @@ const AdminUpload = () => {
                   {selectedFile ? '📁' : '📄'}
                 </div>
                 <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>
-                  {selectedFile ? selectedFile.name : 'Click to select file'}
+                  {selectedFile ? selectedFile.name : t('clickToSelectFile')}
                 </p>
                 <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-                  CSV or Excel files only
+                  {t('csvExcelOnly')}
                 </p>
               </div>
             </div>
@@ -619,11 +621,11 @@ const AdminUpload = () => {
             {selectedFile && (
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                  <span style={{ color: '#666' }}>File Size:</span>
+                  <span style={{ color: '#666' }}>{t('fileSize')}:</span>
                   <span style={{ fontWeight: 'bold' }}>{(selectedFile.size / 1024).toFixed(2)} KB</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#666' }}>Type:</span>
+                  <span style={{ color: '#666' }}>{t('type')}:</span>
                   <span style={{ fontWeight: 'bold' }}>{selectedFile.type || 'Unknown'}</span>
                 </div>
               </div>
@@ -632,7 +634,7 @@ const AdminUpload = () => {
             {isUploading && (
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                  <span style={{ color: '#666' }}>Uploading...</span>
+                  <span style={{ color: '#666' }}>{t('uploading')}</span>
                   <span style={{ fontWeight: 'bold' }}>{uploadProgress}%</span>
                 </div>
                 <div style={{
@@ -666,7 +668,7 @@ const AdminUpload = () => {
                 cursor: selectedFile && !isUploading ? 'pointer' : 'not-allowed'
               }}
             >
-              {isUploading ? 'Uploading...' : 'Process Bulk File'}
+              {isUploading ? t('uploading') : t('processBulkFile')}
             </button>
           </div>
         )}
@@ -694,12 +696,12 @@ const AdminUpload = () => {
               }}>
                 👥
               </div>
-              <h2 style={{ margin: 0, color: '#333' }}>Batch Group Entry</h2>
+              <h2 style={{ margin: 0, color: '#333' }}>{t('batchGroupEntry')}</h2>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Department</label>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{t('department')}</label>
                 <select
                   value={batchInfo.department}
                   onChange={(e) => {
@@ -710,12 +712,12 @@ const AdminUpload = () => {
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 >
                   {departments.map((d) => (
-                    <option key={d} value={d}>{d === 'All' ? 'All Departments' : d}</option>
+                    <option key={d} value={d}>{d === 'All' ? t('allDepartments') || 'All Departments' : d}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Course Code</label>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{t('courseCode')}</label>
                 <input
                   type="text"
                   value={batchInfo.course}
@@ -734,7 +736,7 @@ const AdminUpload = () => {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Subject Name</label>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{t('subjectName')}</label>
                 <input
                   type="text"
                   value={batchInfo.subject}
@@ -752,7 +754,7 @@ const AdminUpload = () => {
                 {coursesCatalog.map(c => <option key={c.code} value={c.name} />)}
               </datalist>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Academic Year</label>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{t('academicYear')}</label>
                 <select
                   value={batchInfo.academicYear}
                   onChange={(e) => {
@@ -763,12 +765,12 @@ const AdminUpload = () => {
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 >
                   {years.map((y) => (
-                    <option key={y} value={y}>{y === 'All' ? 'Select Year' : `Year ${y}`}</option>
+                    <option key={y} value={y}>{y === 'All' ? t('selectYear') : `${t('year')} ${y}`}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>Semester</label>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{t('semester')}</label>
                 <select
                   value={batchInfo.semester}
                   onChange={(e) => {
@@ -779,7 +781,7 @@ const AdminUpload = () => {
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 >
                   {semesters.map((s) => (
-                    <option key={s} value={s}>{s === 'All' ? 'Select Semester' : s}</option>
+                    <option key={s} value={s}>{s === 'All' ? t('selectSemester') : s}</option>
                   ))}
                 </select>
               </div>
@@ -789,10 +791,10 @@ const AdminUpload = () => {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f5f5f5', textAlign: 'left' }}>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Student ID</th>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Name</th>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Grade</th>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Score %</th>
+                    <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{t('studentId')}</th>
+                    <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{t('fullName')}</th>
+                    <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{t('grade')}</th>
+                    <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{t('score')} %</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -849,7 +851,7 @@ const AdminUpload = () => {
                 cursor: 'pointer'
               }}
             >
-              {isUploading ? 'Submitting...' : `Submit Grades for ${filteredStudents.length} Students`}
+              {isUploading ? t('submitting') : `${t('recordAttendance')} ${filteredStudents.length} ${t('manageStudents')}`}
             </button>
           </div>
         )}
@@ -877,35 +879,35 @@ const AdminUpload = () => {
               }}>
                 ➕
               </div>
-              <h2 style={{ margin: 0, color: '#333' }}>Single Grade Entry</h2>
+              <h2 style={{ margin: 0, color: '#333' }}>{t('singleEntry')}</h2>
             </div>
             {/* ... rest of single entry content ... */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Student ID</label>
+                <label style={{ display: 'block', marginBottom: '5px' }}>{t('studentId')}</label>
                 <select
                   value={newGrade.studentId}
                   onChange={(e) => setNewGrade({ ...newGrade, studentId: e.target.value })}
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 >
-                  <option value="">Select Student</option>
+                  <option value="">{t('selectStudent')}</option>
                   {students.map(s => <option key={s.id} value={s.studentId}>{s.name} ({s.studentId})</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Course Code / Name</label>
+                <label style={{ display: 'block', marginBottom: '5px' }}>{t('courseCode')} / {t('courseName')}</label>
                 <input
                   type="text"
                   value={newGrade.course}
                   list="course-names"
                   onChange={(e) => setNewGrade({ ...newGrade, course: e.target.value })}
-                  placeholder="Select or type course..."
+                  placeholder={`${t('selectLanguage')}...`}
                   style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>Grade</label>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>{t('grade')}</label>
                   <select
                     value={newGrade.grade}
                     onChange={(e) => setNewGrade({ ...newGrade, grade: e.target.value })}
@@ -920,7 +922,7 @@ const AdminUpload = () => {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>Score</label>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>{t('score')}</label>
                   <input
                     type="number"
                     value={newGrade.score}
@@ -933,7 +935,7 @@ const AdminUpload = () => {
                 onClick={handleSingleUpload}
                 style={{ width: '100%', padding: '15px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}
               >
-                Submit Grade
+                {t('submitting')}
               </button>
             </div>
           </div>
@@ -949,7 +951,7 @@ const AdminUpload = () => {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ margin: 0, color: '#333' }}>
-            {user?.role === 'admin' ? 'All Grade Records' : 'My Grade Submissions'}
+            {user?.role === 'admin' ? t('gradeApprovals') : t('mySubmissions')}
           </h2>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
@@ -973,7 +975,7 @@ const AdminUpload = () => {
                 fontWeight: 'bold'
               }}
             >
-              Publish All Pending ({pendingGrades.length})
+              {t('approve')} ({pendingGrades.length})
             </button>
           </div>
         </div>
@@ -986,7 +988,7 @@ const AdminUpload = () => {
           marginBottom: '25px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-            <h2 style={{ margin: 0, color: '#333' }}>Students by Year</h2>
+            <h2 style={{ margin: 0, color: '#333' }}>{t('manageStudents')}</h2>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <select
                 value={selectedDepartment}
@@ -994,7 +996,7 @@ const AdminUpload = () => {
                 style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: 'white' }}
               >
                 {departments.map((d) => (
-                  <option key={d} value={d}>{d === 'All' ? 'All Departments' : d}</option>
+                  <option key={d} value={d}>{d === 'All' ? t('allDepartments') || 'All Departments' : d}</option>
                 ))}
               </select>
               <select
@@ -1003,7 +1005,7 @@ const AdminUpload = () => {
                 style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: 'white' }}
               >
                 {years.map((y) => (
-                  <option key={y} value={y}>{y === 'All' ? 'All Years' : `Year ${y}`}</option>
+                  <option key={y} value={y}>{y === 'All' ? t('selectYear') : `${t('year')} ${y}`}</option>
                 ))}
               </select>
               <select
@@ -1012,14 +1014,14 @@ const AdminUpload = () => {
                 style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: 'white' }}
               >
                 {semesters.map((s) => (
-                  <option key={s} value={s}>{s === 'All' ? 'All Semesters' : s}</option>
+                  <option key={s} value={s}>{s === 'All' ? t('selectSemester') : s}</option>
                 ))}
               </select>
               <button
                 onClick={handleShowAll}
                 style={{ padding: '8px 12px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
               >
-                Show All Grades
+                {t('viewGradesAndAcademicProgress')}
               </button>
             </div>
           </div>
@@ -1028,7 +1030,7 @@ const AdminUpload = () => {
             <div style={{ position: 'relative' }}>
               <input
                 type="text"
-                placeholder="🔍 Search student by ID or Name..."
+                placeholder={`🔍 ${t('searchPeople')}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -1075,11 +1077,11 @@ const AdminUpload = () => {
                 }}
               >
                 <div style={{ fontWeight: 'bold', color: '#333' }}>{s.name}</div>
-                <div style={{ color: '#666', fontSize: '13px' }}>{s.studentId} • Year {s.year}</div>
+                <div style={{ color: '#666', fontSize: '13px' }}>{s.studentId} • {t('yearNumber').replace('{year}', s.year)}</div>
               </button>
             ))}
             {filteredStudents.length === 0 && (
-              <div style={{ color: '#666' }}>No students found for selected year.</div>
+              <div style={{ color: '#666' }}>{t('noStudentsFound')}</div>
             )}
           </div>
         </div>
@@ -1088,13 +1090,13 @@ const AdminUpload = () => {
           <table>
             <thead>
               <tr>
-                <th>Student ID</th>
-                <th>Student Name</th>
-                <th>Course</th>
-                <th>Grade</th>
-                <th>Status</th>
-                <th>Notification</th>
-                <th>Actions</th>
+                <th>{t('studentId')}</th>
+                <th>{t('fullName')}</th>
+                <th>{t('courses')}</th>
+                <th>{t('grade')}</th>
+                <th>{t('status')}</th>
+                <th>{t('notifications')}</th>
+                <th>{t('actions')}</th>
               </tr>
             </thead>
             <tbody>

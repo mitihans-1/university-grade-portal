@@ -85,12 +85,6 @@ const TeacherRegistration = () => {
             const result = await api.checkTeacherId(id);
             if (result.valid) {
                 setIdVerifiedStatus('valid');
-                setFormData(prev => ({
-                    ...prev,
-                    department: result.department || prev.department,
-                    subject: result.subject || prev.subject,
-                    specialization: result.specialization || prev.specialization
-                }));
             } else {
                 setIdVerifiedStatus('invalid');
             }
@@ -347,41 +341,12 @@ const TeacherRegistration = () => {
                             {errors.teacherId && <small style={{ color: '#f44336' }}>{t('teacherIdRequired')}</small>}
                             {idVerifiedStatus === 'valid' && (
                                 <div style={{ fontSize: '11px', color: '#4caf50', marginTop: '2px', fontWeight: 'bold' }}>
-                                    Official Record Found! Pre-filling department & details.
+                                    ✅ Official Record Found! Verified.
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {idVerifiedStatus === 'valid' && (
-                        <div style={{
-                            background: '#fdf4ff',
-                            padding: '20px',
-                            borderRadius: '12px',
-                            border: '1px solid #f5d0fe',
-                            marginBottom: '25px',
-                            animation: 'slideDown 0.3s ease-out'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#701a75', marginBottom: '12px' }}>
-                                <span style={{ fontSize: '18px' }}>👨‍🏫</span>
-                                <span style={{ fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assigned Faculty Records</span>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
-                                <div>
-                                    <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Department</div>
-                                    <div style={{ fontWeight: '700', color: '#1f2937' }}>{formData.department || 'Not Assigned'}</div>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Major Subject</div>
-                                    <div style={{ fontWeight: '700', color: '#1f2937' }}>{formData.subject || 'Flexible'}</div>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', marginBottom: '4px' }}>Specialization</div>
-                                    <div style={{ fontWeight: '700', color: '#1f2937' }}>{formData.specialization || 'General'}</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
                         <div className="modern-input-group">

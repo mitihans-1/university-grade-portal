@@ -166,6 +166,87 @@ const notifyParent = async (parent, notification) => {
   return results;
 };
 
+// Function to send exam result notification
+const sendExamResultNotification = async (parent, studentName, examTitle, score, maxScore, results) => {
+  const pref = parent.notificationPreference || 'both';
+  const emailSubject = `Exam Result: ${examTitle} - ${studentName}`;
+
+  // Create a summary table for the email
+  let performanceRows = '';
+  if (results && results.length > 0) {
+    performanceRows = results.map((r, idx) => `
+      <tr style="border-bottom: 1px solid #f1f5f9;">
+        <td style="padding: 10px; font-size: 14px;">${idx + 1}</td>
+        <td style="padding: 10px; font-size: 14px;">${r.questionText.substring(0, 50)}${r.questionText.length > 50 ? '...' : ''}</td>
+        <td style="padding: 10px; font-size: 14px; color: ${r.isCorrect ? '#10b981' : '#ef4444'}; font-weight: bold;">
+          ${r.isCorrect ? 'Correct' : 'Incorrect'}
+        </td>
+        <td style="padding: 10px; font-size: 14px;">${r.marks} pts</td>
+      </tr>
+    `).join('');
+  }
+
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+      <h2 style="color: #4f46e5; text-align: center;">Exam Result Notification</h2>
+      <p style="font-size: 16px; color: #334155;">Hello <strong>${parent.name}</strong>,</p>
+      <p style="font-size: 16px; color: #334155;">Your child <strong>${studentName}</strong> has completed an online exam.</p>
+      
+      <div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #e2e8f0; text-align: center;">
+        <p style="margin: 5px 0; font-size: 14px; color: #64748b;">Exam Title</p>
+        <h3 style="margin: 0 0 15px 0; color: #1e293b;">${examTitle}</h3>
+        <div style="display: flex; justify-content: center; gap: 40px; margin-bottom: 10px;">
+          <div>
+            <p style="margin: 0; font-size: 12px; color: #64748b;">SCORE</p>
+            <p style="margin: 0; font-size: 24px; color: #4f46e5; font-weight: bold;">${score} <span style="font-size: 14px; color: #94a3b8;">/ ${maxScore}</span></p>
+          </div>
+          <div>
+            <p style="margin: 0; font-size: 12px; color: #64748b;">RESULT</p>
+            <p style="margin: 0; font-size: 24px; color: ${(score / maxScore) >= 0.5 ? '#10b981' : '#ef4444'}; font-weight: bold;">
+              ${((score / maxScore) * 100).toFixed(0)}%
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">Performance Summary</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+        <thead>
+          <tr style="background-color: #f8fafc; text-align: left;">
+            <th style="padding: 10px; font-size: 12px; color: #64748b;">#</th>
+            <th style="padding: 10px; font-size: 12px; color: #64748b;">Question Summary</th>
+            <th style="padding: 10px; font-size: 12px; color: #64748b;">Status</th>
+            <th style="padding: 10px; font-size: 12px; color: #64748b;">Weight</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${performanceRows}
+        </tbody>
+      </table>
+
+      <p style="font-size: 15px; color: #475569; line-height: 1.5;">The student has access to detailed <strong>AI Tutor Explanations</strong> for every incorrect answer in their personal dashboard to help them learn from their mistakes.</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${FRONTEND_URL}/parent" style="display: inline-block; padding: 14px 28px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">Review Performance in Portal</a>
+      </div>
+      
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; text-align: center;">Academic Department<br>University Grade Portal</p>
+    </div>
+  `;
+
+  const smsMessage = `Univ Exam Alert: ${studentName} finished ${examTitle} with score ${score}/${maxScore} (${((score / maxScore) * 100).toFixed(1)}%). Check portal for review.`;
+
+  let results_out = {};
+  if (pref === 'email' || pref === 'both') {
+    results_out.email = await sendEmail(parent.email, emailSubject, emailHtml);
+  }
+  if (pref === 'sms' || pref === 'both') {
+    results_out.sms = await sendSMS(parent.phone, smsMessage);
+  }
+  return results_out;
+};
+
 // Function to send verification email
 const sendVerificationEmail = async (email, name, role, token) => {
   // Point directly to backend for instant verification
@@ -221,5 +302,6 @@ module.exports = {
   sendAcademicAlert,
   notifyParent,
   sendVerificationEmail,
-  sendApprovalEmail
+  sendApprovalEmail,
+  sendExamResultNotification
 };

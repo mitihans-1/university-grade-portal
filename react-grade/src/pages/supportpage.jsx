@@ -17,36 +17,36 @@ const SupportPage = () => {
 
     const faqs = [
         {
-            question: "How do I view my grades?",
-            answer: "Navigate to the 'Grades' section from the sidebar menu. Your grades will be displayed by semester and course."
+            question: t('faq1_q'),
+            answer: t('faq1_a')
         },
         {
-            question: "How can I link my child's account (Parents)?",
-            answer: "Go to 'Link New Student' in the menu, enter your child's student ID, and submit the request. An administrator will approve the link."
+            question: t('faq2_q'),
+            answer: t('faq2_a')
         },
         {
-            question: "How do I change my password?",
-            answer: "Visit the 'Settings' page from the sidebar menu and use the 'Change Password' section to update your credentials."
+            question: t('faq3_q'),
+            answer: t('faq3_a')
         },
         {
-            question: "Why can't I see my attendance?",
-            answer: "Attendance records are updated by administrators and teachers. If you don't see your attendance, please contact your institution's admin office."
+            question: t('faq4_q'),
+            answer: t('faq4_a')
         },
         {
-            question: "How do I upload grades (Teachers)?",
-            answer: "Use the 'Upload Grades' option from the teacher dashboard. You can upload individual grades or use CSV for batch upload."
+            question: t('faq5_q'),
+            answer: t('faq5_a')
         },
         {
-            question: "How do I pay my fees?",
-            answer: "Visit the 'Fees' section to view your fee status and payment instructions. Contact the finance office for payment methods."
+            question: t('faq6_q'),
+            answer: t('faq6_a')
         },
         {
-            question: "Can I appeal a grade?",
-            answer: "Yes! Go to the 'Grade Appeals' section (if available for your role) to submit an appeal with supporting documentation."
+            question: t('faq7_q'),
+            answer: t('faq7_a')
         },
         {
-            question: "How do I receive notifications?",
-            answer: "You can set your notification preferences (Email/SMS/Both) in the Settings page. Make sure your contact information is up to date."
+            question: t('faq8_q'),
+            answer: t('faq8_a')
         }
     ];
 
@@ -90,10 +90,10 @@ const SupportPage = () => {
             }}>
                 <HelpCircle size={48} style={{ color: '#3b82f6', marginBottom: '16px' }} />
                 <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#1e293b' }}>
-                    {t('support') || 'Support Center'}
+                    {t('support')}
                 </h1>
                 <p style={{ margin: 0, color: '#64748b', fontSize: '16px' }}>
-                    We're here to help! Find answers or contact us directly.
+                    {t('supportDescription')}
                 </p>
             </div>
 
@@ -121,7 +121,7 @@ const SupportPage = () => {
                     }}
                 >
                     <BookOpen size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                    FAQs
+                    {t('faqs')}
                 </button>
                 <button
                     onClick={() => setActiveTab('contact')}
@@ -140,7 +140,7 @@ const SupportPage = () => {
                     }}
                 >
                     <MessageSquare size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                    Contact Us
+                    {t('contactUs')}
                 </button>
                 <button
                     onClick={() => setActiveTab('info')}
@@ -159,7 +159,7 @@ const SupportPage = () => {
                     }}
                 >
                     <Phone size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                    Contact Info
+                    {t('contactInfo')}
                 </button>
             </div>
 
@@ -172,7 +172,7 @@ const SupportPage = () => {
                     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                 }}>
                     <h2 style={{ marginTop: 0, color: '#1e293b', fontSize: '22px' }}>
-                        Frequently Asked Questions
+                        {t('frequentlyAskedQuestions')}
                     </h2>
                     <div style={{ marginTop: '24px' }}>
                         {faqs.map((faq, index) => (
@@ -231,10 +231,10 @@ const SupportPage = () => {
                     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                 }}>
                     <h2 style={{ marginTop: 0, color: '#1e293b', fontSize: '22px' }}>
-                        Send Us a Message
+                        {t('sendUsAMessage')}
                     </h2>
                     <p style={{ color: '#64748b', marginBottom: '24px' }}>
-                        Fill out the form below and we'll get back to you as soon as possible.
+                        {t('contactFormDescription')}
                     </p>
 
                     <form onSubmit={handleSubmit}>
@@ -245,7 +245,7 @@ const SupportPage = () => {
                                 fontWeight: '600',
                                 color: '#1e293b'
                             }}>
-                                Subject *
+                                {t('subject')} *
                             </label>
                             <input
                                 type="text"
@@ -253,7 +253,7 @@ const SupportPage = () => {
                                 value={formData.subject}
                                 onChange={handleInputChange}
                                 required
-                                placeholder="Brief description of your issue"
+                                placeholder={t('subjectPlaceholder')}
                                 style={{
                                     width: '100%',
                                     padding: '12px',
@@ -272,7 +272,7 @@ const SupportPage = () => {
                                 fontWeight: '600',
                                 color: '#1e293b'
                             }}>
-                                Priority
+                                {t('priority')}
                             </label>
                             <select
                                 name="priority"
@@ -287,9 +287,9 @@ const SupportPage = () => {
                                     boxSizing: 'border-box'
                                 }}
                             >
-                                <option value="low">Low - General inquiry</option>
-                                <option value="medium">Medium - Need assistance</option>
-                                <option value="high">High - Urgent issue</option>
+                                <option value="low">{t('priorityLow')}</option>
+                                <option value="medium">{t('priorityMedium')}</option>
+                                <option value="high">{t('priorityHigh')}</option>
                             </select>
                         </div>
 
@@ -300,7 +300,7 @@ const SupportPage = () => {
                                 fontWeight: '600',
                                 color: '#1e293b'
                             }}>
-                                Message *
+                                {t('yourMessage')} *
                             </label>
                             <textarea
                                 name="message"
@@ -308,7 +308,7 @@ const SupportPage = () => {
                                 onChange={handleInputChange}
                                 required
                                 rows="6"
-                                placeholder="Describe your issue or question in detail..."
+                                placeholder={t('messagePlaceholderSupport')}
                                 style={{
                                     width: '100%',
                                     padding: '12px',
@@ -341,12 +341,12 @@ const SupportPage = () => {
                             }}
                         >
                             <Send size={18} />
-                            {submitStatus === 'sending' ? 'Sending...' : submitStatus === 'success' ? 'Sent!' : 'Send Message'}
+                            {submitStatus === 'sending' ? t('sending') : submitStatus === 'success' ? t('sent') : t('sendMessage')}
                         </button>
 
                         {submitStatus === 'success' && (
                             <p style={{ color: '#10b981', marginTop: '12px', fontWeight: '500' }}>
-                                ✓ Your message has been sent successfully. We'll get back to you soon!
+                                ✓ {t('messageSentSuccessSupport')}
                             </p>
                         )}
                     </form>
@@ -362,10 +362,10 @@ const SupportPage = () => {
                     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                 }}>
                     <h2 style={{ marginTop: 0, color: '#1e293b', fontSize: '22px' }}>
-                        Contact Information
+                        {t('contactInformation')}
                     </h2>
                     <p style={{ color: '#64748b', marginBottom: '32px' }}>
-                        You can reach us through any of the following channels:
+                        {t('contactInfoDescription')}
                     </p>
 
                     <div style={{ display: 'grid', gap: '24px' }}>
@@ -391,10 +391,10 @@ const SupportPage = () => {
                                 <Mail size={24} color="white" />
                             </div>
                             <div>
-                                <h3 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '18px' }}>Email</h3>
+                                <h3 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '18px' }}>{t('email')}</h3>
                                 <p style={{ margin: 0, color: '#64748b' }}>support@university.edu</p>
                                 <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>
-                                    We typically respond within 24-48 hours
+                                    {t('emailSupportNote')}
                                 </p>
                             </div>
                         </div>
@@ -421,10 +421,10 @@ const SupportPage = () => {
                                 <Phone size={24} color="white" />
                             </div>
                             <div>
-                                <h3 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '18px' }}>Phone</h3>
+                                <h3 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '18px' }}>{t('phone')}</h3>
                                 <p style={{ margin: 0, color: '#64748b' }}>+251 11 123 4567</p>
                                 <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>
-                                    Monday - Friday, 8:00 AM - 5:00 PM
+                                    {t('phoneSupportNote')}
                                 </p>
                             </div>
                         </div>
@@ -452,10 +452,10 @@ const SupportPage = () => {
                                 🏢
                             </div>
                             <div>
-                                <h3 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '18px' }}>Office</h3>
-                                <p style={{ margin: 0, color: '#64748b' }}>IT Support Center, Main Building</p>
+                                <h3 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '18px' }}>{t('office')}</h3>
+                                <p style={{ margin: 0, color: '#64748b' }}>{t('officeLocation')}</p>
                                 <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>
-                                    Walk-ins welcome during office hours
+                                    {t('officeSupportNote')}
                                 </p>
                             </div>
                         </div>
@@ -470,13 +470,13 @@ const SupportPage = () => {
                         borderLeft: '4px solid #3b82f6'
                     }}>
                         <h3 style={{ margin: '0 0 12px 0', color: '#1e40af', fontSize: '16px' }}>
-                            💡 Quick Tips
+                            💡 {t('quickTips')}
                         </h3>
                         <ul style={{ margin: 0, paddingLeft: '20px', color: '#1e40af', lineHeight: '1.8' }}>
-                            <li>Check the FAQs section first - your question might already be answered!</li>
-                            <li>Have your student/staff ID ready when contacting support</li>
-                            <li>For urgent technical issues during exams, call the support hotline directly</li>
-                            <li>Use the Messages feature to communicate with your teachers and admin</li>
+                            <li>{t('tip1')}</li>
+                            <li>{t('tip2')}</li>
+                            <li>{t('tip3')}</li>
+                            <li>{t('tip4')}</li>
                         </ul>
                     </div>
                 </div>

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
+import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useToast } from '../components/common/Toast';
 
@@ -11,6 +12,7 @@ const localizer = momentLocalizer(moment);
 
 const AcademicCalendar = () => {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const { showToast } = useToast();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -48,27 +50,27 @@ const AcademicCalendar = () => {
     const handleCreateEvent = async () => {
         try {
             if (!newEvent.title || !newEvent.start || !newEvent.end) {
-                showToast('Please fill in required fields', 'error');
+                showToast(t('pleaseFillRequiredFields'), 'error');
                 return;
             }
             await api.createEvent(newEvent);
-            showToast('Event created successfully', 'success');
+            showToast(t('eventCreatedSuccess'), 'success');
             setShowModal(false);
             fetchEvents();
         } catch (error) {
             console.error('Error creating event:', error);
-            showToast('Failed to create event', 'error');
+            showToast(t('failedToCreateEvent'), 'error');
         }
     };
 
     const handleDeleteEvent = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this event?')) return;
+        if (!window.confirm(t('confirmDeleteEvent'))) return;
         try {
             await api.deleteEvent(id);
-            showToast('Event deleted', 'success');
+            showToast(t('eventDeleted'), 'success');
             fetchEvents();
         } catch (error) {
-            showToast('Failed to delete event', 'error');
+            showToast(t('failedToDeleteEvent'), 'error');
         }
     };
 
@@ -99,8 +101,8 @@ const AcademicCalendar = () => {
         <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                 <div>
-                    <h1 style={{ margin: '0 0 10px 0' }}>📅 Academic Calendar</h1>
-                    <p style={{ color: '#666' }}>Important dates, exams, and holidays.</p>
+                    <h1 style={{ margin: '0 0 10px 0' }}>📅 {t('academicCalendar')}</h1>
+                    <p style={{ color: '#666' }}>{t('academicCalendarDescription')}</p>
                 </div>
                 {user && user.permissions?.includes('manage_system') && (
                     <button
@@ -115,7 +117,7 @@ const AcademicCalendar = () => {
                             fontWeight: 'bold'
                         }}
                     >
-                        + Add Event
+                        + {t('addEvent')}
                     </button>
                 )}
             </div>
@@ -142,10 +144,10 @@ const AcademicCalendar = () => {
                     backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
                 }}>
                     <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '500px', maxWidth: '90%' }}>
-                        <h2>Add New Event</h2>
+                        <h2>{t('addNewEvent')}</h2>
 
                         <div style={{ marginBottom: '15px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Title</label>
+                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t('title')}</label>
                             <input
                                 type="text"
                                 value={newEvent.title}
@@ -155,23 +157,23 @@ const AcademicCalendar = () => {
                         </div>
 
                         <div style={{ marginBottom: '15px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type</label>
+                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t('type')}</label>
                             <select
                                 value={newEvent.type}
                                 onChange={e => setNewEvent({ ...newEvent, type: e.target.value })}
                                 style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
                             >
-                                <option value="academic">Academic</option>
-                                <option value="exam">Exam</option>
-                                <option value="holiday">Holiday</option>
-                                <option value="deadline">Deadline</option>
-                                <option value="activity">Activity</option>
+                                <option value="academic">{t('academic')}</option>
+                                <option value="exam">{t('exam')}</option>
+                                <option value="holiday">{t('holiday')}</option>
+                                <option value="deadline">{t('deadline')}</option>
+                                <option value="activity">{t('activity')}</option>
                             </select>
                         </div>
 
                         <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
                             <div style={{ flex: 1 }}>
-                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Start Date</label>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t('startDate')}</label>
                                 <input
                                     type="datetime-local"
                                     value={moment(newEvent.start).format('YYYY-MM-DDTHH:mm')}
@@ -180,7 +182,7 @@ const AcademicCalendar = () => {
                                 />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>End Date</label>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t('endDate')}</label>
                                 <input
                                     type="datetime-local"
                                     value={moment(newEvent.end).format('YYYY-MM-DDTHH:mm')}
@@ -191,7 +193,7 @@ const AcademicCalendar = () => {
                         </div>
 
                         <div style={{ marginBottom: '20px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Description</label>
+                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t('description')}</label>
                             <textarea
                                 value={newEvent.description}
                                 onChange={e => setNewEvent({ ...newEvent, description: e.target.value })}
@@ -204,13 +206,13 @@ const AcademicCalendar = () => {
                                 onClick={() => setShowModal(false)}
                                 style={{ padding: '10px 20px', backgroundColor: '#eee', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
                             >
-                                Cancel
+                                {t('cancel')}
                             </button>
                             <button
                                 onClick={handleCreateEvent}
                                 style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
                             >
-                                Save Event
+                                {t('saveEvent')}
                             </button>
                         </div>
                     </div>

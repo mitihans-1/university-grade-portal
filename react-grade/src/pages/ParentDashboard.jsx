@@ -34,6 +34,8 @@ const ParentDashboard = () => {
   const [newChildId, setNewChildId] = useState('');
   const [submittingLink, setSubmittingLink] = useState(false);
   const [familyOverview, setFamilyOverview] = useState([]);
+  const [childSchedule, setChildSchedule] = useState([]);
+  const [childExams, setChildExams] = useState([]);
 
   useEffect(() => {
     const fetchLinkedStudents = async () => {
@@ -145,6 +147,18 @@ const ParentDashboard = () => {
               gpa: analyticsData.overallGPA || prev.gpa
             }));
           }
+        } catch (e) { console.error(e); }
+
+        // Fetch Child Schedule Teaser
+        try {
+          const scheduleData = await api.getSchedules(studentData.department, studentData.year, '1'); // Assuming semester 1 for now
+          setChildSchedule(Array.isArray(scheduleData) ? scheduleData : []);
+        } catch (e) { console.error(e); }
+
+        // Fetch Available Exams
+        try {
+          const examsData = await api.getAvailableExams(selectedStudentId);
+          setChildExams(Array.isArray(examsData) ? examsData : []);
         } catch (e) { console.error(e); }
 
       } catch (error) {
@@ -506,6 +520,71 @@ const ParentDashboard = () => {
               </div>
             </div>
           )}
+
+          {/* New Widgets Section */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '25px',
+            marginBottom: '30px'
+          }}>
+            {/* Child's Schedule Widget */}
+            <div className="stagger-item" style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '25px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+              borderBottom: '5px solid #a855f7'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⏰</span> {t('classSchedule')}
+                </h3>
+                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>{t('today')}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {childSchedule.filter(s => s.dayOfWeek === new Date().toLocaleDateString('en-US', { weekday: 'long' })).length > 0 ? (
+                  childSchedule.filter(s => s.dayOfWeek === new Date().toLocaleDateString('en-US', { weekday: 'long' })).slice(0, 3).map(cls => (
+                    <div key={cls.id} style={{ padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', borderLeft: '3px solid #a855f7' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{cls.courseName}</div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>{cls.startTime} - {cls.endTime} • Room {cls.room}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '15px', color: '#94a3b8', fontStyle: 'italic', fontSize: '14px' }}>
+                    {t('noClasses')}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Upcoming Exams Widget */}
+            <div className="stagger-item" style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '25px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+              borderBottom: '5px solid #6366f1'
+            }}>
+              <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📝</span> {t('onlineExams')}
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {childExams.length > 0 ? (
+                  childExams.slice(0, 2).map(exam => (
+                    <div key={exam.id} style={{ padding: '10px', backgroundColor: '#f0f5ff', borderRadius: '8px', borderLeft: '3px solid #6366f1' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{exam.title}</div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>{exam.duration} {t('durationMinutes')} • {exam.courseCode}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '15px', color: '#94a3b8', fontStyle: 'italic', fontSize: '14px' }}>
+                    No upcoming exams
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
 
 

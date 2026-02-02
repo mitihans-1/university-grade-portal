@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { api } from '../utils/api';
 import { useToast } from '../components/common/Toast';
+import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const MessagesPage = () => {
@@ -11,6 +12,7 @@ const MessagesPage = () => {
     const socket = useSocket();
     const location = useLocation();
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const [conversations, setConversations] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -50,7 +52,7 @@ const MessagesPage = () => {
                             otherRole: targetRole,
                             otherName: targetName,
                             unreadCount: 0,
-                            lastMessage: 'Start a new conversation',
+                            lastMessage: t('startNewConversation'),
                             lastTimestamp: new Date().toISOString()
                         });
                     }
@@ -140,7 +142,7 @@ const MessagesPage = () => {
                     ? { ...c, unreadCount: 0 } : c
             ));
         } catch (error) {
-            showToast('Error loading chat history', 'error');
+            showToast(t('errorLoadingChatHistory'), 'error');
         }
     };
 
@@ -180,7 +182,7 @@ const MessagesPage = () => {
                 flexDirection: 'column'
             }}>
                 <div style={{ padding: '20px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ margin: 0, color: '#1976d2' }}>Direct Messages</h2>
+                    <h2 style={{ margin: 0, color: '#1976d2' }}>{t('directMessages')}</h2>
                     <button
                         onClick={() => setShowSearch(!showSearch)}
                         style={{
@@ -205,7 +207,7 @@ const MessagesPage = () => {
                     <div style={{ padding: '15px', borderBottom: '1px solid #eee', backgroundColor: '#f5f5f5' }}>
                         <input
                             type="text"
-                            placeholder="Search people..."
+                            placeholder={t('searchPeople')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
@@ -226,7 +228,7 @@ const MessagesPage = () => {
                                             otherRole: res.role,
                                             otherName: res.name,
                                             unreadCount: 0,
-                                            lastMessage: 'Start a new conversation',
+                                            lastMessage: t('startNewConversation'),
                                             lastTimestamp: new Date().toISOString()
                                         })}
                                         style={{
@@ -249,7 +251,7 @@ const MessagesPage = () => {
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                     {conversations.length === 0 ? (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
-                            No active conversations.
+                            {t('noActiveConversations')}
                         </div>
                     ) : (
                         conversations.map((conv, idx) => (
@@ -347,7 +349,7 @@ const MessagesPage = () => {
                             </div>
                             <div>
                                 <div style={{ fontWeight: 'bold' }}>{selectedChat.otherName}</div>
-                                <div style={{ fontSize: '12px', color: '#4caf50' }}>● Online</div>
+                                <div style={{ fontSize: '12px', color: '#4caf50' }}>● {t('online')}</div>
                             </div>
                         </div>
 
@@ -406,7 +408,7 @@ const MessagesPage = () => {
                         >
                             <input
                                 type="text"
-                                placeholder={`Message ${selectedChat.otherName}...`}
+                                placeholder={t('messagePlaceholderChat', { name: selectedChat.otherName })}
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 style={{
@@ -448,7 +450,7 @@ const MessagesPage = () => {
                         color: '#999'
                     }}>
                         <div style={{ fontSize: '60px', marginBottom: '20px' }}>💬</div>
-                        <h3>Select a conversation to start messaging</h3>
+                        <h3>{t('selectChatToStart')}</h3>
                     </div>
                 )}
             </div>

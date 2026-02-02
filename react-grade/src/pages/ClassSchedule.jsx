@@ -13,9 +13,9 @@ const ClassSchedule = () => {
     const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({
-        department: user.permissions?.includes('view_own_grades') && !user.permissions?.includes('view_child_grades') ? user.department : '',
-        year: user.permissions?.includes('view_own_grades') && !user.permissions?.includes('view_child_grades') ? user.year : '',
-        semester: '1'
+        department: (user.role === 'student' || user.role === 'teacher') ? user.department : '',
+        year: user.role === 'student' ? user.year : '',
+        semester: user.semester || '1'
     });
 
     // Admin Add State
@@ -113,17 +113,17 @@ const ClassSchedule = () => {
             }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '1.8rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Calendar size={28} /> {t('schedule') || 'Academic Timetable'}
+                        <Calendar size={28} /> {t('academicTimetable')}
                     </h1>
-                    <p style={{ color: '#94a3b8', marginTop: '4px', fontSize: '1rem' }}>Manage and view university class allocations</p>
+                    <p style={{ color: '#94a3b8', marginTop: '4px', fontSize: '1rem' }}>{t('timetableDescription')}</p>
                 </div>
-                {user.permissions?.includes('manage_users') && (
+                <div style={{ display: 'flex', gap: '10px' }}>
                     <button
-                        onClick={() => setIsAdding(!isAdding)}
+                        onClick={() => window.print()}
                         style={{
                             padding: '10px 20px',
-                            backgroundColor: isAdding ? '#f43f5e' : '#3b82f6',
-                            color: 'white',
+                            backgroundColor: 'white',
+                            color: '#1e293b',
                             border: 'none',
                             borderRadius: '8px',
                             cursor: 'pointer',
@@ -131,13 +131,34 @@ const ClassSchedule = () => {
                             alignItems: 'center',
                             gap: '8px',
                             fontWeight: '600',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s',
+                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
                         }}
                     >
-                        {isAdding ? <X size={18} /> : <Plus size={18} />}
-                        {isAdding ? 'Cancel' : 'New Schedule'}
+                        <BookOpen size={18} /> {t('print')}
                     </button>
-                )}
+                    {user.permissions?.includes('manage_users') && (
+                        <button
+                            onClick={() => setIsAdding(!isAdding)}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: isAdding ? '#f43f5e' : '#3b82f6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {isAdding ? <X size={18} /> : <Plus size={18} />}
+                            {isAdding ? t('cancel') : t('newSchedule')}
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Filters Section */}
@@ -150,7 +171,7 @@ const ClassSchedule = () => {
                         className="modern-input"
                         disabled={user.permissions?.includes('view_own_grades') && !user.permissions?.includes('view_child_grades')}
                     >
-                        <option value="">All Departments</option>
+                        <option value="">{t('allDepartments')}</option>
                         {departments.map(dept => (
                             <option key={dept} value={dept}>{dept}</option>
                         ))}
@@ -159,15 +180,15 @@ const ClassSchedule = () => {
                 <div style={{ width: '120px' }}>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>YEAR</label>
                     <select value={filters.year} onChange={e => setFilters({ ...filters, year: e.target.value })} className="modern-input">
-                        <option value="">All</option>
-                        {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>Year {y}</option>)}
+                        <option value="">{t('all')}</option>
+                        {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t('year')} {y}</option>)}
                     </select>
                 </div>
                 <div style={{ width: '130px' }}>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>SEMESTER</label>
                     <select value={filters.semester} onChange={e => setFilters({ ...filters, semester: e.target.value })} className="modern-input">
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
+                        <option value="1">{t('semester')} 1</option>
+                        <option value="2">{t('semester')} 2</option>
                     </select>
                 </div>
                 <button
@@ -175,14 +196,14 @@ const ClassSchedule = () => {
                     className="modern-btn"
                     style={{ width: 'auto', padding: '9px 15px', height: '38px', backgroundColor: '#64748b' }}
                 >
-                    <Filter size={16} /> Filter
+                    <Filter size={16} /> {t('filter')}
                 </button>
             </div>
 
             {/* Add Form (Admin) */}
             {isAdding && (
                 <div className="card fade-in" style={{ backgroundColor: '#fff', padding: '25px', borderRadius: '12px', marginBottom: '25px', border: '1px solid #3b82f6' }}>
-                    <h3 style={{ marginBottom: '20px', fontSize: '1.2rem' }}>Add Schedule Entry</h3>
+                    <h3 style={{ marginBottom: '20px', fontSize: '1.2rem' }}>{t('addScheduleEntry')}</h3>
                     <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
                         <input required className="modern-input" placeholder="Course Name" value={newItem.courseName} onChange={e => setNewItem({ ...newItem, courseName: e.target.value })} />
                         <input required className="modern-input" placeholder="Course Code" value={newItem.courseCode} onChange={e => setNewItem({ ...newItem, courseCode: e.target.value })} />
@@ -205,12 +226,12 @@ const ClassSchedule = () => {
                         <input className="modern-input" placeholder="Room/Hall" value={newItem.room} onChange={e => setNewItem({ ...newItem, room: e.target.value })} />
                         <input className="modern-input" placeholder="Instructor" value={newItem.instructor} onChange={e => setNewItem({ ...newItem, instructor: e.target.value })} />
                         <select className="modern-input" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })}>
-                            <option value="lecture">Lecture</option>
-                            <option value="lab">Laboratory</option>
-                            <option value="exam">Examination</option>
-                            <option value="deadline">Deadline</option>
+                            <option value="lecture">{t('lecture')}</option>
+                            <option value="lab">{t('lab')}</option>
+                            <option value="exam">{t('exam')}</option>
+                            <option value="deadline">{t('deadline')}</option>
                         </select>
-                        <button type="submit" className="modern-btn" style={{ fontWeight: '700' }}>Add Entry</button>
+                        <button type="submit" className="modern-btn" style={{ fontWeight: '700' }}>{t('addEntry')}</button>
                     </form>
                 </div>
             )}
@@ -246,8 +267,23 @@ const ClassSchedule = () => {
                                                 borderRight: '1px solid #f1f5f9',
                                                 backgroundColor: '#fff'
                                             }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3b82f6' }}>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    color: new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day ? '#3b82f6' : '#1e293b'
+                                                }}>
                                                     <ChevronRight size={16} /> {day.toUpperCase()}
+                                                    {new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day && (
+                                                        <span style={{
+                                                            fontSize: '10px',
+                                                            backgroundColor: '#dbeafe',
+                                                            color: '#3b82f6',
+                                                            padding: '2px 6px',
+                                                            borderRadius: '4px',
+                                                            marginLeft: '5px'
+                                                        }}>{t('today').toUpperCase()}</span>
+                                                    )}
                                                 </div>
                                             </td>
                                         ) : null}
@@ -310,8 +346,8 @@ const ClassSchedule = () => {
                 {schedules.length === 0 && !loading && (
                     <div style={{ textAlign: 'center', padding: '60px', background: 'white', color: '#94a3b8' }}>
                         <BookOpen size={40} style={{ margin: '0 auto 15px', opacity: 0.3 }} />
-                        <h3 style={{ marginBottom: '5px' }}>No Schedules Available</h3>
-                        <p>No classes found for the current selection.</p>
+                        <h3 style={{ marginBottom: '5px' }}>{t('noSchedulesAvailable')}</h3>
+                        <p>{t('noClassesFound')}</p>
                     </div>
                 )}
             </div>

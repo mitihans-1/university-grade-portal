@@ -69,8 +69,11 @@ const StudentNotifications = () => {
                                 key={notification.id}
                                 style={{
                                     padding: '15px',
-                                    borderLeft: `4px solid ${notification.type === 'warning' ? '#f44336' : notification.read ? '#ccc' : '#1976d2'}`,
-                                    backgroundColor: notification.read ? '#fafafa' : '#e3f2fd',
+                                    borderLeft: `4px solid ${notification.type === 'warning' ? '#f44336' :
+                                            notification.type === 'exam_code' ? '#f97316' :
+                                                notification.read ? '#ccc' : '#1976d2'
+                                        }`,
+                                    backgroundColor: notification.type === 'exam_code' ? '#fff7ed' : notification.read ? '#fafafa' : '#e3f2fd',
                                     borderRadius: '5px',
                                     display: 'flex',
                                     justifyContent: 'space-between',
@@ -79,8 +82,12 @@ const StudentNotifications = () => {
                             >
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                                        <p style={{ margin: 0, fontWeight: notification.read ? 'normal' : 'bold', color: '#333' }}>
-                                            {notification.title || t('notification')}
+                                        <p style={{
+                                            margin: 0,
+                                            fontWeight: notification.read ? 'normal' : 'bold',
+                                            color: notification.type === 'exam_code' ? '#9a3412' : '#333'
+                                        }}>
+                                            {notification.type === 'exam_code' ? '🔓 ' : ''}{notification.title || t('notification')}
                                         </p>
                                         <small style={{ color: '#666' }}>
                                             {new Date(notification.date || notification.createdAt).toLocaleDateString()}
