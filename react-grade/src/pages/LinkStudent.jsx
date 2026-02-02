@@ -54,15 +54,8 @@ const LinkStudent = () => {
             setError('');
             setSuccess('');
 
-            // Call the API endpoint we modified to accept 'studentId' in body
-            const result = await fetch('http://localhost:5000/api/links/request', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-auth-token': localStorage.getItem('token')
-                },
-                body: JSON.stringify({ studentId: studentFound.studentId })
-            }).then(res => res.json());
+            // Call the API endpoint using the utility function
+            const result = await api.requestLink(studentFound.studentId);
 
             if (result.msg && result.msg.includes('successfully')) {
                 setSuccess(t('linkRequestSent'));

@@ -798,6 +798,20 @@ export const api = {
     return response.json();
   },
 
+  // Request to link another student (Parent)
+  requestLink: async (studentId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/links/request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify({ studentId }),
+    });
+    return response.json();
+  },
+
   // Fee Management
   getFees: async () => {
     const token = getToken();

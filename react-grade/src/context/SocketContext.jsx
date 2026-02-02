@@ -17,7 +17,12 @@ export const SocketProvider = ({ children }) => {
 
         if (isAuthenticated && user) {
             // Connect to the backend
-            newSocket = io('http://localhost:5000');
+            // Use VITE_API_URL if available (stripping '/api' if present), otherwise default to localhost
+            const socketUrl = import.meta.env.VITE_API_URL
+                ? import.meta.env.VITE_API_URL.replace('/api', '')
+                : 'http://localhost:5000';
+
+            newSocket = io(socketUrl);
 
             newSocket.on('connect', () => {
                 console.log('Socket connected:', newSocket.id);
