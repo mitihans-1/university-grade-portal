@@ -1,41 +1,30 @@
 const { Sequelize } = require('sequelize');
 
 // Database configuration from environment variables
-// Database configuration
-let sequelize;
+const sequelize = new Sequelize(
+  process.env.DB_NAME || 'gradeportal',
+  process.env.DB_USER || 'root',
+  process.env.DB_PASSWORD || '',
 
-if (process.env.DATABASE_URL) {
-  // Production: Use connection string (Aiven, Railway, Render, etc.)
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
+  {
+    host: process.env.DB_HOST || 'localhost',
     dialect: 'mysql',
+    port: process.env.DB_PORT || 3306,
     logging: false,
-    dialectOptions: {
+    pool: {
+      max: 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    },
+    dialectOptions: process.env.NODE_ENV === 'production' ? {
       ssl: {
         require: true,
-        rejectUnauthorized: false // Required for some managed databases
+        rejectUnauthorized: false
       }
-    }
-  });
-} else {
-  // Development: Use separate variables
-  sequelize = new Sequelize(
-    process.env.DB_NAME || 'gradeportal',
-    process.env.DB_USER || 'root',
-    process.env.DB_PASSWORD || '',
-    {
-      host: process.env.DB_HOST || 'localhost',
-      dialect: 'mysql',
-      port: 3306,
-      logging: false,
-      pool: {
-        max: 10,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-      }
-    }
-  );
-}
+    } : {}
+  }
+);
 
 // Test the connection
 const connectDB = async () => {

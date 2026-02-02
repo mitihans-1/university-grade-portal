@@ -535,7 +535,7 @@ router.get('/verify-email/:token', async (req, res) => {
             <div class="icon">✅</div>
             <h2>Email Verified!</h2>
             <p>Your email has been successfully verified. You can now log in to the portal using your mobile or computer.</p>
-            <a href="http://localhost:5173" class="btn">Return to Login</a>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="btn">Return to Login</a>
           </div>
         </body>
       </html>
