@@ -241,6 +241,18 @@ app.get('/api/admin/setup-db', async (req, res) => {
   }
 });
 
+// DEBUG ROUTE: List all admins (Temporary)
+app.get('/api/admin/list-debug', async (req, res) => {
+  try {
+    const models = require('./models');
+    if (!models.Admin) return res.status(404).send('Admin model not found');
+    const admins = await models.Admin.findAll({ attributes: ['id', 'name', 'email', 'role'] });
+    res.json(admins);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Check email configuration
 if (process.env.GMAIL_USER && process.env.EMAIL_PASS) {
   console.log('Email service configured with: ' + process.env.GMAIL_USER);
