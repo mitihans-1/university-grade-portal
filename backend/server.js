@@ -192,22 +192,8 @@ app.get('/api/admin/setup-db', async (req, res) => {
     console.log('Manual Setup: Disabling foreign key checks...');
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
 
-    console.log('Manual Setup: Syncing core tables...');
-    // Sync models in order to avoid dependency issues
-    if (models.Admin) await models.Admin.sync({ alter: true });
-    if (models.Student) await models.Student.sync({ alter: true });
-    if (models.Parent) await models.Parent.sync({ alter: true });
-    if (models.Teacher) await models.Teacher.sync({ alter: true });
-    if (models.UniversityID) await models.UniversityID.sync({ alter: true });
-    if (models.TeacherID) await models.TeacherID.sync({ alter: true });
-
-    console.log('Manual Setup: Syncing support tables...');
-    if (models.SystemSetting) await models.SystemSetting.sync({ alter: true });
-    if (models.AdminPreference) await models.AdminPreference.sync({ alter: true });
-    if (models.Grade) await models.Grade.sync({ alter: true });
-
-    console.log('Manual Setup: Syncing all remaining tables...');
-    // Now sync everything else
+    console.log('Manual Setup: Syncing all models...');
+    // This will sync ALL models defined in your code automatically
     await sequelize.sync({ alter: true });
 
     console.log('Manual Setup: Re-enabling foreign key checks...');
@@ -229,14 +215,14 @@ app.get('/api/admin/setup-db', async (req, res) => {
     const seedAdmin = require('./utils/seedAdmin');
     await seedAdmin();
 
-    res.send('<h1>Success!</h1><p>Database fully initialized! All tables (including Grades and Settings) have been created and the system is ready.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
+    res.send('<h1>Success!</h1><p>Database fully initialized! All tables have been synchronized and the system is ready.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
   } catch (error) {
     console.error('Manual Setup Error:', error);
     try {
       const { sequelize } = require('./config/db');
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
     } catch (e) { }
-    res.status(500).send(`<h1>Manual Setup Failed</h1><p>Error: ${error.message}</p><pre>${error.stack}</pre>`);
+    res.status(500).send(`<h1>Manual Setup Failed</h1><p>Error: ${error.message}</p><p>Please check Render logs for details.</p>`);
   }
 });
 
