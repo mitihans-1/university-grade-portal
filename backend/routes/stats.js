@@ -147,8 +147,12 @@ router.get('/dashboard', auth, async (req, res) => {
 
     res.json(statsData);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Dashboard Stats Error:', err);
+    res.status(500).json({
+      msg: 'Server error',
+      error: err.message,
+      stack: process.env.NODE_ENV === 'production' ? null : err.stack
+    });
   }
 });
 

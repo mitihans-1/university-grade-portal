@@ -719,8 +719,11 @@ router.get('/pending-approval', auth, async (req, res) => {
 
     res.json(formattedGrades);
   } catch (err) {
-    console.error('Error fetching pending grades:', err.message);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Error fetching pending grades:', err);
+    res.status(500).json({
+      msg: 'Server error',
+      error: err.message
+    });
   }
 });
 
