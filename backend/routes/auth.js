@@ -141,17 +141,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ msg: `Invalid credentials (User not found on ${dbEnv} database)` });
     }
 
-    // Log successful login
-    try {
-      await logAction({
-        action: 'LOGIN_SUCCESS',
-        req,
-        userId: user.id,
-        userRole: userRole
-      });
-    } catch (logErr) {
-      console.error('Logging failed, but continuing:', logErr);
-    }
+    // Log successful login (non-blocking)
+    logAction({
+      action: 'LOGIN_SUCCESS',
+      req,
+      userId: user.id,
+      userRole: userRole
+    }).catch(logErr => console.error('Logging failed:', logErr));
 
     // MFA disabled - Direct login for all roles
     // Create JWT token for all users (Students/Parents/Teachers/Admins)
