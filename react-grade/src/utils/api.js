@@ -116,7 +116,7 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
 
     return response.json();
@@ -133,7 +133,7 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
 
     return response.json();
@@ -153,7 +153,7 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
 
     return response.json();
@@ -170,7 +170,7 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
 
     return response.json();
@@ -187,7 +187,7 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
 
     return response.json();
@@ -203,7 +203,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -218,7 +218,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -234,7 +234,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -250,7 +250,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -268,7 +268,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -284,7 +284,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -300,7 +300,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -315,7 +315,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -371,7 +371,7 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -395,7 +395,7 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -563,7 +563,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -578,7 +578,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
@@ -593,7 +593,7 @@ export const api = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   },
