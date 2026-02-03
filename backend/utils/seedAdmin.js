@@ -6,15 +6,18 @@ const seedAdmin = async () => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash('admin', salt); // Default password: admin
 
-        // Use upsert to ensure the default admin always has these credentials
-        // regardless of whether others exist
-        await Admin.upsert({
-            id: 1, // Fixed ID for default admin
+        // Robust approach: Delete if exists and recreate to ensure clean credentials
+        await Admin.destroy({ where: { email: 'admin@university.edu' } });
+
+        await Admin.create({
+            id: 1,
             name: 'University Admin',
             email: 'admin@university.edu',
             password: hashedPassword,
             role: 'admin',
-            department: 'Registrar Office'
+            department: 'Registrar Office',
+            isVerified: true,
+            isEmailVerified: true
         });
 
         console.log('Default admin synchronized: admin@university.edu / admin');
