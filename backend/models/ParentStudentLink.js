@@ -8,7 +8,7 @@ const ParentStudentLink = sequelize.define('ParentStudentLink', {
     autoIncrement: true
   },
   parentId: {
-    type: DataTypes.STRING,
+    type: DataTypes.INTEGER,
     allowNull: false
   },
   studentId: {

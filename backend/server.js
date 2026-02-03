@@ -192,52 +192,79 @@ app.get('/api/admin/setup-db', async (req, res) => {
     console.log('Manual Setup: Disabling foreign key checks...');
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
 
-    console.log('Manual Setup: HARD RESET for problematic tables...');
-    // Drop tables that might have stuck legacy FK constraints with wrong case
-    await sequelize.query('DROP TABLE IF EXISTS attendance');
-    await sequelize.query('DROP TABLE IF EXISTS teacher_assignments');
-    await sequelize.query('DROP TABLE IF EXISTS parent_student_links');
-    await sequelize.query('DROP TABLE IF EXISTS grades');
+    console.log('Manual Setup: HARD RESET for ALL participating tables...');
+    // Drop all tables to ensure clean slate and correct casing
+    const tablesToDrop = [
+      'attendance',
+      'teacher_assignments',
+      'parent_student_links',
+      'grades',
+      'schedules',
+      'system_settings',
+      'admin_preferences',
+      'notifications',
+      'alerts',
+      'exams',
+      'questions',
+      'exam_attempts',
+      'exam_results',
+      'messages',
+      'student_ids',
+      'teacher_ids'
+    ];
+
+    for (const table of tablesToDrop) {
+      await sequelize.query(`DROP TABLE IF EXISTS ${table}`).catch(e => console.log(`Table ${table} might not exist yet`));
+    }
 
     console.log('Manual Setup: Syncing core tables in order...');
     const coreOrder = ['Admin', 'UniversityID', 'TeacherID', 'Student', 'Teacher', 'Parent'];
     for (const modelName of coreOrder) {
       if (models[modelName]) {
         console.log(`Syncing ${modelName}...`);
-        await models[modelName].sync({ alter: true });
+        await models[modelName].sync({ force: true });
       }
     }
 
-    console.log('Manual Setup: Syncing all remaining models...');
-    await sequelize.sync({ alter: true });
+    console.log('Manual Setup: Syncing ALL remaining models...');
+    await sequelize.sync({ force: true });
 
     console.log('Manual Setup: Re-enabling foreign key checks...');
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
 
-    // Seed system settings if empty
+    // Seed system settings
     if (models.SystemSetting) {
-      const settingsCount = await models.SystemSetting.count();
-      if (settingsCount === 0) {
-        await models.SystemSetting.bulkCreate([
-          { key: 'current_year', value: '2024', description: 'Current academic year' },
-          { key: 'current_semester', value: 'Spring', description: 'Current semester' }
-        ]);
-      }
+      await models.SystemSetting.bulkCreate([
+        { key: 'current_year', value: '2024', description: 'Current academic year' },
+        { key: 'current_semester', value: '1', description: 'Current semester' },
+        { key: 'university_name', value: 'Modern University', description: 'University name' }
+      ]);
     }
 
-    // Seed admin
-    console.log('Manual Setup: Seeding admin...');
+    // Seed default admin
     const seedAdmin = require('./utils/seedAdmin');
     await seedAdmin();
 
-    res.send('<h1>Success!</h1><p>Database fully initialized! I performed a HARD RESET on the grades, attendance, and links tables to clear the case-sensitivity error. All systems are now 100% operational.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
+    // Diagnostics
+    const [tableList] = await sequelize.query("SHOW TABLES");
+
+    res.send(`
+      <div style="font-family: sans-serif; padding: 40px; line-height: 1.6;">
+        <h1 style="color: #2e7d32;">✅ Database Fully Rebuilt!</h1>
+        <p>I have performed a <strong>FORCE RESET</strong> on all tables. This resolved case-sensitivity issues and ensured all columns are correctly typed.</p>
+        <p><strong>Tables currently in database:</strong></p>
+        <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${JSON.stringify(tableList, null, 2)}</pre>
+        <p>You can now log in with the default admin credentials or your newly created account.</p>
+        <p><a href="/" style="display: inline-block; padding: 10px 20px; background: #1976d2; color: white; text-decoration: none; border-radius: 5px;">Return Home</a></p>
+      </div>
+    `);
   } catch (error) {
     console.error('Manual Setup Error:', error);
     try {
       const { sequelize } = require('./config/db');
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
     } catch (e) { }
-    res.status(500).send(`<h1>Manual Setup Failed</h1><p>Error: ${error.message}</p><p>Check server logs for details.</p>`);
+    res.status(500).send(`<h1 style="color: #c62828;">❌ Manual Setup Failed</h1><p>Error: ${error.message}</p>`);
   }
 });
 

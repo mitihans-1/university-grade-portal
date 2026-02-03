@@ -50,6 +50,7 @@ const Schedule = sequelize.define('Schedule', {
         defaultValue: 'lecture'
     }
 }, {
+    tableName: 'schedules',
     timestamps: true
 });
 
