@@ -183,6 +183,32 @@ app.get('/', (req, res) => {
   res.json({ message: 'University Grade Portal API' });
 });
 
+// Production Setup Route (ONLY for initial deployment repair)
+app.get('/api/admin/setup-db', async (req, res) => {
+  try {
+    const models = require('./models');
+    const { sequelize } = require('./config/db');
+
+    // Core tables first
+    await models.Admin.sync({ alter: true });
+    await models.Student.sync({ alter: true });
+    await models.Parent.sync({ alter: true });
+    await models.Teacher.sync({ alter: true });
+
+    // Everything else
+    await sequelize.sync({ alter: true });
+
+    // Seed admin
+    const seedAdmin = require('./utils/seedAdmin');
+    await seedAdmin();
+
+    res.send('<h1>Success!</h1><p>Database initialized and Admin seeded successfully!</p><p><a href="/">Return Home</a></p>');
+  } catch (error) {
+    console.error('Manual Setup Error:', error);
+    res.status(500).send(`<h1>Manual Setup Failed</h1><pre>${error.message}</pre>`);
+  }
+});
+
 // Check email configuration
 if (process.env.GMAIL_USER && process.env.EMAIL_PASS) {
   console.log('Email service configured with: ' + process.env.GMAIL_USER);
