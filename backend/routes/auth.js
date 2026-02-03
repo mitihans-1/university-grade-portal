@@ -175,9 +175,20 @@ router.post('/login', async (req, res) => {
     try {
       fs.appendFileSync('login_debug.txt', `${new Date().toISOString()} - ${err.stack}\n`);
     } catch (e) { }
+    let errorMsg = 'Server error';
+    let debugInfo = err.message;
+
+    if (err.message.includes('ENOTFOUND')) {
+      errorMsg = 'Database connection failed';
+      debugInfo = `Could not find database host: ${process.env.DB_HOST}. Please check your Render Environment Variables.`;
+    } else if (err.message.includes('ECONNREFUSED')) {
+      errorMsg = 'Database connection refused';
+      debugInfo = `Database at ${process.env.DB_HOST} refused the connection. Check your database status and password.`;
+    }
+
     res.status(500).json({
-      msg: 'Server error',
-      debug: err.message,
+      msg: errorMsg,
+      debug: debugInfo,
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   }
