@@ -192,8 +192,18 @@ app.get('/api/admin/setup-db', async (req, res) => {
     console.log('Manual Setup: Disabling foreign key checks...');
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
 
-    console.log('Manual Setup: Syncing all models...');
-    // This will sync ALL models defined in your code automatically
+    console.log('Manual Setup: Syncing core tables in order...');
+
+    // Core tables first
+    const coreModels = ['Admin', 'UniversityID', 'TeacherID', 'Student', 'Teacher', 'Parent'];
+    for (const modelName of coreModels) {
+      if (models[modelName]) {
+        console.log(`Syncing ${modelName}...`);
+        await models[modelName].sync({ alter: true });
+      }
+    }
+
+    console.log('Manual Setup: Syncing all remaining models...');
     await sequelize.sync({ alter: true });
 
     console.log('Manual Setup: Re-enabling foreign key checks...');
@@ -215,7 +225,7 @@ app.get('/api/admin/setup-db', async (req, res) => {
     const seedAdmin = require('./utils/seedAdmin');
     await seedAdmin();
 
-    res.send('<h1>Success!</h1><p>Database fully initialized! All tables have been synchronized and the system is ready.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
+    res.send('<h1>Success!</h1><p>Database fully initialized! Core tables (Admin, Student, Teacher, Parent) created first, then all other tables synchronized. The system is ready.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
   } catch (error) {
     console.error('Manual Setup Error:', error);
     try {
