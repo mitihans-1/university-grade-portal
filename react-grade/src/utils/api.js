@@ -331,6 +331,12 @@ export const api = {
       },
       body: JSON.stringify({ studentId }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+
     return response.json();
   },
 
@@ -343,6 +349,12 @@ export const api = {
       },
       body: JSON.stringify(teacherData),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+
     return response.json();
   },
 
@@ -357,6 +369,12 @@ export const api = {
       },
       body: JSON.stringify(adminData),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+
     return response.json();
   },
 
