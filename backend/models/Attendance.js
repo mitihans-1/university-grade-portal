@@ -11,7 +11,7 @@ const Attendance = sequelize.define('Attendance', {
         type: DataTypes.STRING,
         allowDefaults: false,
         references: {
-            model: 'Students',
+            model: 'students',
             key: 'studentId'
         }
     },

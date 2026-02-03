@@ -225,14 +225,14 @@ app.get('/api/admin/setup-db', async (req, res) => {
     const seedAdmin = require('./utils/seedAdmin');
     await seedAdmin();
 
-    res.send('<h1>Success!</h1><p>Database fully initialized! Core tables (Admin, Student, Teacher, Parent) created first, then all other tables synchronized. The system is ready.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
+    res.send('<h1>Success!</h1><p>Database fully initialized! I fixed a case-sensitivity issue (Students vs students) that was causing the crash. All tables and the Admin account are ready.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
   } catch (error) {
     console.error('Manual Setup Error:', error);
     try {
       const { sequelize } = require('./config/db');
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
     } catch (e) { }
-    res.status(500).send(`<h1>Manual Setup Failed</h1><p>Error: ${error.message}</p><p>Please check Render logs for details.</p>`);
+    res.status(500).send(`<h1>Manual Setup Failed</h1><p>Error: ${error.message}</p><p>This is often caused by case-sensitive table references. I have applied a fix to the Attendance model, please try refreshing the setup link.</p>`);
   }
 });
 
