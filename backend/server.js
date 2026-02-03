@@ -106,14 +106,34 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Health check route (before DB connection)
+app.get('/health', (req, res) => res.status(200).json({ status: 'up', timestamp: new Date() }));
+
 // Other middleware
-// CORS Configuration - More permissive for mobile testing on same Wi-Fi
+// CORS Configuration - More permissive for mobile testing and explicit for Vercel
+const allowedOrigins = [
+  'https://university-grade-portal.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175'
+];
+
 const corsOptions = {
-  origin: true, // Reflects the request origin, allowing any local IP to connect
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  credentials: true
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
 };
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.use(express.json());
 
 // Debug middleware to log raw body if parsing fails

@@ -44,8 +44,8 @@ const connectDB = async () => {
       // Continue anyway - tables might already exist
     }
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
-    process.exit(1);
+    console.error('CRITICAL DATABASE ERROR:', error.message);
+    console.error('The server will continue to run but database features will fail.');
   }
 };
 
