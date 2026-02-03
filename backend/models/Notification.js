@@ -8,7 +8,7 @@ const Notification = sequelize.define('Notification', {
     autoIncrement: true
   },
   parentId: {
-    type: DataTypes.STRING,
+    type: DataTypes.INTEGER,
     allowNull: true
   },
   studentId: {
