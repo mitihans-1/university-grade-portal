@@ -116,6 +116,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Debug middleware to log raw body if parsing fails
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    console.error('Bad JSON structure:', err.body);
+    return res.status(400).send({ msg: 'Invalid JSON' });
+  }
+  next();
+});
+
 // HTTPS Enforcement in production
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
@@ -128,7 +137,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Data Sanitization against XSS
-app.use(xss());
+// app.use(xss());
 
 // Prevent Parameter Pollution
 app.use(hpp());

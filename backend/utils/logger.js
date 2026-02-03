@@ -19,7 +19,9 @@ const logAction = async ({ action, req, userId, userRole, details, resourceId })
         };
 
         if (req) {
-            logData.ipAddress = req.ip || req.connection.remoteAddress;
+            logData.ipAddress = req.ip ||
+                (req.socket ? req.socket.remoteAddress : null) ||
+                (req.connection ? req.connection.remoteAddress : null);
             if (req.user) {
                 logData.userId = req.user.id || req.user.studentId || req.user.teacherId;
                 logData.userRole = req.user.role;

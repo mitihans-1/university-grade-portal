@@ -26,6 +26,7 @@ router.get('/captcha', (req, res) => {
 // @desc    Authenticate user & get token
 // @access  Public
 router.post('/login', async (req, res) => {
+  console.log(`[AUTH] Login request received for email: ${req.body ? req.body.email : 'undefined'}`);
   try {
     const { email, password } = req.body;
 
@@ -141,12 +142,16 @@ router.post('/login', async (req, res) => {
     }
 
     // Log successful login
-    await logAction({
-      action: 'LOGIN_SUCCESS',
-      req,
-      userId: user.id,
-      userRole: userRole
-    });
+    try {
+      await logAction({
+        action: 'LOGIN_SUCCESS',
+        req,
+        userId: user.id,
+        userRole: userRole
+      });
+    } catch (logErr) {
+      console.error('Logging failed, but continuing:', logErr);
+    }
 
     // MFA disabled - Direct login for all roles
     // Create JWT token for all users (Students/Parents/Teachers/Admins)
@@ -157,7 +162,10 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET || 'defaultSecret',
       { expiresIn: '7 days' },
       (err, token) => {
-        if (err) throw err;
+        if (err) {
+          console.error('JWT Sign Error:', err);
+          return res.status(500).json({ msg: 'Server error (Token generation)' });
+        }
         res.json({
           token,
           user: sanitizeUser(user, userRole)
@@ -165,8 +173,17 @@ router.post('/login', async (req, res) => {
       }
     );
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Login error CRITICAL:', err);
+    // Write error to a dedicated debug file
+    const fs = require('fs');
+    try {
+      fs.appendFileSync('login_debug.txt', `${new Date().toISOString()} - ${err.stack}\n`);
+    } catch (e) { }
+    res.status(500).json({
+      msg: 'Server error',
+      debug: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 
