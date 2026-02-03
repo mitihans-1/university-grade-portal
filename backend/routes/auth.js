@@ -128,14 +128,16 @@ router.post('/login', async (req, res) => {
     }
 
     if (!user) {
-      console.log(`Login failed for ${normalizedEmail}. No matching user or password.`);
-      // DEBUGGING: Return specific error to help user
-      if (student) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for Student)' });
-      if (parent) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for Parent)' });
-      if (teacher) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for Teacher)' });
-      if (admin) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for Admin)' });
+      const dbEnv = process.env.NODE_ENV || 'development';
+      console.log(`[AUTH] Login failed for ${normalizedEmail} on ${dbEnv}. Matches found: Student: ${!!student}, Parent: ${!!parent}, Admin: ${!!admin}, Teacher: ${!!teacher}`);
 
-      return res.status(400).json({ msg: 'Invalid credentials (User not found)' });
+      // DEBUGGING: Return specific error to help user
+      if (student) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for student account)' });
+      if (parent) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for parent account)' });
+      if (teacher) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for teacher account)' });
+      if (admin) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for admin account)' });
+
+      return res.status(400).json({ msg: `Invalid credentials (User not found on ${dbEnv} database)` });
     }
 
     // Log successful login
