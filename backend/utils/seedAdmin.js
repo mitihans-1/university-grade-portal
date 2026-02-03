@@ -10,11 +10,11 @@ const seedAdmin = async () => {
             console.log('No admins found. Seeding default admin...');
 
             const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash('admin123', salt); // Default password: admin123
+            const hashedPassword = await bcrypt.hash('admin', salt); // Default password: admin
 
             const defaultAdmin = await Admin.create({
                 name: 'University Admin',
-                email: 'admin@gmail.com',
+                email: 'admin@university.edu',
                 password: hashedPassword,
                 role: 'admin',
                 department: 'Registrar Office'
