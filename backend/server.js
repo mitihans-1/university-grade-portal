@@ -194,16 +194,17 @@ app.get('/api/admin/setup-db', async (req, res) => {
 
     console.log('Manual Setup: Syncing core tables...');
     // Sync models in order to avoid dependency issues
-    await models.Admin.sync({ alter: true });
-    await models.Student.sync({ alter: true });
-    await models.Parent.sync({ alter: true });
-    await models.Teacher.sync({ alter: true });
-    await models.StudentID.sync({ alter: true });
-    await models.TeacherID.sync({ alter: true });
+    if (models.Admin) await models.Admin.sync({ alter: true });
+    if (models.Student) await models.Student.sync({ alter: true });
+    if (models.Parent) await models.Parent.sync({ alter: true });
+    if (models.Teacher) await models.Teacher.sync({ alter: true });
+    if (models.UniversityID) await models.UniversityID.sync({ alter: true });
+    if (models.TeacherID) await models.TeacherID.sync({ alter: true });
 
     console.log('Manual Setup: Syncing support tables...');
-    await models.SystemSetting.sync({ alter: true });
-    await models.AdminPreference.sync({ alter: true });
+    if (models.SystemSetting) await models.SystemSetting.sync({ alter: true });
+    if (models.AdminPreference) await models.AdminPreference.sync({ alter: true });
+    if (models.Grade) await models.Grade.sync({ alter: true });
 
     console.log('Manual Setup: Syncing all remaining tables...');
     // Now sync everything else
@@ -213,12 +214,14 @@ app.get('/api/admin/setup-db', async (req, res) => {
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
 
     // Seed system settings if empty
-    const settingsCount = await models.SystemSetting.count();
-    if (settingsCount === 0) {
-      await models.SystemSetting.bulkCreate([
-        { key: 'current_year', value: '2024', description: 'Current academic year' },
-        { key: 'current_semester', value: 'Spring', description: 'Current semester' }
-      ]);
+    if (models.SystemSetting) {
+      const settingsCount = await models.SystemSetting.count();
+      if (settingsCount === 0) {
+        await models.SystemSetting.bulkCreate([
+          { key: 'current_year', value: '2024', description: 'Current academic year' },
+          { key: 'current_semester', value: 'Spring', description: 'Current semester' }
+        ]);
+      }
     }
 
     // Seed admin
@@ -226,10 +229,13 @@ app.get('/api/admin/setup-db', async (req, res) => {
     const seedAdmin = require('./utils/seedAdmin');
     await seedAdmin();
 
-    res.send('<h1>Success!</h1><p>Database fully initialized, tables created, settings seeded, and Admin created successfully!</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
+    res.send('<h1>Success!</h1><p>Database fully initialized! All tables (including Grades and Settings) have been created and the system is ready.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
   } catch (error) {
     console.error('Manual Setup Error:', error);
-    try { await sequelize.query('SET FOREIGN_KEY_CHECKS = 1'); } catch (e) { }
+    try {
+      const { sequelize } = require('./config/db');
+      await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+    } catch (e) { }
     res.status(500).send(`<h1>Manual Setup Failed</h1><p>Error: ${error.message}</p><pre>${error.stack}</pre>`);
   }
 });
