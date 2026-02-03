@@ -54,16 +54,17 @@ const AdminSettings = () => {
 
     return (
         <div className="fade-in" style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px', borderBottom: '1px solid #e2e8f0', paddingBottom: '20px' }}>
-                <Settings size={32} color="#1a237e" />
-                <div>
-                    <h1 style={{ margin: 0, color: '#1a237e', fontSize: '28px' }}>System Configuration</h1>
-                    <p style={{ margin: '5px 0 0', color: '#64748b' }}>Manage global academic settings, registration periods, and system switches.</p>
+            <div className="responsive-header" style={{ marginBottom: '30px', borderBottom: '1px solid #e2e8f0', paddingBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <Settings size={32} color="#1a237e" />
+                    <div>
+                        <h1 style={{ margin: 0, color: '#1a237e', fontSize: '28px' }}>System Configuration</h1>
+                        <p style={{ margin: '5px 0 0', color: '#64748b' }}>Manage global academic settings, registration periods, and system switches.</p>
+                    </div>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '30px' }}>
-
+            <div className="responsive-grid" style={{ gap: '30px' }}>
                 {/* Academic Period Section */}
                 <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
@@ -170,7 +171,7 @@ const AdminSettings = () => {
                         <h2 style={{ fontSize: '18px', margin: 0, color: '#0f172a' }}>Academic Catalogs</h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
+                    <div className="responsive-grid" style={{ gap: '30px' }}>
                         {/* Departments */}
                         <ListManager
                             title="Departments"

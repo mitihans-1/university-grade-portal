@@ -75,10 +75,12 @@ const AdminAppeals = () => {
     if (loading) return <LoadingSpinner fullScreen />;
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
-            <div style={{ marginBottom: '30px' }}>
-                <h1 style={{ margin: '0 0 10px 0' }}>⚖️ Grade Appeals</h1>
-                <p style={{ color: '#666' }}>Manage and resolve student grade disputes.</p>
+        <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+            <div className="responsive-header" style={{ marginBottom: '30px' }}>
+                <div>
+                    <h1 style={{ margin: '0 0 10px 0' }}>⚖️ Grade Appeals</h1>
+                    <p style={{ color: '#666' }}>Manage and resolve student grade disputes.</p>
+                </div>
             </div>
 
             <div style={{ backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', overflow: 'hidden' }}>

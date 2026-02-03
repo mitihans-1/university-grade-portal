@@ -598,9 +598,9 @@ td {
 
 /* 4. The Card (Bright White & Floating) */
 .auth-card {
-  width: 100%;
+  width: 90%;
   max-width: 440px;
-  padding: 40px;
+  padding: 30px;
   /* Increased transparency for Glass effect */
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(16px);
@@ -615,6 +615,13 @@ td {
   position: relative;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   animation: cardEntry 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
 }
 
 .auth-card:hover {

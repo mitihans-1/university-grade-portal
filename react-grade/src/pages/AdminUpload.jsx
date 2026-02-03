@@ -457,61 +457,80 @@ const AdminUpload = () => {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header Stats */}
-      <div style={{
+      <div className="responsive-header" style={{
         backgroundColor: 'white',
         borderRadius: '10px',
         padding: '25px',
         marginBottom: '25px',
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
-        <h1 style={{ margin: '0 0 20px 0', color: '#333' }}>
-          {user?.role === 'admin' ? t('adminGradePortal') : t('teacherGradePortal')}
-        </h1>
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          {user?.role === 'admin'
-            ? t('adminPortalDescription')
-            : t('teacherPortalDescription')}
-        </p>
+        <div>
+          <h1 style={{ margin: '0 0 10px 0', color: '#333' }}>
+            {user?.role === 'admin' ? t('adminGradePortal') : t('teacherGradePortal')}
+          </h1>
+          <p style={{ color: '#666', margin: 0 }}>
+            {user?.role === 'admin'
+              ? t('adminPortalDescription')
+              : t('teacherPortalDescription')}
+          </p>
+        </div>
+      </div>
 
+      <div className="responsive-grid" style={{ marginBottom: '25px' }}>
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '20px'
+          backgroundColor: 'white',
+          borderRadius: '10px',
+          padding: '20px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+          textAlign: 'center'
         }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
-              {filteredGradeList.length}
-            </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>{user?.role === 'admin' ? t('totalGrades') : t('mySubmissions')}</div>
+          <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
+            {filteredGradeList.length}
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#ff9800', marginBottom: '5px' }}>
-              {pendingGrades.length}
-            </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>{t('pending')}</div>
+          <div style={{ color: '#666', fontSize: '14px' }}>{user?.role === 'admin' ? t('totalGrades') : t('mySubmissions')}</div>
+        </div>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '10px',
+          padding: '20px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#ff9800', marginBottom: '5px' }}>
+            {pendingGrades.length}
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#4caf50', marginBottom: '5px' }}>
-              {publishedGrades.length}
-            </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>{t('published')}</div>
+          <div style={{ color: '#666', fontSize: '14px' }}>{t('pending')}</div>
+        </div>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '10px',
+          padding: '20px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#4caf50', marginBottom: '5px' }}>
+            {publishedGrades.length}
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#2196f3', marginBottom: '5px' }}>
-              {filteredGradeList.filter(g => g.notified).length}
-            </div>
-            <div style={{ color: '#666', fontSize: '14px' }}>{t('notificationsSent')}</div>
+          <div style={{ color: '#666', fontSize: '14px' }}>{t('published')}</div>
+        </div>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '10px',
+          padding: '20px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#2196f3', marginBottom: '5px' }}>
+            {filteredGradeList.filter(g => g.notified).length}
           </div>
+          <div style={{ color: '#666', fontSize: '14px' }}>{t('notificationsSent')}</div>
         </div>
       </div>
 
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '25px',
         marginBottom: '25px'
       }}>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', flexWrap: 'wrap' }}>
+        <div className="responsive-header" style={{ gap: '10px', marginBottom: '30px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setUploadType('single')}
             style={{
@@ -699,7 +718,7 @@ const AdminUpload = () => {
               <h2 style={{ margin: 0, color: '#333' }}>{t('batchGroupEntry')}</h2>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+            <div className="responsive-grid" style={{ gap: '15px', marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{t('department')}</label>
                 <select

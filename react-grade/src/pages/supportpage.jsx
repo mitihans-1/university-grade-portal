@@ -80,7 +80,7 @@ const SupportPage = () => {
             padding: '20px'
         }}>
             {/* Header */}
-            <div style={{
+            <div className="responsive-header" style={{
                 backgroundColor: 'white',
                 borderRadius: '12px',
                 padding: '30px',
@@ -88,15 +88,16 @@ const SupportPage = () => {
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 textAlign: 'center'
             }}>
-                <HelpCircle size={48} style={{ color: '#3b82f6', marginBottom: '16px' }} />
-                <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#1e293b' }}>
-                    {t('support')}
-                </h1>
-                <p style={{ margin: 0, color: '#64748b', fontSize: '16px' }}>
-                    {t('supportDescription')}
-                </p>
+                <div style={{ margin: '0 auto' }}>
+                    <HelpCircle size={48} style={{ color: '#3b82f6', marginBottom: '16px' }} />
+                    <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#1e293b' }}>
+                        {t('support')}
+                    </h1>
+                    <p style={{ margin: 0, color: '#64748b', fontSize: '16px' }}>
+                        {t('supportDescription')}
+                    </p>
+                </div>
             </div>
-
             {/* Tab Navigation */}
             <div style={{
                 display: 'flex',

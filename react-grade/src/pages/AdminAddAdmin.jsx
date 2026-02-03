@@ -227,7 +227,7 @@ const AdminAddAdmin = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div className="responsive-grid" style={{ gap: '15px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <label style={{ fontSize: '14px', fontWeight: '600', color: '#475569', marginLeft: '4px' }}>{t('password')}</label>
                             <div style={{ position: 'relative' }}>

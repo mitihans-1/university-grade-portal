@@ -209,7 +209,7 @@ const AdminAnnouncements = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '20px', marginBottom: '35px', flexWrap: 'wrap' }}>
+                    <div className="responsive-grid" style={{ marginBottom: '35px' }}>
                         <div style={{ flex: 1, minWidth: '200px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#334155' }}>
                                 {t('targetAudience')}

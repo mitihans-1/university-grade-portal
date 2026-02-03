@@ -87,7 +87,7 @@ const AdminReportCard = () => {
                 <h1 style={{ color: '#1976d2', marginBottom: '20px' }}>⭐ Digital Report Card Generator</h1>
                 <p style={{ color: '#666', marginBottom: '30px' }}>Generate professional report cards with GPA, attendance, and custom teacher remarks.</p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                <div className="responsive-grid" style={{ marginBottom: '20px' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Student ID</label>
                         <input
@@ -159,7 +159,7 @@ const AdminReportCard = () => {
                             <h3 style={{ color: '#666', marginTop: '5px' }}>Official Semester Report Card</h3>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '30px' }}>
+                        <div className="responsive-grid" style={{ gap: '40px', marginBottom: '30px' }}>
                             <div>
                                 <p><strong>Student Name:</strong> {reportData.student.name}</p>
                                 <p><strong>Student ID:</strong> {reportData.student.studentId}</p>

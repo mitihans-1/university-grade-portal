@@ -164,18 +164,18 @@ const StudentManagement = () => {
 
   return (
     <div className="fade-in" style={{ maxWidth: '1400px', margin: '0 auto', padding: '30px' }}>
-      <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="responsive-header" style={{ marginBottom: '30px' }}>
         <div>
           <h1 style={{ color: '#1e293b', fontSize: '28px', marginBottom: '8px' }}>{t('studentManagement')}</h1>
           <p style={{ color: '#64748b' }}>{t('manageStudentInformation')}</p>
         </div>
-        <div style={{ padding: '10px 20px', backgroundColor: '#e2e8f0', borderRadius: '20px', color: '#475569', fontWeight: '600' }}>
+        <div style={{ padding: '10px 20px', backgroundColor: '#e2e8f0', borderRadius: '20px', color: '#475569', fontWeight: '600', width: 'fit-content' }}>
           Total Students: {students.length}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, position: 'relative', minWidth: '300px' }}>
+      <div className="responsive-grid" style={{ marginBottom: '25px' }}>
+        <div style={{ position: 'relative' }}>
           <Search size={20} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             ref={searchInputRef}
@@ -187,7 +187,7 @@ const StudentManagement = () => {
             style={{ paddingLeft: '45px', width: '100%' }}
           />
         </div>
-        <div style={{ position: 'relative', minWidth: '200px' }}>
+        <div style={{ position: 'relative' }}>
           <Filter size={20} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)' }} />
           <select
             value={selectedYear}

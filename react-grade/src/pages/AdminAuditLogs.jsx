@@ -51,23 +51,23 @@ const AdminAuditLogs = () => {
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-            <div style={{ marginBottom: '30px' }}>
-                <h1 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '32px' }}>🛡️</span>
-                    System Audit Logs
-                </h1>
-                <p style={{ color: '#666' }}>Track user activity and system events for security and compliance.</p>
+            <div className="responsive-header" style={{ marginBottom: '30px' }}>
+                <div>
+                    <h1 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '32px' }}>🛡️</span>
+                        System Audit Logs
+                    </h1>
+                    <p style={{ color: '#666' }}>Track user activity and system events for security and compliance.</p>
+                </div>
             </div>
 
             {/* Filters */}
-            <div style={{
+            <div className="responsive-header" style={{
                 backgroundColor: 'white',
                 padding: '20px',
                 borderRadius: '10px',
                 boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                marginBottom: '20px',
-                display: 'flex',
-                gap: '20px'
+                marginBottom: '20px'
             }}>
                 <div>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Filter by Action:</label>

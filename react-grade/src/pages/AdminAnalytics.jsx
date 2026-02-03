@@ -62,11 +62,12 @@ const AdminAnalytics = () => {
 
     return (
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
-            <div style={{ marginBottom: '30px' }}>
-                <h1>{t('academicAnalytics')}</h1>
-                <p style={{ color: '#666' }}>{t('analyticsDescription')}</p>
+            <div className="responsive-header" style={{ marginBottom: '30px' }}>
+                <div>
+                    <h1>{t('academicAnalytics')}</h1>
+                    <p style={{ color: '#666' }}>{t('analyticsDescription')}</p>
+                </div>
             </div>
-
             {/* Top Level Stats */}
             <div className="responsive-grid" style={{
                 marginBottom: '30px'

@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -105,16 +106,15 @@ const AdminGradeApproval = () => {
 
     return (
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
-            <div style={{ marginBottom: '30px' }}>
-                <h1 style={{ marginBottom: '10px', fontSize: '2rem' }}>📋 {t('teacherGradeApprovals')}</h1>
-                <p style={{ color: '#666' }}>{t('teacherGradeApprovalsDescription')}</p>
+            <div className="responsive-header" style={{ marginBottom: '30px' }}>
+                <div>
+                    <h1 style={{ marginBottom: '10px', fontSize: '2rem' }}>📋 {t('teacherGradeApprovals')}</h1>
+                    <p style={{ color: '#666' }}>{t('teacherGradeApprovalsDescription')}</p>
+                </div>
             </div>
 
             {pendingGrades.length > 0 && (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '15px',
+                <div className="responsive-grid" style={{
                     marginBottom: '25px'
                 }}>
                     {Object.entries(
@@ -146,9 +146,9 @@ const AdminGradeApproval = () => {
                 </div>
             ) : (
                 <div style={{ backgroundColor: 'white', borderRadius: '10px', padding: '25px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-                    <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="responsive-header" style={{ marginBottom: '20px' }}>
                         <h3 style={{ margin: 0 }}>{t('pendingApprovals')} ({pendingGrades.length})</h3>
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             <button
                                 onClick={handleApproveAll}
                                 style={{
@@ -159,12 +159,14 @@ const AdminGradeApproval = () => {
                                     borderRadius: '5px',
                                     cursor: 'pointer',
                                     fontWeight: 'bold',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                    flex: '1',
+                                    minWidth: 'fit-content'
                                 }}
                             >
                                 ✅ {t('approveAllPending')}
                             </button>
-                            <button onClick={fetchPendingGrades} style={{ padding: '8px 16px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+                            <button onClick={fetchPendingGrades} style={{ padding: '8px 16px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', flex: '1', minWidth: 'fit-content' }}>
                                 🔄 {t('refresh')}
                             </button>
                         </div>

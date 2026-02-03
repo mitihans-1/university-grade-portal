@@ -244,43 +244,45 @@ const AdminIdManagement = () => {
 
     return (
         <div className="fade-in" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1 style={{ color: '#1a237e' }}>User ID Management</h1>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <input
-                        type="text"
-                        placeholder="Search ID or Department..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            padding: '10px',
-                            borderRadius: '8px',
-                            border: '1px solid #cbd5e1',
-                            outline: 'none',
-                            width: '250px'
-                        }}
-                    />
+            <div className="responsive-header" style={{ marginBottom: '20px' }}>
+                <h1 style={{ color: '#1a237e', margin: 0 }}>User ID Management</h1>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
+                        <input
+                            type="text"
+                            placeholder="Search ID or Department..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                padding: '10px',
+                                borderRadius: '8px',
+                                border: '1px solid #cbd5e1',
+                                outline: 'none',
+                                width: '100%'
+                            }}
+                        />
+                    </div>
                     <button
                         onClick={() => setShowUploadModal(true)}
                         className="modern-btn"
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#059669' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#059669', flex: '1', minWidth: 'fit-content' }}
                     >
                         <span>📂</span> Import CSV
                     </button>
                     <button
                         onClick={openAddModal}
                         className="modern-btn"
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', minWidth: 'fit-content' }}
                     >
-                        <span>➕</span> Add New {activeTab === 'student' ? 'Student' : 'Teacher'} ID
+                        <span>➕</span> Add New
                     </button>
                 </div>
             </div>
 
             {/* ... rest of the existing list/table code ... */}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0' }}>
+            <div className="responsive-header" style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', flexWrap: 'wrap' }}>
                     <button
                         onClick={() => setActiveTab('student')}
                         style={{
@@ -313,7 +315,7 @@ const AdminIdManagement = () => {
                     </button>
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px' }}>
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#475569', fontWeight: '500' }}>Year:</span>
                         <select
