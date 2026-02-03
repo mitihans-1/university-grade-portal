@@ -82,7 +82,7 @@ import StudentAssignments from './pages/StudentAssignments';
 import StudentExams from './pages/StudentExams';
 import StudentExamPlayer from './pages/StudentExamPlayer';
 import StudentProfileSetup from './pages/StudentProfileSetup';
-import SupportPage from './pages/SupportPage';
+import SupportPage from './pages/supportpage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmail from './pages/VerifyEmail';
