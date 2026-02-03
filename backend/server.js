@@ -186,26 +186,29 @@ app.get('/', (req, res) => {
 // Production Setup Route (ONLY for initial deployment repair)
 app.get('/api/admin/setup-db', async (req, res) => {
   try {
-    const models = require('./models');
     const { sequelize } = require('./config/db');
 
-    // Core tables first
-    await models.Admin.sync({ alter: true });
-    await models.Student.sync({ alter: true });
-    await models.Parent.sync({ alter: true });
-    await models.Teacher.sync({ alter: true });
+    console.log('Manual Setup: Disabling foreign key checks...');
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
 
-    // Everything else
+    console.log('Manual Setup: Syncing database...');
+    // Sync all models at once with foreign key checks disabled
     await sequelize.sync({ alter: true });
 
+    console.log('Manual Setup: Re-enabling foreign key checks...');
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+
     // Seed admin
+    console.log('Manual Setup: Seeding admin...');
     const seedAdmin = require('./utils/seedAdmin');
     await seedAdmin();
 
-    res.send('<h1>Success!</h1><p>Database initialized and Admin seeded successfully!</p><p><a href="/">Return Home</a></p>');
+    res.send('<h1>Success!</h1><p>Database schema synchronized and Admin created successfully with foreign key checks handled!</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
   } catch (error) {
     console.error('Manual Setup Error:', error);
-    res.status(500).send(`<h1>Manual Setup Failed</h1><pre>${error.message}</pre>`);
+    // Try to re-enable checks even if it fails
+    try { await sequelize.query('SET FOREIGN_KEY_CHECKS = 1'); } catch (e) { }
+    res.status(500).send(`<h1>Manual Setup Failed</h1><p>The server encountered an error while setting up tables:</p><pre>${error.message}</pre><p>Please check Render logs for more details.</p>`);
   }
 });
 
