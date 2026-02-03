@@ -98,7 +98,7 @@ const AttendanceManagement = () => {
                 borderRadius: '10px',
                 boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                <div className="responsive-header" style={{ marginBottom: '25px' }}>
                     <h2 style={{ margin: 0 }}>
                         {user?.role === 'admin' ? t('attendanceRecords') : t('attendanceManagementTitle')}
                     </h2>
@@ -183,7 +183,7 @@ const AttendanceManagement = () => {
                             </select>
                         </div>
 
-                        <div className="grid-container" style={{ marginBottom: '15px' }}>
+                        <div className="responsive-grid" style={{ marginBottom: '15px' }}>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '5px' }}>{t('courseCode')}</label>
                                 <input

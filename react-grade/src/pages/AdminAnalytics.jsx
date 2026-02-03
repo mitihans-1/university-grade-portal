@@ -68,10 +68,7 @@ const AdminAnalytics = () => {
             </div>
 
             {/* Top Level Stats */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '20px',
+            <div className="responsive-grid" style={{
                 marginBottom: '30px'
             }}>
                 <div style={statCardStyle('#1976d2')}>
@@ -92,7 +89,7 @@ const AdminAnalytics = () => {
                 </div>
             </div>
 
-            <div className="grid-container" style={{ gap: '30px', marginBottom: '30px' }}>
+            <div className="responsive-grid" style={{ gap: '30px', marginBottom: '30px' }}>
                 {/* Department Breakdown Heatmap-like Table */}
                 <div style={containerCardStyle}>
                     <h3 style={{ marginBottom: '20px' }}>{t('performanceByDepartment')}</h3>

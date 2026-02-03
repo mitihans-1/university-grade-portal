@@ -556,7 +556,8 @@ function AppLayout() {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)',
+              backgroundColor: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(4px)',
               zIndex: 1000,
               animation: 'fadeIn 0.2s ease-in-out'
             }}
@@ -585,7 +586,7 @@ function AppLayout() {
 
         <main style={{
           flex: 1,
-          padding: isFullScreenPage ? '0' : '24px',
+          padding: isFullScreenPage ? '0' : 'clamp(1rem, 3vw, 24px)',
           overflowX: 'hidden',
           overflowY: 'auto',
           height: isFullScreenPage ? '100vh' : 'calc(100vh - 56px)',

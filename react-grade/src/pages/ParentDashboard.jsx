@@ -281,9 +281,7 @@ const ParentDashboard = () => {
                   {familyOverview.length} Children Linked
                 </span>
               </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              <div className="responsive-grid" style={{
                 gap: '20px'
               }}>
                 {familyOverview.map(child => (
@@ -355,7 +353,7 @@ const ParentDashboard = () => {
             background: 'linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%)',
             borderLeft: '5px solid #2e7d32'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+            <div className="responsive-header" style={{ alignItems: 'flex-start', marginBottom: '20px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
                   <div style={{
@@ -410,8 +408,7 @@ const ParentDashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid-container" style={{
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                <div className="responsive-grid" style={{
                   gap: '15px'
                 }}>
                   <div className="card" style={{ padding: '10px 15px', border: 'none', background: 'rgba(255,255,255,0.5)' }}>
@@ -522,10 +519,7 @@ const ParentDashboard = () => {
           )}
 
           {/* New Widgets Section */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '25px',
+          <div className="responsive-grid" style={{
             marginBottom: '30px'
           }}>
             {/* Child's Schedule Widget */}
@@ -588,11 +582,7 @@ const ParentDashboard = () => {
 
 
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '25px'
-          }}>
+          <div className="responsive-grid">
             {/* Grades Table */}
             <div className="stagger-item">
               <div style={{

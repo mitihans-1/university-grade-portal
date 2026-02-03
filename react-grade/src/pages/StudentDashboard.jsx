@@ -180,7 +180,7 @@ const StudentDashboard = () => {
                   📅 {systemSettings.current_year} {systemSettings.current_semester}
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+              <div className="responsive-header" style={{ gap: '20px' }}>
                 <div>
                   <h1 style={{ margin: '0 0 10px 0', color: '#1a237e', fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}>
                     {t('welcomeMessage').replace('{name}', user?.name || 'Student')}
@@ -260,7 +260,7 @@ const StudentDashboard = () => {
                 </h3>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
+              <div className="responsive-grid" style={{ gap: '20px' }}>
                 <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
                   <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Faculty / Department</div>
                   <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '15px' }}>{user?.department || 'General Science'}</div>
@@ -307,8 +307,7 @@ const StudentDashboard = () => {
               </div>
             )}
 
-            <div className="grid-container" style={{
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            <div className="responsive-grid" style={{
               gap: '20px'
             }}>
               <div className="stagger-item">
@@ -376,7 +375,7 @@ const StudentDashboard = () => {
               boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
               border: '1px solid #f1f5f9'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div className="responsive-header" style={{ marginBottom: '20px' }}>
                 <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '24px' }}>📢</span> {t('notifications')}
                 </h3>
@@ -386,7 +385,7 @@ const StudentDashboard = () => {
               </div>
 
               {announcements.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="responsive-stack" style={{ gap: '12px' }}>
                   {announcements.map(anno => (
                     <div key={anno.id} style={{
                       padding: '15px',

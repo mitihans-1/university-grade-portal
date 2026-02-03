@@ -236,12 +236,12 @@ const AdminDashboard = () => {
 
   return (
     <div className="dashboard-container fade-in">
-      <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="responsive-header" style={{ marginBottom: '30px' }}>
         <div>
           <h1 style={{ marginBottom: '8px', fontSize: '2rem', fontWeight: '800', color: '#1a237e' }}>{t('adminDashboard')}</h1>
           <p style={{ color: '#64748b', fontSize: '1.1rem' }}>{t('welcomeBack')}, <span style={{ fontWeight: '600', color: '#0f172a' }}>{user?.name}</span></p>
         </div>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{
             display: 'flex',
             backgroundColor: '#fff',
@@ -280,7 +280,10 @@ const AdminDashboard = () => {
               alignItems: 'center',
               gap: '8px',
               boxShadow: '0 4px 12px rgba(26, 35, 126, 0.2)',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              flex: '1',
+              justifyContent: 'center',
+              minWidth: 'fit-content'
             }}
           >
             <span>➕</span> {t('addAdministrator')}
@@ -288,8 +291,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="grid-container" style={{
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+      <div className="responsive-grid" style={{
         marginBottom: '25px'
       }}>
         {statCards.map((card, index) => (
@@ -377,9 +379,7 @@ const AdminDashboard = () => {
             <div style={{ fontSize: '12px', color: '#64748b' }}>Operational Balance</div>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          <div className="responsive-grid" style={{
             gap: '30px'
           }}>
             {/* Students Distribution */}
@@ -445,19 +445,17 @@ const AdminDashboard = () => {
               <h3 style={{ margin: 0, fontSize: '18px', color: '#92400e' }}>Pending Approval Notifications</h3>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div className="responsive-stack" style={{ gap: '15px' }}>
               {stats.pendingTeachers.map((teacher) => (
-                <div key={`pending-t-${teacher.id}`} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                <div key={`pending-t-${teacher.id}`} className="responsive-header" style={{
                   backgroundColor: 'white',
                   padding: '15px 20px',
                   borderRadius: '12px',
-                  border: '1px solid #fef3c7'
+                  border: '1px solid #fef3c7',
+                  marginBottom: '10px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '40px', height: '40px', backgroundColor: '#ecfdf5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👨‍🏫</div>
+                  <div className="responsive-row" style={{ flex: 1 }}>
+                    <div style={{ width: '40px', height: '40px', backgroundColor: '#ecfdf5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>👨‍🏫</div>
                     <div>
                       <p style={{ margin: 0, fontWeight: '700', color: '#1e293b' }}>{teacher.name}</p>
                       <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
@@ -479,17 +477,15 @@ const AdminDashboard = () => {
               ))}
 
               {stats.pendingParents.map((parent) => (
-                <div key={`pending-p-${parent.id}`} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                <div key={`pending-p-${parent.id}`} className="responsive-header" style={{
                   backgroundColor: 'white',
                   padding: '15px 20px',
                   borderRadius: '12px',
-                  border: '1px solid #fef3c7'
+                  border: '1px solid #fef3c7',
+                  marginBottom: '10px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '40px', height: '40px', backgroundColor: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>👨‍👩‍👧</div>
+                  <div className="responsive-row" style={{ flex: 1 }}>
+                    <div style={{ width: '40px', height: '40px', backgroundColor: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>👨‍👩‍👧</div>
                     <div>
                       <p style={{ margin: 0, fontWeight: '700', color: '#1e293b' }}>{parent.name}</p>
                       <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>Parent Registration • Linking to Student {parent.studentId}</p>
@@ -515,13 +511,8 @@ const AdminDashboard = () => {
           boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
           border: '1px solid rgba(0,0,0,0.05)'
         }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+          <div className="responsive-header" style={{
             marginBottom: '20px',
-            flexWrap: 'wrap',
-            gap: '10px',
             borderBottom: '1px solid #f1f5f9',
             paddingBottom: '15px'
           }}>

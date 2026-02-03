@@ -100,13 +100,15 @@ const FeeManagement = () => {
 
     return (
         <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto', padding: '30px' }}>
-            <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{ padding: '12px', backgroundColor: '#e0f2fe', borderRadius: '12px' }}>
-                    <DollarSign size={32} color="#0284c7" />
-                </div>
-                <div>
-                    <h1 style={{ margin: 0, color: '#0f172a', fontSize: '28px' }}>Fee Management</h1>
-                    <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>Track tuition, manage assignments, and view payments.</p>
+            <div className="responsive-header" style={{ marginBottom: '30px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ padding: '12px', backgroundColor: '#e0f2fe', borderRadius: '12px', flexShrink: 0 }}>
+                        <DollarSign size={32} color="#0284c7" />
+                    </div>
+                    <div>
+                        <h1 style={{ margin: 0, color: '#0f172a', fontSize: '28px' }}>Fee Management</h1>
+                        <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>Track tuition, manage assignments, and view payments.</p>
+                    </div>
                 </div>
             </div>
 
@@ -118,7 +120,7 @@ const FeeManagement = () => {
                         <h3 style={{ margin: 0, fontSize: '18px', color: '#1e293b' }}>Assign New Fee</h3>
                     </div>
 
-                    <form onSubmit={handleAssignFee} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '25px' }}>
+                    <form onSubmit={handleAssignFee} className="responsive-grid" style={{ gap: '25px' }}>
                         <div style={{ gridColumn: '1 / -1' }}>
                             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#475569' }}>Target Audience</label>
                             <div style={{ display: 'flex', gap: '15px' }}>

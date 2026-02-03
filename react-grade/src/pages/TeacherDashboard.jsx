@@ -84,7 +84,7 @@ const TeacherDashboard = () => {
 
     return (
         <div className="dashboard-container">
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="responsive-header" style={{ marginBottom: '20px' }}>
                 <div>
                     <h1 style={{ marginBottom: '5px', fontSize: '1.8rem' }}>{t('teacherDashboard') || 'Teacher Dashboard'}</h1>
                     <p style={{ color: '#666' }}>{t('welcomeBack')}, {user?.name}</p>
@@ -92,7 +92,7 @@ const TeacherDashboard = () => {
                         {user?.department} • {user?.teacherId} • Year {user?.year || 'N/A'} • Semester {user?.semester || 'N/A'}
                     </p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
                     {systemSettings && (
                         <div style={{
                             backgroundColor: '#f5f5f5',
@@ -123,7 +123,10 @@ const TeacherDashboard = () => {
                             alignItems: 'center',
                             gap: '8px',
                             boxShadow: '0 4px 6px rgba(59, 130, 246, 0.2)',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s',
+                            justifyContent: 'center',
+                            flex: '1',
+                            minWidth: 'fit-content'
                         }}
                     >
                         <Upload size={18} /> {t('uploadGrades')}
@@ -168,8 +171,7 @@ const TeacherDashboard = () => {
                 </div>
             </div>
 
-            <div className="grid-container" style={{
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            <div className="responsive-grid" style={{
                 marginBottom: '25px'
             }}>
                 <div style={{
@@ -250,7 +252,7 @@ const TeacherDashboard = () => {
                 marginBottom: '30px',
                 border: '1px solid #f1f5f9'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div className="responsive-header" style={{ marginBottom: '20px' }}>
                     <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ fontSize: '24px' }}>📅</span> {t('weeklySchedule')}
                     </h3>
@@ -260,7 +262,7 @@ const TeacherDashboard = () => {
                 </div>
 
                 {schedules.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px' }}>
+                    <div className="responsive-grid" style={{ gap: '15px' }}>
                         {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
                             const dayClasses = schedules.filter(s => s.dayOfWeek === day);
                             const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day;
@@ -325,7 +327,7 @@ const TeacherDashboard = () => {
                 marginBottom: '30px',
                 borderLeft: '6px solid #f59e0b'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div className="responsive-header" style={{ marginBottom: '20px' }}>
                     <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ fontSize: '24px' }}>📢</span> {t('notifications') || 'Announcements'}
                     </h3>
@@ -335,7 +337,7 @@ const TeacherDashboard = () => {
                 </div>
 
                 {announcements.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="responsive-stack" style={{ gap: '12px' }}>
                         {announcements.map(anno => (
                             <div key={anno.id} style={{
                                 padding: '15px',
