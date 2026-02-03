@@ -9,11 +9,7 @@ const TeacherAssignment = sequelize.define('TeacherAssignment', {
     },
     teacherId: {
         type: DataTypes.STRING,
-        allowNull: false,
-        references: {
-            model: 'teachers',
-            key: 'teacherId'
-        }
+        allowNull: false
     },
     department: {
         type: DataTypes.STRING,

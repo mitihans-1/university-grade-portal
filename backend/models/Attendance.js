@@ -9,11 +9,7 @@ const Attendance = sequelize.define('Attendance', {
     },
     studentId: {
         type: DataTypes.STRING,
-        allowDefaults: false,
-        references: {
-            model: 'students',
-            key: 'studentId'
-        }
+        allowDefaults: false
     },
     courseCode: {
         type: DataTypes.STRING,
@@ -34,7 +30,12 @@ const Attendance = sequelize.define('Attendance', {
         type: DataTypes.STRING
     }
 }, {
+    tableName: 'attendance',
     timestamps: true
 });
+
+Attendance.associate = (models) => {
+    Attendance.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student' });
+};
 
 module.exports = Attendance;

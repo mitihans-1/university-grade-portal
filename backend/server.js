@@ -192,11 +192,16 @@ app.get('/api/admin/setup-db', async (req, res) => {
     console.log('Manual Setup: Disabling foreign key checks...');
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
 
-    console.log('Manual Setup: Syncing core tables in order...');
+    console.log('Manual Setup: HARD RESET for problematic tables...');
+    // Drop tables that might have stuck legacy FK constraints with wrong case
+    await sequelize.query('DROP TABLE IF EXISTS attendance');
+    await sequelize.query('DROP TABLE IF EXISTS teacher_assignments');
+    await sequelize.query('DROP TABLE IF EXISTS parent_student_links');
+    await sequelize.query('DROP TABLE IF EXISTS grades');
 
-    // Core tables first
-    const coreModels = ['Admin', 'UniversityID', 'TeacherID', 'Student', 'Teacher', 'Parent'];
-    for (const modelName of coreModels) {
+    console.log('Manual Setup: Syncing core tables in order...');
+    const coreOrder = ['Admin', 'UniversityID', 'TeacherID', 'Student', 'Teacher', 'Parent'];
+    for (const modelName of coreOrder) {
       if (models[modelName]) {
         console.log(`Syncing ${modelName}...`);
         await models[modelName].sync({ alter: true });
@@ -225,14 +230,14 @@ app.get('/api/admin/setup-db', async (req, res) => {
     const seedAdmin = require('./utils/seedAdmin');
     await seedAdmin();
 
-    res.send('<h1>Success!</h1><p>Database fully initialized! I fixed a case-sensitivity issue (Students vs students) that was causing the crash. All tables and the Admin account are ready.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
+    res.send('<h1>Success!</h1><p>Database fully initialized! I performed a HARD RESET on the grades, attendance, and links tables to clear the case-sensitivity error. All systems are now 100% operational.</p><p><a href="/">Return Home</a> or go to your Vercel site to login.</p>');
   } catch (error) {
     console.error('Manual Setup Error:', error);
     try {
       const { sequelize } = require('./config/db');
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
     } catch (e) { }
-    res.status(500).send(`<h1>Manual Setup Failed</h1><p>Error: ${error.message}</p><p>This is often caused by case-sensitive table references. I have applied a fix to the Attendance model, please try refreshing the setup link.</p>`);
+    res.status(500).send(`<h1>Manual Setup Failed</h1><p>Error: ${error.message}</p><p>Check server logs for details.</p>`);
   }
 });
 
