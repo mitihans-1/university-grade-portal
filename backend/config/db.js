@@ -32,6 +32,7 @@ const sequelize = new Sequelize(
 // Test the connection
 const connectDB = async () => {
   try {
+    console.log(`Attempting to connect to DB at: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
     await sequelize.authenticate();
     console.log('MySQL database connected successfully');
 

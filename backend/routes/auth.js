@@ -169,7 +169,7 @@ router.post('/login', async (req, res) => {
       }
     );
   } catch (err) {
-    console.error('Login error CRITICAL:', err);
+    console.error(`Login error CRITICAL - Host: [${process.env.DB_HOST}]`, err);
     // Write error to a dedicated debug file
     const fs = require('fs');
     try {
