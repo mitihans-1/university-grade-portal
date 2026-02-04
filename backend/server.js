@@ -1,9 +1,5 @@
 const dotenv = require('dotenv');
-if (process.env.NODE_ENV === 'production') {
-  dotenv.config({ path: '.env.production' });
-} else {
-  dotenv.config();
-}
+dotenv.config();
 
 const express = require('express');
 const cors = require('cors');
