@@ -1081,7 +1081,7 @@ const AdminUpload = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+          <div className="table-responsive-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
             {filteredStudents.map((s) => (
               <button
                 key={s.id}
@@ -1105,8 +1105,8 @@ const AdminUpload = () => {
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table>
+        <div className="table-responsive-cards">
+          <table style={{ width: '100%' }}>
             <thead>
               <tr>
                 <th>{t('studentId')}</th>
@@ -1121,10 +1121,10 @@ const AdminUpload = () => {
             <tbody>
               {filteredGradeList.map((grade) => (
                 <tr key={grade.id}>
-                  <td style={{ fontWeight: 'bold' }}>{grade.studentId}</td>
-                  <td>{grade.studentName || 'N/A'}</td>
-                  <td>{grade.courseCode || grade.courseName}</td>
-                  <td>
+                  <td data-label={t('studentId')} style={{ fontWeight: 'bold' }}>{grade.studentId}</td>
+                  <td data-label={t('fullName')}>{grade.studentName || 'N/A'}</td>
+                  <td data-label={t('courses')}>{grade.courseCode || grade.courseName}</td>
+                  <td data-label={t('grade')}>
                     <span style={{
                       backgroundColor: getGradeColor(grade.grade),
                       color: 'white',
@@ -1138,7 +1138,7 @@ const AdminUpload = () => {
                       {grade.grade}
                     </span>
                   </td>
-                  <td>
+                  <td data-label={t('status')}>
                     <span style={{
                       backgroundColor: grade.status === 'published' ? '#d4edda' : '#fff3cd',
                       color: grade.status === 'published' ? '#155724' : '#856404',
@@ -1150,25 +1150,26 @@ const AdminUpload = () => {
                       {grade.status === 'published' ? 'Published' : 'Pending'}
                     </span>
                   </td>
-                  <td>
+                  <td data-label={t('notifications')}>
                     {grade.status === 'published' ? (
                       <span style={{ color: '#4caf50', fontWeight: 'bold' }}>✓ Sent</span>
                     ) : (
                       <span style={{ color: '#ff9800', fontWeight: 'bold' }}>Pending</span>
                     )}
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '5px' }}>
+                  <td data-label={t('actions')}>
+                    <div style={{ display: 'flex', gap: '5px', width: '100%' }}>
                       {user?.role === 'admin' && (
                         <button
                           onClick={() => handlePublish(grade.id)}
                           disabled={grade.status === 'published'}
                           style={{
-                            padding: '5px 10px',
+                            flex: 1,
+                            padding: '8px 10px',
                             backgroundColor: grade.status === 'published' ? '#ccc' : '#4caf50',
                             color: 'white',
                             border: 'none',
-                            borderRadius: '3px',
+                            borderRadius: '4px',
                             cursor: grade.status === 'published' ? 'not-allowed' : 'pointer',
                             fontSize: '12px'
                           }}
@@ -1179,11 +1180,12 @@ const AdminUpload = () => {
                       <button
                         onClick={() => handleDelete(grade.id)}
                         style={{
-                          padding: '5px 10px',
+                          flex: 1,
+                          padding: '8px 10px',
                           backgroundColor: '#f44336',
                           color: 'white',
                           border: 'none',
-                          borderRadius: '3px',
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -1197,6 +1199,7 @@ const AdminUpload = () => {
             </tbody>
           </table>
         </div>
+
 
         {user?.role === 'admin' && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '15px', marginBottom: '15px' }}>

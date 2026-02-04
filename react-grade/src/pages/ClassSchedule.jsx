@@ -100,7 +100,7 @@ const ClassSchedule = () => {
     return (
         <div className="fade-in" style={{ maxWidth: '1300px', margin: '30px auto', padding: '0 20px' }}>
             {/* Header Section */}
-            <div style={{
+            <div className="responsive-header" style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -121,6 +121,7 @@ const ClassSchedule = () => {
                     <button
                         onClick={() => window.print()}
                         style={{
+                            flex: 1,
                             padding: '10px 20px',
                             backgroundColor: 'white',
                             color: '#1e293b',
@@ -129,6 +130,7 @@ const ClassSchedule = () => {
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
+                            justifyContent: 'center',
                             gap: '8px',
                             fontWeight: '600',
                             transition: 'all 0.2s',
@@ -141,6 +143,7 @@ const ClassSchedule = () => {
                         <button
                             onClick={() => setIsAdding(!isAdding)}
                             style={{
+                                flex: 1,
                                 padding: '10px 20px',
                                 backgroundColor: isAdding ? '#f43f5e' : '#3b82f6',
                                 color: 'white',
@@ -149,6 +152,7 @@ const ClassSchedule = () => {
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
+                                justifyContent: 'center',
                                 gap: '8px',
                                 fontWeight: '600',
                                 transition: 'all 0.2s'
@@ -161,83 +165,130 @@ const ClassSchedule = () => {
                 </div>
             </div>
 
+
             {/* Filters Section */}
-            <div className="card" style={{ marginBottom: '25px', padding: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                <div style={{ flex: 1, minWidth: '200px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>DEPARTMENT</label>
-                    <select
-                        value={filters.department}
-                        onChange={e => setFilters({ ...filters, department: e.target.value })}
-                        className="modern-input"
-                        disabled={user.permissions?.includes('view_own_grades') && !user.permissions?.includes('view_child_grades')}
+            <div className="card" style={{ marginBottom: '25px', padding: '20px' }}>
+                <div className="responsive-grid" style={{ gap: '15px', alignItems: 'flex-end' }}>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>DEPARTMENT</label>
+                        <select
+                            value={filters.department}
+                            onChange={e => setFilters({ ...filters, department: e.target.value })}
+                            className="modern-input"
+                            disabled={user.permissions?.includes('view_own_grades') && !user.permissions?.includes('view_child_grades')}
+                        >
+                            <option value="">{t('allDepartments')}</option>
+                            {departments.map(dept => (
+                                <option key={dept} value={dept}>{dept}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>YEAR</label>
+                        <select value={filters.year} onChange={e => setFilters({ ...filters, year: e.target.value })} className="modern-input">
+                            <option value="">{t('all')}</option>
+                            {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t('year')} {y}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>SEMESTER</label>
+                        <select value={filters.semester} onChange={e => setFilters({ ...filters, semester: e.target.value })} className="modern-input">
+                            <option value="1">{t('semester')} 1</option>
+                            <option value="2">{t('semester')} 2</option>
+                        </select>
+                    </div>
+                    <button
+                        onClick={fetchSchedules}
+                        className="modern-btn"
+                        style={{ width: '100%', padding: '9px 15px', height: '38px', backgroundColor: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                     >
-                        <option value="">{t('allDepartments')}</option>
-                        {departments.map(dept => (
-                            <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                    </select>
+                        <Filter size={16} /> {t('filter')}
+                    </button>
                 </div>
-                <div style={{ width: '120px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>YEAR</label>
-                    <select value={filters.year} onChange={e => setFilters({ ...filters, year: e.target.value })} className="modern-input">
-                        <option value="">{t('all')}</option>
-                        {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t('year')} {y}</option>)}
-                    </select>
-                </div>
-                <div style={{ width: '130px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>SEMESTER</label>
-                    <select value={filters.semester} onChange={e => setFilters({ ...filters, semester: e.target.value })} className="modern-input">
-                        <option value="1">{t('semester')} 1</option>
-                        <option value="2">{t('semester')} 2</option>
-                    </select>
-                </div>
-                <button
-                    onClick={fetchSchedules}
-                    className="modern-btn"
-                    style={{ width: 'auto', padding: '9px 15px', height: '38px', backgroundColor: '#64748b' }}
-                >
-                    <Filter size={16} /> {t('filter')}
-                </button>
             </div>
+
 
             {/* Add Form (Admin) */}
             {isAdding && (
                 <div className="card fade-in" style={{ backgroundColor: '#fff', padding: '25px', borderRadius: '12px', marginBottom: '25px', border: '1px solid #3b82f6' }}>
                     <h3 style={{ marginBottom: '20px', fontSize: '1.2rem' }}>{t('addScheduleEntry')}</h3>
-                    <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
-                        <input required className="modern-input" placeholder="Course Name" value={newItem.courseName} onChange={e => setNewItem({ ...newItem, courseName: e.target.value })} />
-                        <input required className="modern-input" placeholder="Course Code" value={newItem.courseCode} onChange={e => setNewItem({ ...newItem, courseCode: e.target.value })} />
-                        <select className="modern-input" required value={newItem.department} onChange={e => setNewItem({ ...newItem, department: e.target.value })}>
-                            <option value="">Select Dept</option>
-                            {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-                        </select>
-                        <select className="modern-input" required value={newItem.year} onChange={e => setNewItem({ ...newItem, year: e.target.value })}>
-                            {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>Year {y}</option>)}
-                        </select>
-                        <select className="modern-input" required value={newItem.semester} onChange={e => setNewItem({ ...newItem, semester: e.target.value })}>
-                            <option value="1">Semester 1</option>
-                            <option value="2">Semester 2</option>
-                        </select>
-                        <select className="modern-input" value={newItem.dayOfWeek} onChange={e => setNewItem({ ...newItem, dayOfWeek: e.target.value })}>
-                            {days.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                        <input type="time" required className="modern-input" value={newItem.startTime} onChange={e => setNewItem({ ...newItem, startTime: e.target.value })} />
-                        <input type="time" required className="modern-input" value={newItem.endTime} onChange={e => setNewItem({ ...newItem, endTime: e.target.value })} />
-                        <input className="modern-input" placeholder="Room/Hall" value={newItem.room} onChange={e => setNewItem({ ...newItem, room: e.target.value })} />
-                        <input className="modern-input" placeholder="Instructor" value={newItem.instructor} onChange={e => setNewItem({ ...newItem, instructor: e.target.value })} />
-                        <select className="modern-input" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })}>
-                            <option value="lecture">{t('lecture')}</option>
-                            <option value="lab">{t('lab')}</option>
-                            <option value="exam">{t('exam')}</option>
-                            <option value="deadline">{t('deadline')}</option>
-                        </select>
-                        <button type="submit" className="modern-btn" style={{ fontWeight: '700' }}>{t('addEntry')}</button>
-                    </form>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                        gap: '15px',
+                        alignItems: 'end'
+                    }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Course Name</label>
+                            <input required className="modern-input" placeholder="Enter Course Name" value={newItem.courseName} onChange={e => setNewItem({ ...newItem, courseName: e.target.value })} />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Course Code</label>
+                            <input required className="modern-input" placeholder="e.g. CS101" value={newItem.courseCode} onChange={e => setNewItem({ ...newItem, courseCode: e.target.value })} />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Department</label>
+                            <select className="modern-input" required value={newItem.department} onChange={e => setNewItem({ ...newItem, department: e.target.value })}>
+                                <option value="">Select Dept</option>
+                                {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Year</label>
+                            <select className="modern-input" required value={newItem.year} onChange={e => setNewItem({ ...newItem, year: e.target.value })}>
+                                {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>Year {y}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Semester</label>
+                            <select className="modern-input" required value={newItem.semester} onChange={e => setNewItem({ ...newItem, semester: e.target.value })}>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Day</label>
+                            <select className="modern-input" value={newItem.dayOfWeek} onChange={e => setNewItem({ ...newItem, dayOfWeek: e.target.value })}>
+                                {days.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Start Time</label>
+                            <input type="time" required className="modern-input" value={newItem.startTime} onChange={e => setNewItem({ ...newItem, startTime: e.target.value })} />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>End Time</label>
+                            <input type="time" required className="modern-input" value={newItem.endTime} onChange={e => setNewItem({ ...newItem, endTime: e.target.value })} />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Room</label>
+                            <input className="modern-input" placeholder="Room/Hall" value={newItem.room} onChange={e => setNewItem({ ...newItem, room: e.target.value })} />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Instructor</label>
+                            <input className="modern-input" placeholder="Instructor Name" value={newItem.instructor} onChange={e => setNewItem({ ...newItem, instructor: e.target.value })} />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Type</label>
+                            <select className="modern-input" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })}>
+                                <option value="lecture">{t('lecture')}</option>
+                                <option value="lab">{t('lab')}</option>
+                                <option value="exam">{t('exam')}</option>
+                                <option value="deadline">{t('deadline')}</option>
+                            </select>
+                        </div>
+                        <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                            <button type="submit" className="modern-btn" style={{ fontWeight: '700', width: '100%', padding: '15px' }}>
+                                <Plus size={20} /> {t('addEntry')}
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             )}
 
             {/* Timetable View */}
-            <div className="table-container fade-in" style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+            <div className="table-responsive-cards fade-in" style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
                 <table style={{ background: 'white' }}>
                     <thead>
                         <tr>
@@ -259,58 +310,55 @@ const ClassSchedule = () => {
                                 const typeStyle = getTypeStyle(item.type);
                                 return (
                                     <tr key={item.id} className="table-row-animate" style={{ transition: 'all 0.2s' }}>
-                                        {index === 0 ? (
-                                            <td rowSpan={dayClasses.length} style={{
-                                                verticalAlign: 'top',
-                                                fontWeight: '800',
-                                                color: '#1e293b',
-                                                borderRight: '1px solid #f1f5f9',
-                                                backgroundColor: '#fff'
+                                        <td data-label="DAY" style={{
+                                            fontWeight: '800',
+                                            color: '#1e293b',
+                                            borderRight: '1px solid #f1f5f9',
+                                            backgroundColor: '#fff'
+                                        }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                color: new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day ? '#3b82f6' : '#1e293b'
                                             }}>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '8px',
-                                                    color: new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day ? '#3b82f6' : '#1e293b'
-                                                }}>
-                                                    <ChevronRight size={16} /> {day.toUpperCase()}
-                                                    {new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day && (
-                                                        <span style={{
-                                                            fontSize: '10px',
-                                                            backgroundColor: '#dbeafe',
-                                                            color: '#3b82f6',
-                                                            padding: '2px 6px',
-                                                            borderRadius: '4px',
-                                                            marginLeft: '5px'
-                                                        }}>{t('today').toUpperCase()}</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        ) : null}
-                                        <td style={{ fontWeight: '600', color: '#475569' }}>
+                                                <ChevronRight size={16} className="desktop-only" /> {day.toUpperCase()}
+                                                {new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day && (
+                                                    <span style={{
+                                                        fontSize: '10px',
+                                                        backgroundColor: '#dbeafe',
+                                                        color: '#3b82f6',
+                                                        padding: '2px 6px',
+                                                        borderRadius: '4px',
+                                                        marginLeft: '5px'
+                                                    }}>{t('today').toUpperCase()}</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td data-label="TIME" style={{ fontWeight: '600', color: '#475569' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 <Clock size={14} style={{ opacity: 0.5 }} />
                                                 {item.startTime} - {item.endTime}
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="COURSE">
                                             <div style={{ fontWeight: '700', color: '#0f172a' }}>
                                                 {item.courseName} ({item.courseCode})
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="INSTRUCTOR">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
                                                 <User size={14} style={{ color: '#10b981' }} />
                                                 {item.instructor || 'Staff'}
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="ROOM">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
                                                 <MapPin size={14} style={{ color: '#ef4444' }} />
                                                 {item.room || 'TBA'}
                                             </div>
                                         </td>
-                                        <td style={{ textAlign: 'center' }}>
+                                        <td data-label="TYPE" style={{ textAlign: 'center' }}>
                                             <span style={{
                                                 backgroundColor: typeStyle.bg,
                                                 color: typeStyle.color,
@@ -325,7 +373,7 @@ const ClassSchedule = () => {
                                             </span>
                                         </td>
                                         {user.permissions?.includes('manage_users') && (
-                                            <td style={{ textAlign: 'right' }}>
+                                            <td data-label="ACTIONS" style={{ textAlign: 'right' }}>
                                                 <button
                                                     onClick={() => handleDelete(item.id)}
                                                     style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', transition: 'color 0.2s' }}

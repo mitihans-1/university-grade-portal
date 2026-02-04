@@ -201,7 +201,7 @@ const StudentManagement = () => {
         </div>
       </div>
 
-      <div style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div className="table-responsive-cards" style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -217,9 +217,9 @@ const StudentManagement = () => {
             <tbody>
               {filteredStudents.map((student) => (
                 <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} className="hover-bg-slate-50">
-                  <td style={{ padding: '15px 20px' }}>
+                  <td data-label={t('student')} style={{ padding: '15px 20px' }}>
                     {editingStudent === student.id ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                         <input className="modern-input" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} placeholder="Name" />
                         <div style={{ fontSize: '12px', color: '#64748b' }}>{student.studentId}</div>
                       </div>
@@ -236,9 +236,9 @@ const StudentManagement = () => {
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: '15px 20px' }}>
+                  <td data-label="Contact" style={{ padding: '15px 20px' }}>
                     {editingStudent === student.id ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                         <input className="modern-input" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} placeholder="Email" />
                         <input className="modern-input" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} placeholder="Phone" />
                       </div>
@@ -255,9 +255,9 @@ const StudentManagement = () => {
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: '15px 20px' }}>
+                  <td data-label={t('department')} style={{ padding: '15px 20px' }}>
                     {editingStudent === student.id ? (
-                      <select className="modern-input" value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })}>
+                      <select className="modern-input" style={{ width: '100%' }} value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })}>
                         <option value="Computer Science">Computer Science</option>
                         <option value="Electrical Engineering">Electrical Engineering</option>
                         <option value="Mechanical Engineering">Mechanical Engineering</option>
@@ -271,16 +271,16 @@ const StudentManagement = () => {
                       </span>
                     )}
                   </td>
-                  <td style={{ padding: '15px 20px' }}>
+                  <td data-label={t('year')} style={{ padding: '15px 20px' }}>
                     {editingStudent === student.id ? (
-                      <input type="number" className="modern-input" style={{ width: '60px' }} value={editForm.year} onChange={e => setEditForm({ ...editForm, year: e.target.value })} />
+                      <input type="number" className="modern-input" style={{ width: '100%' }} value={editForm.year} onChange={e => setEditForm({ ...editForm, year: e.target.value })} />
                     ) : (
                       <span style={{ fontWeight: '600', color: '#475569' }}>Year {student.year}</span>
                     )}
                   </td>
-                  <td style={{ padding: '15px 20px' }}>
+                  <td data-label={t('parent')} style={{ padding: '15px 20px' }}>
                     {student.parentLink ? (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', width: '100%' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <User size={16} color="#64748b" />
@@ -314,16 +314,16 @@ const StudentManagement = () => {
                       <span style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>No Parent Linked</span>
                     )}
                   </td>
-                  <td style={{ padding: '15px 20px' }}>
+                  <td data-label={t('actions')} style={{ padding: '15px 20px' }}>
                     {editingStudent === student.id ? (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={handleUpdate} className="modern-btn" style={{ backgroundColor: '#22c55e', padding: '8px 12px' }}><CheckCircle size={16} /></button>
-                        <button onClick={() => setEditingStudent(null)} className="modern-btn" style={{ backgroundColor: '#94a3b8', padding: '8px 12px' }}><XCircle size={16} /></button>
+                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <button onClick={handleUpdate} className="modern-btn" style={{ flex: 1, backgroundColor: '#22c55e', padding: '8px 12px' }}><CheckCircle size={16} /></button>
+                        <button onClick={() => setEditingStudent(null)} className="modern-btn" style={{ flex: 1, backgroundColor: '#94a3b8', padding: '8px 12px' }}><XCircle size={16} /></button>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => handleEdit(student)} className="modern-btn" style={{ padding: '8px', backgroundColor: '#e2e8f0', color: '#475569' }}><Edit2 size={16} /></button>
-                        <button onClick={() => handleDelete(student.id)} className="modern-btn" style={{ padding: '8px', backgroundColor: '#fee2e2', color: '#ef4444' }}><Trash2 size={16} /></button>
+                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <button onClick={() => handleEdit(student)} className="modern-btn" style={{ flex: 1, padding: '8px', backgroundColor: '#e2e8f0', color: '#475569' }}><Edit2 size={16} /></button>
+                        <button onClick={() => handleDelete(student.id)} className="modern-btn" style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#ef4444' }}><Trash2 size={16} /></button>
                       </div>
                     )}
                   </td>

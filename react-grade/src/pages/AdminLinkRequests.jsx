@@ -178,116 +178,113 @@ const AdminLinkRequests = () => {
               <p>{t('pendingRequestsProcessed')}</p>
             </div>
           ) : (
-            <div style={{
+            <div className="table-responsive-cards" style={{
               backgroundColor: 'white',
               borderRadius: '10px',
               padding: '25px',
               boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%' }}>
-                  <thead>
-                    <tr>
-                      <th>{t('parent')}</th>
-                      <th>{t('student')}</th>
-                      <th>{t('studentId')}</th>
-                      <th>{t('relationship')}</th>
-                      <th>{t('requestDate')}</th>
-                      <th>{t('contactInfo')}</th>
-                      <th>{t('source')}</th>
-                      <th>{t('status')}</th>
-                      <th>{t('actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {linkRequests.map(link => {
-                      // Access nested parent and student data from the API response
-                      const parent = link.parent || {};
-                      const student = link.student || {};
+              <table style={{ width: '100%' }}>
+                <thead>
+                  <tr>
+                    <th>{t('parent')}</th>
+                    <th>{t('student')}</th>
+                    <th>{t('studentId')}</th>
+                    <th>{t('relationship')}</th>
+                    <th>{t('requestDate')}</th>
+                    <th>{t('contactInfo')}</th>
+                    <th>{t('source')}</th>
+                    <th>{t('status')}</th>
+                    <th>{t('actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {linkRequests.map(link => {
+                    // Access nested parent and student data from the API response
+                    const parent = link.parent || {};
+                    const student = link.student || {};
 
-                      return (
-                        <tr key={link.id} style={{ borderBottom: '1px solid #eee' }}>
-                          <td style={{ padding: '12px' }}>
-                            <strong>{parent.name}</strong>
-                            <div style={{ fontSize: '14px', color: '#666' }}>{parent.email}</div>
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            <strong>{student.name}</strong>
-                            <div style={{ fontSize: '14px', color: '#666' }}>{student.department}</div>
-                          </td>
-                          <td style={{ padding: '12px' }}>{student.studentId}</td>
-                          <td style={{ padding: '12px' }}>{parent.relationship}</td>
-                          <td style={{ padding: '12px' }}>
-                            {new Date(link.linkDate || link.createdAt).toLocaleDateString()}
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            <div>{parent.phone}</div>
-                            <div style={{ fontSize: '14px', color: '#666' }}>{parent.email}</div>
-                            <div style={{ fontSize: '12px', color: '#2e7d32', marginTop: '4px', fontStyle: 'italic' }}>
-                              🔔 {t('notificationPreference')}: {parent.notificationPreference === 'both' ? t('bothEmailAndSms') : parent.notificationPreference === 'email' ? t('emailOnly') : t('smsOnly')}
-                            </div>
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            <span style={{
-                              backgroundColor: link.linkedBy === 'System' ? '#e3f2fd' : '#f3e5f5',
-                              color: link.linkedBy === 'System' ? '#1976d2' : '#7b1fa2',
-                              padding: '4px 8px',
-                              borderRadius: '12px',
-                              fontSize: '11px',
-                              fontWeight: 'bold',
-                              textTransform: 'uppercase'
-                            }}>
-                              {link.linkedBy === 'System' ? 'Registration' : 'Dashboard'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            <span style={{
-                              backgroundColor: '#fff3e0',
-                              color: '#ef6c00',
-                              padding: '4px 8px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: 'bold'
-                            }}>
-                              ⏳ {t('pending')}
-                            </span>
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                              <button
-                                onClick={() => handleApprove(link.id)}
-                                style={{
-                                  padding: '8px 16px',
-                                  backgroundColor: '#4caf50',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                {t('approve')}
-                              </button>
-                              <button
-                                onClick={() => handleReject(link.id)}
-                                style={{
-                                  padding: '8px 16px',
-                                  backgroundColor: '#f44336',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                {t('reject')}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    return (
+                      <tr key={link.id} style={{ borderBottom: '1px solid #eee' }}>
+                        <td data-label={t('parent')} style={{ padding: '12px' }}>
+                          <strong>{parent.name}</strong>
+                          <div style={{ fontSize: '14px', color: '#666' }}>{parent.email}</div>
+                        </td>
+                        <td data-label={t('student')} style={{ padding: '12px' }}>
+                          <strong>{student.name}</strong>
+                          <div style={{ fontSize: '14px', color: '#666' }}>{student.department}</div>
+                        </td>
+                        <td data-label={t('studentId')} style={{ padding: '12px' }}>{student.studentId}</td>
+                        <td data-label={t('relationship')} style={{ padding: '12px' }}>{parent.relationship}</td>
+                        <td data-label={t('requestDate')} style={{ padding: '12px' }}>
+                          {new Date(link.linkDate || link.createdAt).toLocaleDateString()}
+                        </td>
+                        <td data-label={t('contactInfo')} style={{ padding: '12px' }}>
+                          <div>{parent.phone}</div>
+                          <div style={{ fontSize: '14px', color: '#666' }}>{parent.email}</div>
+                        </td>
+                        <td data-label={t('source')} style={{ padding: '12px' }}>
+                          <span style={{
+                            backgroundColor: link.linkedBy === 'System' ? '#e3f2fd' : '#f3e5f5',
+                            color: link.linkedBy === 'System' ? '#1976d2' : '#7b1fa2',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase'
+                          }}>
+                            {link.linkedBy === 'System' ? 'Registration' : 'Dashboard'}
+                          </span>
+                        </td>
+                        <td data-label={t('status')} style={{ padding: '12px' }}>
+                          <span style={{
+                            backgroundColor: '#fff3e0',
+                            color: '#ef6c00',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                          }}>
+                            ⏳ {t('pending')}
+                          </span>
+                        </td>
+                        <td data-label={t('actions')} style={{ padding: '12px' }}>
+                          <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                            <button
+                              onClick={() => handleApprove(link.id)}
+                              style={{
+                                flex: 1,
+                                padding: '8px 16px',
+                                backgroundColor: '#4caf50',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {t('approve')}
+                            </button>
+                            <button
+                              onClick={() => handleReject(link.id)}
+                              style={{
+                                flex: 1,
+                                padding: '8px 16px',
+                                backgroundColor: '#f44336',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {t('reject')}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </>

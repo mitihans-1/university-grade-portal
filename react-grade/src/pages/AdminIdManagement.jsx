@@ -354,7 +354,7 @@ const AdminIdManagement = () => {
                 </div>
             </div>
 
-            <div className="table-container" style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
+            <div className="table-responsive-cards" style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
@@ -371,21 +371,21 @@ const AdminIdManagement = () => {
                         {filteredItems.map((item) => (
                             <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
 
-                                <td style={{ padding: '15px', fontWeight: 'bold' }}>{item.studentId || item.teacherId}</td>
-                                <td style={{ padding: '15px' }}>{item.department || '-'}</td>
-                                {activeTab === 'teacher' && <td style={{ padding: '15px' }}>{item.subject || '-'}</td>}
-                                <td style={{ padding: '15px' }}>{item.nationalId || '-'}</td>
-                                <td style={{ padding: '15px' }}>
+                                <td data-label="ID" style={{ padding: '15px', fontWeight: 'bold' }}>{item.studentId || item.teacherId}</td>
+                                <td data-label="Department" style={{ padding: '15px' }}>{item.department || '-'}</td>
+                                {activeTab === 'teacher' && <td data-label="Subject" style={{ padding: '15px' }}>{item.subject || '-'}</td>}
+                                <td data-label="National ID" style={{ padding: '15px' }}>{item.nationalId || '-'}</td>
+                                <td data-label="Year/Sem" style={{ padding: '15px' }}>
                                     {item.year ? `Y${item.year}` : ''}
                                     {item.semester ? ` S${item.semester}` : ''}
                                 </td>
-                                <td style={{ padding: '15px' }}>
+                                <td data-label="Status" style={{ padding: '15px' }}>
                                     {item.isUsed ?
                                         <span style={{ backgroundColor: '#ffcdd2', color: '#c62828', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>Used</span> :
                                         <span style={{ backgroundColor: '#c8e6c9', color: '#2e7d32', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>Available</span>
                                     }
                                 </td>
-                                <td style={{ padding: '15px', display: 'flex', gap: '8px' }}>
+                                <td data-label="Actions" style={{ padding: '15px', display: 'flex', gap: '8px' }}>
                                     <button
                                         onClick={() => handleEdit(item)}
                                         disabled={item.isUsed}
@@ -395,14 +395,15 @@ const AdminIdManagement = () => {
                                             border: 'none',
                                             padding: '6px 12px',
                                             borderRadius: '4px',
-                                            cursor: item.isUsed ? 'not-allowed' : 'pointer'
+                                            cursor: item.isUsed ? 'not-allowed' : 'pointer',
+                                            flex: 1
                                         }}
                                     >
                                         Edit
                                     </button>
                                     <button
                                         onClick={() => handleDelete(item.id)}
-                                        style={{ backgroundColor: '#ffebee', color: '#c62828', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                                        style={{ backgroundColor: '#ffebee', color: '#c62828', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', flex: 1 }}
                                     >
                                         Delete
                                     </button>

@@ -241,7 +241,9 @@ const AdminDashboard = () => {
           <h1 style={{ marginBottom: '8px', fontSize: '2rem', fontWeight: '800', color: '#1a237e' }}>{t('adminDashboard')}</h1>
           <p style={{ color: '#64748b', fontSize: '1.1rem' }}>{t('welcomeBack')}, <span style={{ fontWeight: '600', color: '#0f172a' }}>{user?.name}</span></p>
         </div>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap', width: '100%', justifyContent: 'space-between' }}>
+          <div className="mobile-only" style={{ width: '100%', height: '10px' }}></div>
+
           <div style={{
             display: 'flex',
             backgroundColor: '#fff',
@@ -251,21 +253,22 @@ const AdminDashboard = () => {
             gap: '20px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
           }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Workflow Health</div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                <div title="Pending Registrations" style={{ color: (stats.pendingTeachers.length + stats.pendingParents.length) > 0 ? '#f59e0b' : '#10b981', fontWeight: '800' }}>
-                  👤 {stats.pendingTeachers.length + stats.pendingParents.length}
+            <div style={{ textAlign: 'center', width: '100%' }}>
+              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('workflowHealth')}</div>
+              <div style={{ display: 'flex', gap: '15px', marginTop: '6px', justifyContent: 'center' }}>
+                <div title={t('pendingRegistrations')} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: (stats.pendingTeachers.length + stats.pendingParents.length) > 0 ? '#f59e0b' : '#10b981', fontWeight: '800', fontSize: '14px' }}>
+                  <span style={{ fontSize: '16px' }}>👤</span> {stats.pendingTeachers.length + stats.pendingParents.length}
                 </div>
-                <div title="Pending Grades" style={{ color: (stats.pendingGradeApprovals?.length || 0) > 0 ? '#ef4444' : '#10b981', fontWeight: '800' }}>
-                  📋 {stats.pendingGradeApprovals?.length || 0}
+                <div title={t('pendingGrades')} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: (stats.pendingGradeApprovals?.length || 0) > 0 ? '#ef4444' : '#10b981', fontWeight: '800', fontSize: '14px' }}>
+                  <span style={{ fontSize: '16px' }}>📋</span> {stats.pendingGradeApprovals?.length || 0}
                 </div>
-                <div title="Link Requests" style={{ color: stats.pendingLinks > 0 ? '#3b82f6' : '#10b981', fontWeight: '800' }}>
-                  🔗 {stats.pendingLinks}
+                <div title={t('linkRequests')} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: stats.pendingLinks > 0 ? '#3b82f6' : '#10b981', fontWeight: '800', fontSize: '14px' }}>
+                  <span style={{ fontSize: '16px' }}>🔗</span> {stats.pendingLinks}
                 </div>
               </div>
             </div>
           </div>
+
           <Link
             to="/admin/add-admin"
             style={{

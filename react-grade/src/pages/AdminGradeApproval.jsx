@@ -172,7 +172,7 @@ const AdminGradeApproval = () => {
                         </div>
                     </div>
 
-                    <div style={{ overflowX: 'auto' }}>
+                    <div className="table-responsive-cards">
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ backgroundColor: '#f5f5f5', textAlign: 'left' }}>
@@ -189,15 +189,15 @@ const AdminGradeApproval = () => {
                             <tbody>
                                 {pendingGrades.map((grade) => (
                                     <tr key={grade.id} style={{ borderBottom: '1px solid #eee' }}>
-                                        <td style={{ padding: '12px' }}>
+                                        <td data-label={t('student')} style={{ padding: '12px' }}>
                                             <div style={{ fontWeight: 'bold' }}>{grade.studentName}</div>
                                             <div style={{ fontSize: '12px', color: '#888' }}>{grade.studentId}</div>
                                         </td>
-                                        <td style={{ padding: '12px' }}>
+                                        <td data-label={t('courses')} style={{ padding: '12px' }}>
                                             <div style={{ fontWeight: 'bold' }}>{grade.courseName}</div>
                                             <div style={{ fontSize: '12px', color: '#888' }}>{grade.courseCode}</div>
                                         </td>
-                                        <td style={{ padding: '12px' }}>
+                                        <td data-label={t('grade')} style={{ padding: '12px' }}>
                                             <span style={{
                                                 padding: '6px 12px',
                                                 backgroundColor: grade.grade === 'A' ? '#4caf50' : grade.grade === 'B' ? '#2196f3' : grade.grade === 'C' ? '#ff9800' : '#f44336',
@@ -209,27 +209,28 @@ const AdminGradeApproval = () => {
                                                 {grade.grade}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '12px' }}>
+                                        <td data-label={t('score')} style={{ padding: '12px' }}>
                                             <span style={{ fontWeight: 'bold', fontSize: '16px' }}>{grade.score}%</span>
                                         </td>
-                                        <td style={{ padding: '12px' }}>
+                                        <td data-label={t('semester')} style={{ padding: '12px' }}>
                                             <div>{grade.semester}</div>
                                             <div style={{ fontSize: '12px', color: '#888' }}>{grade.academicYear}</div>
                                         </td>
-                                        <td style={{ padding: '12px' }}>
+                                        <td data-label={t('teacher')} style={{ padding: '12px' }}>
                                             <div style={{ fontWeight: 'bold' }}>{grade.teacherName}</div>
                                             <div style={{ fontSize: '12px', color: '#888' }}>{grade.teacherId}</div>
                                         </td>
-                                        <td style={{ padding: '12px' }}>
+                                        <td data-label={t('submitted')} style={{ padding: '12px' }}>
                                             <div style={{ fontSize: '12px' }}>{new Date(grade.submittedDate).toLocaleDateString()}</div>
                                             <div style={{ fontSize: '11px', color: '#888' }}>{new Date(grade.submittedDate).toLocaleTimeString()}</div>
                                         </td>
-                                        <td style={{ padding: '12px' }}>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                        <td data-label={t('actions')} style={{ padding: '12px' }}>
+                                            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
                                                 <button
                                                     onClick={() => handleApprove(grade.id)}
                                                     style={{
-                                                        padding: '8px 16px',
+                                                        flex: 1,
+                                                        padding: '10px 16px',
                                                         backgroundColor: '#4caf50',
                                                         color: 'white',
                                                         border: 'none',
@@ -246,7 +247,8 @@ const AdminGradeApproval = () => {
                                                 <button
                                                     onClick={() => handleRejectClick(grade.id)}
                                                     style={{
-                                                        padding: '8px 16px',
+                                                        flex: 1,
+                                                        padding: '10px 16px',
                                                         backgroundColor: '#f44336',
                                                         color: 'white',
                                                         border: 'none',
