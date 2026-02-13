@@ -25,7 +25,7 @@ export const SocketProvider = ({ children }) => {
             newSocket = io(socketUrl);
 
             newSocket.on('connect', () => {
-                console.log('Socket connected:', newSocket.id);
+
 
                 // Join universal broadcast room
                 newSocket.emit('join_room', 'broadcast');
@@ -43,7 +43,7 @@ export const SocketProvider = ({ children }) => {
 
             // Global notification handler
             newSocket.on('notification', (data) => {
-                console.log('Received notification:', data);
+
 
                 // Show toast notification
                 showToast(
@@ -69,7 +69,7 @@ export const SocketProvider = ({ children }) => {
 
         return () => {
             if (newSocket) {
-                console.log('Disconnecting socket...');
+
                 newSocket.disconnect();
             }
         };

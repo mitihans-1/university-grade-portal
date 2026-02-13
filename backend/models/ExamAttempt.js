@@ -56,7 +56,7 @@ const ExamAttempt = sequelize.define('ExamAttempt', {
 
 ExamAttempt.associate = (models) => {
     ExamAttempt.belongsTo(models.Exam, { foreignKey: 'examId', as: 'exam' });
-    ExamAttempt.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student' });
+    ExamAttempt.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student', onDelete: 'CASCADE' });
 };
 
 module.exports = ExamAttempt;

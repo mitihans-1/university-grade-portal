@@ -9,7 +9,15 @@ const Attendance = sequelize.define('Attendance', {
     },
     studentId: {
         type: DataTypes.STRING,
-        allowDefaults: false
+        allowNull: true
+    },
+    teacherId: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    classSessionId: {
+        type: DataTypes.UUID,
+        allowNull: true
     },
     courseCode: {
         type: DataTypes.STRING,
@@ -35,7 +43,9 @@ const Attendance = sequelize.define('Attendance', {
 });
 
 Attendance.associate = (models) => {
-    Attendance.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student' });
+    Attendance.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student', onDelete: 'CASCADE' });
+    Attendance.belongsTo(models.Teacher, { foreignKey: 'teacherId', targetKey: 'teacherId', as: 'teacher' });
+    Attendance.belongsTo(models.ClassSession, { foreignKey: 'classSessionId', as: 'session' });
 };
 
 module.exports = Attendance;

@@ -79,7 +79,7 @@ const Submission = sequelize.define('Submission', {
 
 Submission.associate = (models) => {
     Submission.belongsTo(models.Assignment, { foreignKey: 'assignmentId', as: 'assignment' });
-    Submission.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student' });
+    Submission.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student', onDelete: 'CASCADE' });
 };
 
 module.exports = Submission;

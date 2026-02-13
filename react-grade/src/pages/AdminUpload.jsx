@@ -7,7 +7,7 @@ const sendParentNotification = async (studentId, notificationData) => {
   try {
     // In the actual implementation, this would be handled by the backend
     // when grades are published
-    console.log(`Notification sent for student ${studentId}:`, notificationData);
+
     return true;
   } catch (error) {
     console.error('Error sending notification:', error);
@@ -55,9 +55,9 @@ const AdminUpload = () => {
   useEffect(() => {
     const fetchGrades = async () => {
       try {
-        console.log('Fetching grades for admin...');
+
         const gradesData = await api.getGrades();
-        console.log('Received grades data:', gradesData);
+
         // Ensure gradesData is an array
         setGrades(Array.isArray(gradesData) ? gradesData : []);
       } catch (error) {
@@ -68,10 +68,10 @@ const AdminUpload = () => {
 
     const fetchStudents = async () => {
       try {
-        console.log('Fetching students for admin...');
+
         // Get all students for the dropdown using API utility
         const studentsData = await api.getAllStudents();
-        console.log('Received students data:', studentsData);
+
         // Ensure studentsData is an array
         setStudents(Array.isArray(studentsData) ? studentsData : []);
       } catch (error) {
@@ -91,7 +91,7 @@ const AdminUpload = () => {
     const canEnterGrades = user && (user.role === 'admin' || user.permissions?.includes('enter_grades'));
 
     if (canEnterGrades) {
-      console.log('User has grade entry permission, fetching data...', user);
+
       fetchGrades();
       fetchStudents();
       fetchSettings();
@@ -115,7 +115,7 @@ const AdminUpload = () => {
         }));
       }
     } else {
-      console.log('User does not have required permissions', user);
+
     }
   }, [user]);
 
@@ -228,7 +228,7 @@ const AdminUpload = () => {
       };
 
       const result = await api.uploadGrade(gradeData);
-      console.log('Upload grade result:', result); // Debug log
+
 
       if (result && result.grade) {
         // Add the new grade to the current grades list
@@ -952,9 +952,19 @@ const AdminUpload = () => {
               </div>
               <button
                 onClick={handleSingleUpload}
-                style={{ width: '100%', padding: '15px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}
+                disabled={isUploading}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  backgroundColor: isUploading ? '#ccc' : '#4caf50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  fontWeight: 'bold',
+                  cursor: isUploading ? 'not-allowed' : 'pointer'
+                }}
               >
-                {t('submitting')}
+                {isUploading ? t('submitting') : t('addGradeRecord') || 'Add Grade Record'}
               </button>
             </div>
           </div>

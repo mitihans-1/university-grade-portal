@@ -3,45 +3,14 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../utils/api';
 import { Link } from 'react-router-dom';
-import LanguageSelector from '../components/common/LanguageSelector';
-
-const SummaryCard = ({ to, icon, value, label, color }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <Link
-      to={to}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        textDecoration: 'none',
-        color: 'inherit',
-        display: 'block',
-        height: '100%'
-      }}
-    >
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '25px',
-        textAlign: 'center',
-        boxShadow: isHovered ? '0 10px 20px rgba(0,0,0,0.12)' : '0 4px 12px rgba(0,0,0,0.06)',
-        borderBottom: `5px solid ${color}`,
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ fontSize: '40px', marginBottom: '10px' }}>{icon}</div>
-        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#333' }}>{value}</div>
-        <div style={{ color: '#666', fontSize: '13px', fontWeight: '500', marginTop: '5px' }}>{label}</div>
-      </div>
-    </Link>
-  );
-};
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import {
+  BookOpen, GraduationCap, CheckCircle2, Calendar, Clock,
+  Bell, ChevronRight, TrendingUp, Award, ShieldAlert,
+  MapPin, Trophy, Layout, Zap, Megaphone, Activity,
+  FileText, User, Star
+} from 'lucide-react';
+import '../admin-dashboard.css';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -54,424 +23,280 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     const fetchStudentData = async () => {
+      if (!user) return;
       try {
         setLoading(true);
-        // Fetch current system settings
-        const settings = await api.getPublicSettings();
+        const [settings, gradesData] = await Promise.all([
+          api.getPublicSettings(),
+          api.getMyGrades()
+        ]);
+
         setSystemSettings(settings);
+        setGrades(Array.isArray(gradesData) ? gradesData : []);
 
-        // Fetch student's grades
-        const gradesData = await api.getMyGrades();
-        const allGrades = Array.isArray(gradesData) ? gradesData : [];
-
-        // You could filter here for current semester if desired, 
-        // but often students want to see cumulative stats.
-        // For now, we'll keep allGrades for cumulative GPA, 
-        // but we might want a filtered list for "Current Semester" display.
-        setGrades(allGrades);
-
-        // Fetch attendance summary
-        try {
-          const attendanceData = await api.getAttendanceSummary(user.studentId);
-          setAttendanceSummary(attendanceData);
-        } catch (error) {
-          console.error('Error fetching attendance summary:', error);
-        }
-
-        // Fetch announcements
-        try {
-          const notificationData = await api.getNotifications();
-          setAnnouncements(Array.isArray(notificationData) ? notificationData.filter(n => ['broadcast', 'exam_code'].includes(n.type)).slice(0, 5) : []);
-        } catch (error) {
-          console.error('Error fetching announcements:', error);
-        }
+        api.getAttendanceSummary(user.studentId).then(setAttendanceSummary).catch(() => null);
+        api.getNotifications().then(data => {
+          const filtered = Array.isArray(data) ? data.filter(n => ['broadcast', 'exam_code'].includes(n.type)).slice(0, 5) : [];
+          setAnnouncements(filtered);
+        }).catch(() => []);
       } catch (error) {
         console.error('Error fetching student data:', error);
-        setGrades([]);
       } finally {
         setLoading(false);
       }
     };
-
-    if (user) {
-      fetchStudentData();
-    }
+    fetchStudentData();
   }, [user]);
 
   const calculateGPA = () => {
-    if (!Array.isArray(grades)) {
-      return '0.00';
-    }
-
-    const gradePoints = {
-      'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-      'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0
-    };
-
-    let totalPoints = 0;
-    let totalCredits = 0;
-
+    if (!Array.isArray(grades) || grades.length === 0) return '0.00';
+    const gradePoints = { 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0 };
+    let totalPoints = 0, totalCredits = 0;
     grades.forEach(g => {
       const credits = g.creditHours || g.credits || 3;
       totalPoints += (gradePoints[g.grade] || 0) * credits;
       totalCredits += credits;
     });
-
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+    return (totalPoints / (totalCredits || 1)).toFixed(2);
   };
 
-  if (!user) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '100px 20px',
-        flexDirection: 'column',
-        gap: '20px'
-      }}>
-        <div style={{ fontSize: '48px' }}>🔒</div>
-        <h2>Please log in to access your dashboard</h2>
-      </div>
-    );
-  }
+  const calculateTotalCredits = () => {
+    if (!Array.isArray(grades)) return 0;
+    return grades.reduce((acc, curr) => acc + (curr.creditHours || curr.credits || 0), 0);
+  };
 
-  return (
-    <div className="dashboard-container">
-      {/* Main Content */}
-      <div className="fade-in">
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
-            <p style={{ color: '#666' }}>{t('loadingDashboard')}</p>
-          </div>
-        ) : (
-          <div>
+  if (loading) return <LoadingSpinner fullScreen />;
 
-
-            {/* Welcome Section */}
-            <div className="stagger-item" style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '30px',
-              marginBottom: '30px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-              borderLeft: '6px solid #1976d2',
-              background: 'linear-gradient(to right, #ffffff, #f8faff)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              {systemSettings && (
-                <div style={{
-                  position: 'absolute',
-                  top: '15px',
-                  right: '15px',
-                  backgroundColor: '#e3f2fd',
-                  color: '#1565c0',
-                  padding: '5px 12px',
-                  borderRadius: '20px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  border: '1px solid #bbdefb'
-                }}>
-                  📅 {systemSettings.current_year} {systemSettings.current_semester}
-                </div>
-              )}
-              <div className="responsive-header" style={{ gap: '20px' }}>
-                <div>
-                  <h1 style={{ margin: '0 0 10px 0', color: '#1a237e', fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}>
-                    {t('welcomeMessage').replace('{name}', user?.name || 'Student')}
-                  </h1>
-                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <div style={{
-                      backgroundColor: '#f1f5f9',
-                      padding: '4px 12px',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      color: '#475569',
-                      fontWeight: '600',
-                      border: '1px solid #e2e8f0'
-                    }}>
-                      🆔 {user?.studentId}
-                    </div>
-                    <div style={{
-                      backgroundColor: '#e0f2fe',
-                      padding: '4px 12px',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      color: '#0369a1',
-                      fontWeight: '600',
-                      border: '1px solid #bae6fd'
-                    }}>
-                      🏢 {user?.department || 'General Science'}
-                    </div>
-                    <div style={{
-                      backgroundColor: '#fef3c7',
-                      padding: '4px 12px',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      color: '#b45309',
-                      fontWeight: '600',
-                      border: '1px solid #fde68a'
-                    }}>
-                      🎓 {t('yearNumber').replace('{year}', user?.year || '1')}
-                    </div>
-                    <div style={{
-                      backgroundColor: '#f3e8ff',
-                      padding: '4px 12px',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      color: '#7e22ce',
-                      fontWeight: '600',
-                      border: '1px solid #e9d5ff'
-                    }}>
-                      📚 {t('semester')} {user?.semester || '1'}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ textAlign: 'center', minWidth: '140px', padding: '15px', backgroundColor: '#e3f2fd', borderRadius: '12px', flex: '1 1 auto' }}>
-                  <div style={{ fontSize: '14px', color: '#1565c0', marginBottom: '5px', fontWeight: 'bold' }}>{t('currentGPA')}</div>
-                  <div style={{ fontSize: '36px', fontWeight: '900', color: '#0d47a1' }}>
-                    {calculateGPA()}
-                    <span style={{ fontSize: '18px', color: '#546e7a', fontWeight: 'normal' }}>/4.0</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Official Placement Record Card */}
-            <div className="stagger-item" style={{
-              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-              padding: '24px',
-              borderRadius: '16px',
-              border: '1px solid #bae6fd',
-              marginBottom: '30px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '15px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#0369a1' }}>
-                <div style={{ fontSize: '24px' }}>📋</div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  Official Academic Placement
-                </h3>
-              </div>
-
-              <div className="responsive-grid" style={{ gap: '20px' }}>
-                <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Faculty / Department</div>
-                  <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '15px' }}>{user?.department || 'General Science'}</div>
-                </div>
-                <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Academic Level</div>
-                  <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '15px' }}>{t('yearNumber').replace('{year}', user?.year || '1')}</div>
-                </div>
-                <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>Current Term</div>
-                  <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '15px' }}>{t('semester')} {user?.semester || '1'}</div>
-                </div>
-                <div style={{ backgroundColor: 'rgba(255,255,255,0.6)', padding: '15px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '700' }}>ID Status</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
-                    <span style={{ fontWeight: '800', color: '#059669', fontSize: '13px' }}>Verified Record</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Academic Warning Banner */}
-            {(Array.isArray(grades) && parseFloat(calculateGPA()) < 2.5 && grades.some(g => ['F', 'D'].includes(g.grade))) && (
-              <div className="stagger-item" style={{
-                backgroundColor: 'fff4e5',
-                color: '#663c00',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '30px',
-                borderLeft: '6px solid #ffa117',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '20px',
-                boxShadow: '0 4px 12px rgba(255, 161, 23, 0.15)'
-              }}>
-                <div style={{ fontSize: '32px' }}>⚠️</div>
-                <div>
-                  <h4 style={{ margin: '0 0 5px 0', color: '#663c00' }}>{t('academicAdvisory')}</h4>
-                  <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
-                    {t('academicAdvisoryMessage')}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="responsive-grid" style={{
-              gap: '20px'
-            }}>
-              <div className="stagger-item">
-                <SummaryCard
-                  to="/student/grades"
-                  icon="📖"
-                  value={Array.isArray(grades) ? grades.length : 0}
-                  label={t('coursesTaken')}
-                  color="#1976d2"
-                />
-              </div>
-              <div className="stagger-item">
-                <SummaryCard
-                  to="/student/grades"
-                  icon="🎓"
-                  value={Array.isArray(grades) ? grades.reduce((sum, g) => sum + (g.creditHours || 3), 0) : 0}
-                  label={t('totalCredits')}
-                  color="#2e7d32"
-                />
-              </div>
-              <div className="stagger-item">
-                <SummaryCard
-                  to="/student/grades"
-                  icon="✅"
-                  value={Array.isArray(grades) ? grades.filter(g => (g.score || 0) >= 50).length : 0}
-                  label={t('passedCourses')}
-                  color="#ed6c02"
-                />
-              </div>
-              <div className="stagger-item">
-                <SummaryCard
-                  to="/student/attendance"
-                  icon="📅"
-                  value={attendanceSummary ? `${attendanceSummary.percentage}%` : 'N/A'}
-                  label={t('attendanceRecord')}
-                  color="#9c27b0"
-                />
-              </div>
-              <div className="stagger-item">
-                <SummaryCard
-                  to="/student/exams"
-                  icon="📝"
-                  value={t('start')}
-                  label={t('onlineExams')}
-                  color="#6366f1"
-                />
-              </div>
-              <div className="stagger-item">
-                <SummaryCard
-                  to="/schedule"
-                  icon="⏰"
-                  value={t('view')}
-                  label={t('classSchedule')}
-                  color="#a855f7"
-                />
-              </div>
-            </div>
-
-            {/* Announcements Section */}
-            <div className="stagger-item" style={{
-              marginTop: '30px',
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '25px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-              border: '1px solid #f1f5f9'
-            }}>
-              <div className="responsive-header" style={{ marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '24px' }}>📢</span> {t('notifications')}
-                </h3>
-                <Link to="/student/notifications" style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 'bold', textDecoration: 'none' }}>
-                  {t('viewAll')} →
-                </Link>
-              </div>
-
-              {announcements.length > 0 ? (
-                <div className="responsive-stack" style={{ gap: '12px' }}>
-                  {announcements.map(anno => (
-                    <div key={anno.id} style={{
-                      padding: '15px',
-                      backgroundColor: anno.type === 'exam_code' ? '#fff7ed' : '#f8fafc',
-                      borderRadius: '12px',
-                      borderLeft: `4px solid ${anno.type === 'exam_code' ? '#f97316' : '#3b82f6'}`,
-                      display: 'flex',
-                      gap: '15px',
-                      alignItems: 'flex-start',
-                      boxShadow: anno.type === 'exam_code' ? '0 4px 12px rgba(249, 115, 22, 0.1)' : 'none'
-                    }}>
-                      <div style={{
-                        fontSize: '24px',
-                        backgroundColor: 'white',
-                        padding: '10px',
-                        borderRadius: '10px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        {anno.type === 'exam_code' ? '🔓' : '🔔'}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <span style={{
-                            fontWeight: '700',
-                            fontSize: '15px',
-                            color: anno.type === 'exam_code' ? '#9a3412' : '#0f172a'
-                          }}>
-                            {anno.title}
-                          </span>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>
-                            {new Date(anno.date || anno.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p style={{
-                          margin: 0,
-                          fontSize: '13px',
-                          color: anno.type === 'exam_code' ? '#9a3412' : '#475569',
-                          lineHeight: '1.5',
-                          fontWeight: anno.type === 'exam_code' ? '600' : 'normal'
-                        }}>
-                          {anno.message}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
-                  <p>{t('noNotifications')}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+  if (!user) return (
+    <div className="admin-dashboard-container fade-in">
+      <div className="admin-card" style={{ textAlign: 'center', padding: '100px 20px', maxWidth: '600px', margin: '40px auto' }}>
+        <ShieldAlert size={80} color="#ef4444" style={{ marginBottom: '30px' }} />
+        <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '20px', color: '#1e293b' }}>{t('pleaseLogin')}</h2>
+        <Link to="/login" className="admin-btn primary" style={{ maxWidth: '200px', margin: '0 auto' }}>{t('login')}</Link>
       </div>
     </div>
   );
-};
 
-const QuickActionLink = ({ to, icon, label }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const gpa = parseFloat(calculateGPA());
+  const totalCredits = calculateTotalCredits();
+  const attendancePercent = attendanceSummary ? Math.round((attendanceSummary.present / (attendanceSummary.total || 1)) * 100) : 0;
+
+  const statsCards = [
+    {
+      title: t('cumulativeGPA'),
+      value: gpa.toFixed(2),
+      icon: <TrendingUp size={24} />,
+      color: '#3b82f6',
+      desc: 'Scaled on 4.0',
+      link: '/student/grades'
+    },
+    {
+      title: t('creditsEarned'),
+      value: totalCredits,
+      icon: <Award size={24} />,
+      color: '#8b5cf6',
+      desc: 'Total Units',
+      link: '/student/grades'
+    },
+    {
+      title: t('attendance'),
+      value: `${attendancePercent}%`,
+      icon: <CheckCircle2 size={24} />,
+      color: '#10b981',
+      desc: 'Overall Presence',
+      link: '/student/attendance'
+    },
+    {
+      title: t('academicStatus'),
+      value: gpa >= 3.0 ? 'Good' : (gpa >= 2.0 ? 'Average' : 'Warning'),
+      icon: <Activity size={24} />,
+      color: gpa >= 3.0 ? '#0ea5e9' : (gpa >= 2.0 ? '#f59e0b' : '#ef4444'),
+      desc: 'Current Standing',
+      link: '#'
+    }
+  ];
+
+  const quickActions = [
+    { label: t('viewGrades'), path: '/student/grades', icon: <FileText size={20} />, color: '#3b82f6' },
+    { label: t('classSchedule'), path: '/schedule', icon: <Calendar size={20} />, color: '#8b5cf6' },
+    { label: t('myAssignments'), path: '/student/assignments', icon: <BookOpen size={20} />, color: '#ec4899' },
+    { label: t('onlineExams'), path: '/student/exams', icon: <Zap size={20} />, color: '#f59e0b' }
+  ];
+
   return (
-    <Link
-      to={to}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '15px',
-        padding: '15px 20px',
-        backgroundColor: isHovered ? '#e8eaf6' : '#f8f9fa',
-        color: '#1a237e',
-        textDecoration: 'none',
-        borderRadius: '12px',
-        fontWeight: 'bold',
-        transition: 'all 0.2s ease',
-        transform: isHovered ? 'translateX(5px)' : 'translateX(0)',
-        borderLeft: isHovered ? '4px solid #1a237e' : '4px solid transparent'
-      }}
-    >
-      <span style={{ fontSize: '20px' }}>{icon}</span> {label}
-    </Link>
+    <div className="admin-dashboard-container fade-in">
+      {/* Background Animations */}
+      <div className="floating-shapes">
+        <div style={{ top: '15%', left: '5%', width: '100px', height: '100px', animationDelay: '0s', opacity: 0.5 }}></div>
+        <div style={{ top: '60%', left: '85%', width: '150px', height: '150px', animationDelay: '2s', opacity: 0.3 }}></div>
+        <div style={{ top: '30%', left: '60%', width: '80px', height: '80px', animationDelay: '4s', opacity: 0.4 }}></div>
+      </div>
+
+      <div className="admin-card" style={{ maxWidth: '1200px', margin: '0 auto', background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(20px)' }}>
+
+        <header className="admin-header">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6366f1', marginBottom: '5px', fontWeight: '700', fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              <GraduationCap size={16} /> Student Portal
+            </div>
+            <h1 className="admin-title" style={{ textAlign: 'left', marginBottom: '5px' }}>
+              {t('welcomeBack')}, <span className="gradient-text">{user.name.split(' ')[0]}</span>
+            </h1>
+            <p className="admin-subtitle">
+              {user.department} • Year {user.year}
+            </p>
+          </div>
+
+          <div className="year-badge">
+            <span style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1e293b' }}>SEM {systemSettings?.current_semester}</span>
+            <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#64748b', marginTop: '2px' }}>ACADEMIC CYCLE</div>
+          </div>
+        </header>
+
+        {/* Stats Grid */}
+        <div className="admin-stats-grid">
+          {statsCards.map((card, idx) => (
+            <Link key={idx} to={card.link} className="stat-card-glass" style={{ textDecoration: 'none' }}>
+              <div className="stat-icon-box" style={{ color: card.color, background: `${card.color}15` }}>
+                {card.icon}
+              </div>
+              <div>
+                <div className="stat-value" style={{ background: `linear-gradient(135deg, ${card.color}, #1e293b)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  {card.value}
+                </div>
+                <div className="stat-label">{card.title}</div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>{card.desc}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Main Content Layout */}
+        <div className="admin-content-grid">
+
+          {/* Left Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+
+            {/* Recent Academic Performance */}
+            <div className="admin-card" style={{ padding: '25px', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)' }}>
+              <div className="section-title">
+                <Award size={20} color="#f59e0b" />
+                {t('coursePerformance')}
+              </div>
+              {grades.length > 0 ? (
+                <div className="table-container" style={{ border: 'none', boxShadow: 'none' }}>
+                  <table className="dash-table">
+                    <thead>
+                      <tr>
+                        <th style={{ paddingLeft: '10px' }}>Course</th>
+                        <th>Credit</th>
+                        <th>Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {grades.slice(0, 5).map((g, i) => (
+                        <tr key={i}>
+                          <td style={{ paddingLeft: '10px', fontWeight: '600' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span>{g.courseName}</span>
+                              <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: '400' }}>{g.code}</span>
+                            </div>
+                          </td>
+                          <td>{g.creditHours || g.credits || 3}</td>
+                          <td>
+                            <span style={{
+                              padding: '4px 10px', borderRadius: '8px', fontWeight: '800', fontSize: '0.85rem',
+                              background: ['A', 'A-'].includes(g.grade) ? '#dcfce7' : ['B+', 'B', 'B-'].includes(g.grade) ? '#dbeafe' : '#fef3c7',
+                              color: ['A', 'A-'].includes(g.grade) ? '#166534' : ['B+', 'B', 'B-'].includes(g.grade) ? '#1e40af' : '#92400e'
+                            }}>
+                              {g.grade}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-icon-box">
+                    <FileText size={28} color="#94a3b8" />
+                  </div>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#475569', fontSize: '0.95rem' }}>No Academic Records</h4>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>
+                    Grades for this semester haven't been published yet.
+                  </p>
+                </div>
+              )}
+              <Link to="/student/grades" className="btn-view-all">
+                <span>View Full Transcript</span>
+                <ChevronRight size={16} />
+              </Link>
+            </div>
+
+          </div>
+
+          {/* Right Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+
+            {/* Quick Actions */}
+            <div className="quick-actions-grid">
+              {quickActions.map((action, idx) => (
+                <Link
+                  key={idx}
+                  to={action.path}
+                  className="quick-action-card"
+                  style={{
+                    '--accent-color': action.color,
+                    '--bg-color-light': `${action.color}15`
+                  }}
+                >
+                  <div className="quick-action-icon">
+                    {action.icon}
+                  </div>
+                  <span className="quick-action-label">{action.label}</span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Announcements */}
+            <div className="admin-card" style={{ padding: '25px', borderTop: '4px solid #6366f1' }}>
+              <div className="section-title" style={{ marginBottom: '20px' }}>
+                <Megaphone size={20} color="#6366f1" />
+                {t('announcements')}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {announcements.length > 0 ? announcements.map(anno => (
+                  <div key={anno.id} className="activity-item" style={{ alignItems: 'flex-start', background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: '800', color: anno.type === 'exam_code' ? '#ea580c' : '#3b82f6', textTransform: 'uppercase' }}>
+                          {anno.type === 'exam_code' ? 'EXAM' : 'NOTICE'}
+                        </span>
+                        <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{new Date(anno.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <h4 style={{ fontSize: '0.9rem', marginBottom: '5px', color: '#1f2937' }}>{anno.title}</h4>
+                      <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0, lineHeight: '1.4' }}>{anno.message}</p>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
+                    <Bell size={24} style={{ opacity: 0.5, marginBottom: '5px' }} />
+                    <p style={{ fontSize: '0.85rem' }}>No new announcements</p>
+                  </div>
+                )}
+              </div>
+              <Link to="/student/notifications" style={{ display: 'block', textAlign: 'center', marginTop: '15px', fontSize: '0.85rem', color: '#6366f1', fontWeight: '700', textDecoration: 'none' }}>
+                View All
+              </Link>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
 };
 

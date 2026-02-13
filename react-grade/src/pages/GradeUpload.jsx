@@ -214,7 +214,7 @@ const GradeUpload = () => {
     try {
       // The backend will automatically handle notification creation when a grade is published
       // This is handled by the API endpoint when updating the grade status
-      console.log(`Notification sent for grade update: ${grade.studentName} - ${grade.grade}`);
+
     } catch (error) {
       console.error('Error sending notification:', error);
     }

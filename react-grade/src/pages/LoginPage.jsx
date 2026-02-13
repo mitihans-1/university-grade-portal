@@ -48,7 +48,7 @@ const LoginPage = () => {
         if (result.mfaRequired) {
           setMfaData({ email: result.email, role: result.role, code: '' });
           setShowMfa(true);
-          showToast('Verification code sent to email', 'info');
+          showToast(t('verificationCodeSent'), 'info');
         } else {
           showToast(t('loginSuccessful'), 'success');
         }
@@ -64,7 +64,7 @@ const LoginPage = () => {
 
   const handleMfaSubmit = async () => {
     if (!mfaData.code || mfaData.code.length !== 6) {
-      showToast('Please enter the 6-digit code', 'warning');
+      showToast(t('enter6DigitCode'), 'warning');
       return;
     }
 
@@ -74,10 +74,10 @@ const LoginPage = () => {
       if (result.success) {
         showToast(t('loginSuccessful'), 'success');
       } else {
-        showToast(result.message || 'Verification failed', 'error');
+        showToast(result.message || t('verificationFailed'), 'error');
       }
     } catch (error) {
-      showToast('Verification failed', 'error');
+      showToast(t('verificationFailed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -116,10 +116,10 @@ const LoginPage = () => {
             WebkitTextFillColor: 'transparent',
             letterSpacing: '-1px'
           }}>
-            {showMfa ? 'Verify Access' : isLogin ? t('universityGradePortal') : 'Create Your Account'}
+            {showMfa ? t('verifyAccess') : isLogin ? t('universityGradePortal') : t('createYourAccount')}
           </h1>
           <p style={{ color: '#64748b', fontSize: '0.95rem', fontWeight: '500' }}>
-            {showMfa ? `Code sent to ${mfaData.email}` : isLogin ? 'Seamless Access to Academic Records' : 'Join thousands of students and educators'}
+            {showMfa ? `${t('verificationCodeSent')} ${mfaData.email}` : isLogin ? t('portalSubtitle') : t('joinPortalSubtitle')}
           </p>
         </div>
 
@@ -127,7 +127,7 @@ const LoginPage = () => {
           /* ----- MFA OTP FORM ----- */
           <div className="fade-in">
             <div className="modern-input-group">
-              <label className="modern-input-label">Verification Code</label>
+              <label className="modern-input-label">{t('verificationCode')}</label>
               <div style={{ position: 'relative' }}>
                 <ShieldCheck size={18} style={{
                   position: 'absolute',
@@ -155,7 +155,7 @@ const LoginPage = () => {
                 />
               </div>
               <p style={{ fontSize: '13px', color: '#64748b', marginTop: '10px', textAlign: 'center' }}>
-                Enter the 6-digit security code sent to your professional email.
+                {t('mfaInstruction')}
               </p>
             </div>
 
@@ -169,7 +169,7 @@ const LoginPage = () => {
                 marginBottom: '15px'
               }}
             >
-              {loading ? 'Verifying...' : 'Complete Sign In'}
+              {loading ? t('verifying') : t('completeSignIn')}
             </button>
 
             <button
@@ -184,7 +184,7 @@ const LoginPage = () => {
                 fontSize: '14px'
               }}
             >
-              Cancel and go back
+              {t('cancelAndGoBack')}
             </button>
           </div>
         ) : isLogin ? (
@@ -271,7 +271,7 @@ const LoginPage = () => {
                 textDecoration: 'none',
                 transition: 'color 0.2s'
               }}>
-                Forgot your password?
+                {t('forgotPasswordQuestion')}
               </Link>
             </div>
 
@@ -289,7 +289,7 @@ const LoginPage = () => {
               {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                   <div className="loading-spinner-small" style={{ width: '20px', height: '20px' }}></div>
-                  <span>Authenticating...</span>
+                  <span>{t('authenticating')}</span>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -301,7 +301,7 @@ const LoginPage = () => {
 
             <div style={{ marginTop: '30px', textAlign: 'center' }}>
               <p style={{ color: '#64748b', fontSize: '15px', fontWeight: '500' }}>
-                Don't have an account yet?{' '}
+                {t('dontHaveAccountYet')}{' '}
                 <button
                   onClick={() => setIsLogin(false)}
                   style={{
@@ -315,7 +315,7 @@ const LoginPage = () => {
                     textDecoration: 'underline'
                   }}
                 >
-                  Join Us
+                  {t('joinUs')}
                 </button>
               </p>
             </div>
@@ -327,8 +327,8 @@ const LoginPage = () => {
               <Link to="/student/register" className="role-selection-card">
                 <div className="role-icon-box" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>👨‍🎓</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '800', color: '#1e293b' }}>The Student</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Access grades and course materials</div>
+                  <div style={{ fontWeight: '800', color: '#1e293b' }}>{t('theStudent')}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>{t('studentRoleDesc')}</div>
                 </div>
                 <ArrowLeft size={16} style={{ transform: 'rotate(180deg)', opacity: 0.5 }} />
               </Link>
@@ -336,8 +336,8 @@ const LoginPage = () => {
               <Link to="/parent/register" className="role-selection-card">
                 <div className="role-icon-box" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>👨‍👩‍👧‍👦</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '800', color: '#1e293b' }}>The Parent</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Monitor academic progress & attendance</div>
+                  <div style={{ fontWeight: '800', color: '#1e293b' }}>{t('theParent')}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>{t('parentRoleDesc')}</div>
                 </div>
                 <ArrowLeft size={16} style={{ transform: 'rotate(180deg)', opacity: 0.5 }} />
               </Link>
@@ -345,8 +345,8 @@ const LoginPage = () => {
               <Link to="/teacher/register" className="role-selection-card">
                 <div className="role-icon-box" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' }}>👨‍🏫</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '800', color: '#1e293b' }}>The Educator</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>Manage grades and student analytics</div>
+                  <div style={{ fontWeight: '800', color: '#1e293b' }}>{t('theEducator')}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>{t('teacherRoleDesc')}</div>
                 </div>
                 <ArrowLeft size={16} style={{ transform: 'rotate(180deg)', opacity: 0.5 }} />
               </Link>
@@ -378,7 +378,7 @@ const LoginPage = () => {
                 e.currentTarget.style.color = '#64748b';
               }}
             >
-              <ArrowLeft size={18} /> Back to Sign In
+              <ArrowLeft size={18} /> {t('backToSignIn')}
             </button>
           </div>
         )}
@@ -386,10 +386,10 @@ const LoginPage = () => {
         <div className="secure-badge" style={{ marginTop: '25px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8' }}>
             <ShieldCheck size={14} />
-            <span>AES-256 Encrypted Academic Connection</span>
+            <span>{t('secureConnection')}</span>
           </div>
           <Link to="/privacy-policy" style={{ fontSize: '12px', color: '#6366f1', textDecoration: 'none', fontWeight: '600', opacity: 0.8 }}>
-            University Data Protection & Privacy Policy
+            {t('dataProtectionPolicy')}
           </Link>
         </div>
       </div>

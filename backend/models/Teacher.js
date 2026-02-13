@@ -92,7 +92,22 @@ const Teacher = sequelize.define('Teacher', {
     }
 }, {
     tableName: 'teachers',
-    timestamps: false
+    timestamps: false,
+    hooks: {
+        afterDestroy: async (teacher) => {
+            try {
+                const { TeacherID } = sequelize.models;
+                if (TeacherID) {
+                    await TeacherID.update(
+                        { isUsed: false },
+                        { where: { teacherId: teacher.teacherId } }
+                    );
+                }
+            } catch (err) {
+                console.error('Error in Teacher afterDestroy hook:', err);
+            }
+        }
+    }
 });
 
 Teacher.associate = (models) => {

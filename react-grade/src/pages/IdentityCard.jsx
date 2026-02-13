@@ -1,4 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { User, Award, Printer } from 'lucide-react';
 
 const IdentityCard = () => {
     const { user } = useAuth();
@@ -31,148 +34,149 @@ const IdentityCard = () => {
     });
 
     return (
-        <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
-            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                <div>
-                    <h1 style={{ margin: '0 0 10px 0' }}>🪪 {isTeacher ? (t('teacherIdCard') || 'Teacher ID Card') : (t('studentIdCard') || 'Student ID Card')}</h1>
-                    <p style={{ color: '#666' }}>Your official digital notification of identity.</p>
+        <div className="admin-dashboard-container fade-in">
+            <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+                <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                    <div>
+                        <h1 style={{ margin: '0 0 10px 0' }}>🪪 {isTeacher ? (t('teacherIdCard') || 'Teacher ID Card') : (t('studentIdCard') || 'Student ID Card')}</h1>
+                        <p style={{ color: '#666' }}>Your official digital notification of identity.</p>
+                    </div>
+                    <button
+                        onClick={handlePrint}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: roleColor,
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        <Printer size={18} /> Print Card
+                    </button>
                 </div>
-                <button
-                    onClick={handlePrint}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: roleColor,
+
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div id="id-card" style={{
+                        width: '450px',
+                        height: '280px',
+                        borderRadius: '15px',
+                        background: backgroundGradient,
                         color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    <Printer size={18} /> Print Card
-                </button>
-            </div>
+                        padding: '25px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        fontFamily: '"Segoe UI", sans-serif'
+                    }}>
+                        {/* Background Pattern */}
+                        <div style={{
+                            position: 'absolute', top: '-50px', right: '-50px',
+                            width: '200px', height: '200px',
+                            borderRadius: '50%',
+                            border: '30px solid rgba(255,255,255,0.1)'
+                        }}></div>
 
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <div id="id-card" style={{
-                    width: '450px',
-                    height: '280px',
-                    borderRadius: '15px',
-                    background: backgroundGradient,
-                    color: 'white',
-                    padding: '25px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    fontFamily: '"Segoe UI", sans-serif'
-                }}>
-                    {/* Background Pattern */}
-                    <div style={{
-                        position: 'absolute', top: '-50px', right: '-50px',
-                        width: '200px', height: '200px',
-                        borderRadius: '50%',
-                        border: '30px solid rgba(255,255,255,0.1)'
-                    }}></div>
-
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                                width: '40px', height: '40px',
-                                backgroundColor: 'white',
-                                borderRadius: '50%',
-                                display: 'flex', justifyContent: 'center', alignItems: 'center'
-                            }}>
-                                <Award color={roleColor} size={24} />
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>University Portal</div>
-                                <div style={{ fontSize: '10px', opacity: 0.8 }}>Official {isTeacher ? 'Teacher' : 'Student'} ID</div>
-                            </div>
-                        </div>
-                        {(user.isVerified || user.status === 'active') && (
-                            <div style={{
-                                backgroundColor: '#4caf50',
-                                color: 'white',
-                                padding: '4px 10px',
-                                borderRadius: '20px',
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                            }}>
-                                ✓ Verified
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Content */}
-                    <div style={{ display: 'flex', gap: '25px' }}>
-                        {/* Photo column */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-                            <div style={{
-                                width: '100px', height: '120px',
-                                backgroundColor: 'white',
-                                borderRadius: '8px',
-                                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                color: '#ccc',
-                                border: '2px solid rgba(255,255,255,0.3)'
-                            }}>
-                                <User size={50} color="#ccc" />
-                            </div>
-                            <div style={{
-                                backgroundColor: 'white',
-                                padding: '5px',
-                                borderRadius: '5px',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center'
-                            }}>
-                                <QRCodeSVG value={qrData} size={60} />
-                            </div>
-                        </div>
-
-                        {/* Details */}
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '2px' }}>{user.name}</div>
-                            <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '12px', color: '#ffd700', fontWeight: 'bold' }}>
-                                ID: {isTeacher ? user.teacherId : user.studentId}
-                            </div>
-
-                            <div style={{ marginBottom: '12px' }}>
-                                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>{t('nationalId')} (Fayda)</div>
-                                <div style={{ fontSize: '13px', fontWeight: '500' }}>{user.nationalId || 'Not Registered'}</div>
-                            </div>
-
-                            <div style={{ marginBottom: '12px' }}>
-                                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Department</div>
-                                <div style={{ fontSize: '13px', fontWeight: '500' }}>{user.department || 'General'}</div>
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <div>
-                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>{isTeacher ? 'Assigned Year' : 'Year'}</div>
-                                    <div style={{ fontSize: '12px' }}>{user.year || 'N/A'}</div>
+                        {/* Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{
+                                    width: '40px', height: '40px',
+                                    backgroundColor: 'white',
+                                    borderRadius: '50%',
+                                    display: 'flex', justifyContent: 'center', alignItems: 'center'
+                                }}>
+                                    <Award color={roleColor} size={24} />
                                 </div>
                                 <div>
-                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Semester</div>
-                                    <div style={{ fontSize: '12px' }}>{user.semester || 'N/A'}</div>
+                                    <div style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>University Portal</div>
+                                    <div style={{ fontSize: '10px', opacity: 0.8 }}>Official {isTeacher ? 'Teacher' : 'Student'} ID</div>
                                 </div>
-                                <div>
-                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Issued</div>
-                                    <div style={{ fontSize: '12px' }}>{new Date().toLocaleDateString()}</div>
+                            </div>
+                            {(user.isVerified || user.status === 'active') && (
+                                <div style={{
+                                    backgroundColor: '#4caf50',
+                                    color: 'white',
+                                    padding: '4px 10px',
+                                    borderRadius: '20px',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                }}>
+                                    ✓ Verified
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Content */}
+                        <div style={{ display: 'flex', gap: '25px' }}>
+                            {/* Photo column */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                                <div style={{
+                                    width: '100px', height: '120px',
+                                    backgroundColor: 'white',
+                                    borderRadius: '8px',
+                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                    color: '#ccc',
+                                    border: '2px solid rgba(255,255,255,0.3)'
+                                }}>
+                                    <User size={50} color="#ccc" />
+                                </div>
+                                <div style={{
+                                    backgroundColor: 'white',
+                                    padding: '5px',
+                                    borderRadius: '5px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center'
+                                }}>
+                                    <QRCodeSVG value={qrData} size={60} />
+                                </div>
+                            </div>
+
+                            {/* Details */}
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '2px' }}>{user.name}</div>
+                                <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '12px', color: '#ffd700', fontWeight: 'bold' }}>
+                                    ID: {isTeacher ? user.teacherId : user.studentId}
+                                </div>
+
+                                <div style={{ marginBottom: '12px' }}>
+                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>{t('nationalId')} (Fayda)</div>
+                                    <div style={{ fontSize: '13px', fontWeight: '500' }}>{user.nationalId || 'Not Registered'}</div>
+                                </div>
+
+                                <div style={{ marginBottom: '12px' }}>
+                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Department</div>
+                                    <div style={{ fontSize: '13px', fontWeight: '500' }}>{user.department || 'General'}</div>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>{isTeacher ? 'Assigned Year' : 'Year'}</div>
+                                        <div style={{ fontSize: '12px' }}>{user.year || 'N/A'}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Semester</div>
+                                        <div style={{ fontSize: '12px' }}>{user.semester || 'N/A'}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>Issued</div>
+                                        <div style={{ fontSize: '12px' }}>{new Date().toLocaleDateString()}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <style>{`
+                <style>{`
                 @media print {
                     .no-print { display: none !important; }
                     body { background: white; }
@@ -190,6 +194,7 @@ const IdentityCard = () => {
                     }
                 }
             `}</style>
+            </div>
         </div>
     );
 };

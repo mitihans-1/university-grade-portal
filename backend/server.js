@@ -190,6 +190,7 @@ app.use('/api/stats', require('./routes/stats'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/attendance', require('./routes/attendance'));
+app.use('/api/qr', require('./routes/qrAttendance'));
 app.use('/api/schedule', require('./routes/schedule'));
 app.use('/api/admin', require('./routes/adminPreferences'));
 app.use('/api/audit', require('./routes/audit'));

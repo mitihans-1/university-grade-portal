@@ -1602,6 +1602,21 @@ export const api = {
     return response.json();
   },
 
+  getAuditLogs: async (params = {}) => {
+    const token = getToken();
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/audit?${query}`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
   updateSetting: async (key, value) => {
     const token = getToken();
     const response = await fetch(`${API_BASE_URL}/settings/${key}`, {
@@ -1683,6 +1698,70 @@ export const api = {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.msg || 'Failed to approve grades');
     }
+    return response.json();
+  },
+
+  // QR Attendance
+  startSession: async (sessionData) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/qr/start-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify(sessionData),
+    });
+    return response.json();
+  },
+
+  scanQR: async (scanData) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/qr/scan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify(scanData),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.msg || `Scan failed! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  getActiveSessions: async () => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/qr/active-sessions`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    return response.json();
+  },
+
+  endSession: async (sessionId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/qr/end-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token,
+      },
+      body: JSON.stringify({ sessionId }),
+    });
+    return response.json();
+  },
+
+  getTeacherAttendance: async (teacherId) => {
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/attendance/teacher/${teacherId}`, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
     return response.json();
   }
 };

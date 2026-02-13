@@ -14,6 +14,11 @@ const { generateMathPuzzle } = require('../utils/captcha');
 const crypto = require('crypto');
 const router = express.Router();
 
+// Memory-based store for login attempts (Brute force protection)
+const loginAttempts = new Map();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
 // @route   GET api/auth/captcha
 // @desc    Get a simple math puzzle
 // @access  Public
@@ -38,6 +43,24 @@ router.post('/login', async (req, res) => {
     // Sanitize inputs
     const sanitizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
     const sanitizedPassword = typeof password === 'string' ? password : '';
+
+    // Check for lockout
+    const attempts = loginAttempts.get(sanitizedEmail);
+    if (attempts && attempts.count >= MAX_ATTEMPTS) {
+      const now = Date.now();
+      const timeLeft = Math.ceil((attempts.lockUntil - now) / 60000);
+
+      if (timeLeft > 0) {
+        return res.status(403).json({
+          msg: `Too many failed attempts. Account is locked for ${timeLeft} more minute(s).`,
+          isLocked: true,
+          lockUntil: attempts.lockUntil
+        });
+      } else {
+        // Reset if time passed
+        loginAttempts.delete(sanitizedEmail);
+      }
+    }
 
     // Validate email format
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -129,17 +152,38 @@ router.post('/login', async (req, res) => {
     }
 
     if (!user) {
+      // Record failed attempt
+      const userExists = student || parent || admin || teacher;
+      let msg = 'Invalid credentials';
+      let remaining = MAX_ATTEMPTS;
+
+      if (userExists) {
+        const current = loginAttempts.get(sanitizedEmail) || { count: 0 };
+        current.count += 1;
+        current.lastAttempt = Date.now();
+
+        if (current.count >= MAX_ATTEMPTS) {
+          current.lockUntil = Date.now() + LOCKOUT_TIME;
+          msg = `Too many failed attempts. Account is locked for 15 minutes.`;
+        } else {
+          remaining = MAX_ATTEMPTS - current.count;
+          msg = `Invalid credentials. ${remaining} attempt(s) remaining before account lockout.`;
+        }
+        loginAttempts.set(sanitizedEmail, current);
+      }
+
       const dbEnv = process.env.NODE_ENV || 'development';
-      console.log(`[AUTH] Login failed for ${normalizedEmail} on ${dbEnv}. Matches found: Student: ${!!student}, Parent: ${!!parent}, Admin: ${!!admin}, Teacher: ${!!teacher}`);
+      console.log(`[AUTH] Login failed for ${normalizedEmail}. Attempts: ${loginAttempts.get(sanitizedEmail)?.count || 0}`);
 
-      // DEBUGGING: Return specific error to help user
-      if (student) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for student account)' });
-      if (parent) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for parent account)' });
-      if (teacher) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for teacher account)' });
-      if (admin) return res.status(400).json({ msg: 'Invalid credentials (Password incorrect for admin account)' });
-
-      return res.status(400).json({ msg: `Invalid credentials (User not found on ${dbEnv} database)` });
+      return res.status(400).json({
+        msg,
+        remainingAttempts: remaining,
+        userExists: !!userExists
+      });
     }
+
+    // Clear failed attempts on success
+    loginAttempts.delete(sanitizedEmail);
 
     // Log successful login (non-blocking)
     logAction({

@@ -330,6 +330,7 @@ const NavigationLinks = ({ user, t, setIsMenuOpen, logout, onEditImage }) => {
         <>
           <div style={sectionLabelStyle}>{t('administrative')}</div>
           <Link to="/admin/students" onClick={handleLinkClick} style={getLinkStyle('/admin/students')}><Users size={20} color={getIconColor('users', '/admin/students')} /> {t('manageStudents')}</Link>
+          <Link to="/admin/attendance" onClick={handleLinkClick} style={getLinkStyle('/admin/attendance')}><CalendarCheck size={20} color={getIconColor('attendance', '/admin/attendance')} /> {t('attendance')}</Link>
           <Link to="/admin/ids" onClick={handleLinkClick} style={getLinkStyle('/admin/ids')}><IdCard size={20} color={getIconColor('idcard', '/admin/ids')} /> {t('idManagement')}</Link>
           <Link to="/admin/upload" onClick={handleLinkClick} style={getLinkStyle('/admin/upload')}><GraduationCap size={20} color={getIconColor('upload', '/admin/upload')} /> {t('uploadGrades')}</Link>
           <Link to="/admin/grade-approval" onClick={handleLinkClick} style={getLinkStyle('/admin/grade-approval')}><ShieldCheck size={20} color={getIconColor('grades', '/admin/grade-approval')} /> {t('gradeApprovals')}</Link>
@@ -634,7 +635,7 @@ function AppLayout() {
             <Route path="/admin/students" element={<ProtectedRoute allowedPermissions={['manage_users']}><StudentManagement /></ProtectedRoute>} />
             <Route path="/admin/ids" element={<ProtectedRoute allowedPermissions={['manage_users']}><AdminIdManagement /></ProtectedRoute>} />
             <Route path="/admin/upload" element={<ProtectedRoute allowedPermissions={['manage_grades']}><AdminUpload /></ProtectedRoute>} />
-            <Route path="/admin/attendance" element={<ProtectedRoute allowedPermissions={['manage_attendance']}><AttendanceManagement /></ProtectedRoute>} />
+            <Route path="/admin/attendance" element={<ProtectedRoute allowedPermissions={['manage_attendance', 'manage_users']}><AttendanceManagement /></ProtectedRoute>} />
             <Route path="/admin/analytics" element={<ProtectedRoute allowedPermissions={['view_analytics']}><AdminAnalytics /></ProtectedRoute>} />
             <Route path="/admin/appeals" element={<ProtectedRoute allowedPermissions={['manage_grades']}><AdminAppeals /></ProtectedRoute>} />
             <Route path="/admin/audit" element={<ProtectedRoute allowedPermissions={['manage_system']}><AdminAuditLogs /></ProtectedRoute>} />
@@ -688,7 +689,7 @@ function App() {
       <LanguageProvider>
         <ToastProvider>
           <SocketProvider>
-            <Router>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <AppLayout />
             </Router>
           </SocketProvider>

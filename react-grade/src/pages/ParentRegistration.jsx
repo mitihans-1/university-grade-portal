@@ -85,7 +85,7 @@ const ParentRegistration = () => {
       } else {
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
         if (!passwordRegex.test(formData.password)) {
-          newErrors.password = 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.';
+          newErrors.password = t('passwordRequirements') || 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.';
         }
       }
     }
@@ -109,9 +109,9 @@ const ParentRegistration = () => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
     if (!passwordRegex.test(formData.password)) {
       if (!validationErrors.password) {
-        validationErrors.password = 'Password must contain at least 1 letter, 1 number, and 1 special character.';
+        validationErrors.password = t('passwordComplexityRequired');
         setErrors(validationErrors);
-        alert('Password validation failed: ' + validationErrors.password); // Add user visible feedback
+        alert(t('passwordValidationFailed') + validationErrors.password); // Add user visible feedback
         return;
       }
     }
@@ -120,7 +120,7 @@ const ParentRegistration = () => {
       setErrors(validationErrors);
       // Construct a readable error message for the user
       const errorMsg = Object.values(validationErrors).join('\n');
-      alert('Please correct the following errors:\n' + errorMsg);
+      alert(t('correctErrorsMessage') + '\n' + errorMsg);
       return;
     }
 
@@ -137,14 +137,14 @@ const ParentRegistration = () => {
       const result = await api.registerParent(parentData);
 
       if (result.msg && !result.error) {
-        alert(result.msg + (result.generatedEmail ? '\n\nYour login email: ' + result.generatedEmail : ''));
+        alert(result.msg + (result.generatedEmail ? '\n\n' + t('yourLoginEmail') + result.generatedEmail : ''));
         navigate('/');
       } else if (result.token && result.user) {
         if (result.generatedEmail) {
           alert(
             t('parentRegistrationSuccessWithoutEmail') + '\n\n' +
-            'Your login email: ' + result.generatedEmail + '\n' +
-            'Please save this email for future logins!'
+            t('yourLoginEmail') + result.generatedEmail + '\n' +
+            t('saveEmailForFuture')
           );
         } else if (formData.email) {
           alert(t('parentRegistrationSuccessWithEmail'));
@@ -234,7 +234,7 @@ const ParentRegistration = () => {
             />
             {focused.email && (
               <div style={{ fontSize: '12px', color: '#2e7d32', marginTop: '5px' }}>
-                ℹ️ Must be unique if provided. Leave blank to auto-generate.
+                ℹ️ {t('emailUniqueHint')}
               </div>
             )}
             {errors.email && <small style={{ color: '#f44336' }}>{t('validEmailRequiredOrLeaveEmpty')}</small>}
@@ -263,7 +263,7 @@ const ParentRegistration = () => {
               />
               {focused.password && (
                 <div style={{ fontSize: '11px', color: '#2e7d32', marginTop: '5px' }}>
-                  ℹ️ Min 8 chars, 1 letter, 1 number, 1 special char
+                  ℹ️ {t('passwordRequirements')}
                 </div>
               )}
               <PasswordStrengthMeter password={formData.password} />

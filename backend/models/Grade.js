@@ -86,7 +86,7 @@ const Grade = sequelize.define('Grade', {
 });
 
 Grade.associate = (models) => {
-  Grade.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'Student' });
+  Grade.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'Student', onDelete: 'CASCADE' });
   Grade.belongsTo(models.Teacher, { foreignKey: 'uploadedBy', targetKey: 'teacherId', as: 'Teacher' });
 };
 

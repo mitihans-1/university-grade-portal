@@ -115,7 +115,7 @@ const TeacherRegistration = () => {
         } else {
             const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
             if (!passwordRegex.test(formData.password)) {
-                newErrors.password = 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.';
+                newErrors.password = t('passwordRequirements') || 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.';
             }
         }
 
@@ -132,7 +132,7 @@ const TeacherRegistration = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!isRegistrationOpen) {
-            showToast('Registration is currently closed.', 'error');
+            showToast(t('registrationClosedShort'), 'error');
             return;
         }
 
@@ -158,11 +158,11 @@ const TeacherRegistration = () => {
                     setRegisteredData(result.user);
                     setRegistrationSuccess(true);
                 } else {
-                    showToast(result.msg || 'Registration failed', 'error');
+                    showToast(result.msg || t('registrationFailed'), 'error');
                 }
             } catch (error) {
                 console.error('Teacher registration error:', error);
-                showToast(t('teacherRegistrationError') || 'An error occurred during registration', 'error');
+                showToast(t('teacherRegistrationError') || t('errorDuringRegistration'), 'error');
             } finally {
                 setLoading(false);
             }
@@ -176,7 +176,7 @@ const TeacherRegistration = () => {
             <div className="auth-page-container fade-in">
                 <div className="auth-card" style={{ textAlign: 'center', padding: '50px' }}>
                     <div className="loading-spinner"></div>
-                    <p style={{ marginTop: '20px', color: '#64748b' }}>Checking registration status...</p>
+                    <p style={{ marginTop: '20px', color: '#64748b' }}>{t('checkingRegistrationStatus')}</p>
                 </div>
             </div>
         );
@@ -189,13 +189,13 @@ const TeacherRegistration = () => {
                 <div className="blob blob-2"></div>
                 <div className="auth-card" style={{ maxWidth: '400px', textAlign: 'center', padding: '40px' }}>
                     <div style={{ fontSize: '60px', marginBottom: '20px' }}>🔐</div>
-                    <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>Teacher Registration Closed</h2>
+                    <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>{t('teacherRegistrationClosed')}</h2>
                     <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '25px' }}>
-                        We're sorry, but teacher registration is currently closed for
+                        {t('teacherRegistrationClosedPeriod')}
                         <strong> {systemSettings?.current_year} {systemSettings?.current_semester}</strong>.
                     </p>
                     <Link to="/" className="modern-btn" style={{ textDecoration: 'none', display: 'inline-block', background: 'linear-gradient(45deg, #9c27b0, #ba68c8)' }}>
-                        Back to Login
+                        {t('backToSignIn')}
                     </Link>
                 </div>
             </div>
@@ -209,10 +209,10 @@ const TeacherRegistration = () => {
                 <div className="blob blob-2"></div>
                 <div className="auth-card" style={{ maxWidth: '450px', textAlign: 'center', padding: '40px' }}>
                     <div style={{ fontSize: '60px', marginBottom: '20px' }}>🎉</div>
-                    <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>{t('registrationSuccessful') || 'Registration Successful!'}</h2>
+                    <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>{t('registrationSuccessful')}</h2>
                     <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '25px' }}>
-                        Your teacher account has been verified and activated for <strong>{formData.email}</strong>.
-                        You can now log in to the portal.
+                        {t('teacherAccountVerified')} <strong>{formData.email}</strong>.
+                        {t('nowCanLogin')}
                     </p>
                     {registeredData && (
                         <div style={{
@@ -224,21 +224,21 @@ const TeacherRegistration = () => {
                             fontSize: '14px',
                             border: '1px solid #e2e8f0'
                         }}>
-                            <p style={{ margin: '0 0 5px 0', color: '#475569' }}><strong>Assigned Department:</strong> {registeredData.department || 'General'}</p>
-                            <p style={{ margin: '0 0 5px 0', color: '#475569' }}><strong>Academic Year:</strong> Year {registeredData.year || 'N/A'}</p>
-                            <p style={{ margin: '0', color: '#475569' }}><strong>Semester:</strong> Semester {registeredData.semester || 'N/A'}</p>
+                            <p style={{ margin: '0 0 5px 0', color: '#475569' }}><strong>{t('assignedDepartment')}:</strong> {registeredData.department || t('general')}</p>
+                            <p style={{ margin: '0 0 5px 0', color: '#475569' }}><strong>{t('academicYear')}:</strong> {t('year')} {registeredData.year || 'N/A'}</p>
+                            <p style={{ margin: '0', color: '#475569' }}><strong>{t('semesterLabelShort')}:</strong> {t('semester')} {registeredData.semester || 'N/A'}</p>
                         </div>
                     )}
                     <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', marginBottom: '25px', border: '1px solid #e2e8f0' }}>
-                        <p style={{ fontWeight: '600', color: '#9c27b0', margin: '5px 0' }}>Account Active</p>
-                        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>A <strong>Welcome Email</strong> has been sent to your inbox.</p>
+                        <p style={{ fontWeight: '600', color: '#9c27b0', margin: '5px 0' }}>{t('accountActive')}</p>
+                        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{t('welcomeEmailSent')}</p>
                     </div>
                     <button
                         onClick={() => navigate('/')}
                         className="modern-btn"
                         style={{ background: 'linear-gradient(45deg, #9c27b0, #ba68c8)', width: '100%', marginBottom: '15px' }}
                     >
-                        Log In Now
+                        {t('logInNow')}
                     </button>
                 </div>
             </div>
@@ -297,7 +297,7 @@ const TeacherRegistration = () => {
                             />
                             {focused.fullName && (
                                 <div style={{ fontSize: '12px', color: '#9c27b0', marginTop: '5px' }}>
-                                    ℹ️ Enter your full legal name.
+                                    ℹ️ {t('enterLegalName')}
                                 </div>
                             )}
                             {errors.fullName && <small style={{ color: '#f44336' }}>{t('fullNameRequired')}</small>}
@@ -335,13 +335,13 @@ const TeacherRegistration = () => {
                             </div>
                             {focused.teacherId && (
                                 <div style={{ fontSize: '11px', color: '#9c27b0', marginTop: '5px' }}>
-                                    ℹ️ Enter your official teacher ID.
+                                    ℹ️ {t('enterTeacherIdHint') || 'Enter your official teacher ID.'}
                                 </div>
                             )}
                             {errors.teacherId && <small style={{ color: '#f44336' }}>{t('teacherIdRequired')}</small>}
                             {idVerifiedStatus === 'valid' && (
                                 <div style={{ fontSize: '11px', color: '#4caf50', marginTop: '2px', fontWeight: 'bold' }}>
-                                    ✅ Official Record Found! Verified.
+                                    ✅ {t('officialRecordVerified')}
                                 </div>
                             )}
                         </div>
@@ -369,7 +369,7 @@ const TeacherRegistration = () => {
                             />
                             {focused.email && (
                                 <div style={{ fontSize: '11px', color: '#9c27b0', marginTop: '2px' }}>
-                                    ℹ️ Valid email required.
+                                    ℹ️ {t('emailInputHint')}
                                 </div>
                             )}
                             {errors.email && <small style={{ color: '#f44336' }}>{t('validEmailRequired')}</small>}
@@ -395,7 +395,7 @@ const TeacherRegistration = () => {
                             />
                             {focused.phone && (
                                 <div style={{ fontSize: '11px', color: '#9c27b0', marginTop: '2px' }}>
-                                    ℹ️ Used for system notifications.
+                                    ℹ️ {t('usedForNotifications')}
                                 </div>
                             )}
                             {errors.phone && <small style={{ color: '#f44336' }}>{t('phoneRequired')}</small>}
@@ -403,7 +403,7 @@ const TeacherRegistration = () => {
                     </div>
 
                     <div className="modern-input-group" style={{ marginBottom: '15px' }}>
-                        <label className="modern-input-label">National ID (FIN)</label>
+                        <label className="modern-input-label">{t('nationalIdLabel')}</label>
                         <input
                             type="text"
                             name="nationalId"
@@ -412,12 +412,12 @@ const TeacherRegistration = () => {
                             onFocus={handleFocus}
                             onBlur={handleBlur}
                             className="modern-input"
-                            placeholder="e.g. FIN-1234567"
+                            placeholder={t('nationalIdPlaceholder')}
                             autoComplete="off"
                         />
                         {focused.nationalId && (
                             <div style={{ fontSize: '11px', color: '#9c27b0', marginTop: '2px' }}>
-                                ℹ️ Official ID required for verification.
+                                ℹ️ {t('officialIdRequired')}
                             </div>
                         )}
                     </div>
@@ -439,7 +439,7 @@ const TeacherRegistration = () => {
                             />
                             {focused.password && (
                                 <div style={{ fontSize: '11px', color: '#9c27b0', marginTop: '5px' }}>
-                                    ℹ️ Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+                                    ℹ️ {t('passwordRequirements')}
                                 </div>
                             )}
                             <PasswordStrengthMeter password={formData.password} />
@@ -473,7 +473,7 @@ const TeacherRegistration = () => {
                         />
                         <div>
                             <span style={{ fontSize: '14px', color: '#64748b' }}>
-                                I agree to the Teacher Terms of Service and share academic information with the university administration.
+                                {t('teacherTermsAgreement')}
                             </span>
                             {errors.agreeToTerms && <div style={{ color: '#f44336', fontSize: '12px', marginTop: '2px' }}>{t('agreeToTermsRequired')}</div>}
                         </div>
@@ -485,7 +485,7 @@ const TeacherRegistration = () => {
                         className="modern-btn"
                         style={{ background: 'linear-gradient(45deg, #9c27b0, #ba68c8)' }}
                     >
-                        {loading ? 'Registering...' : t('registerAsTeacher')}
+                        {loading ? t('registering') : t('registerAsTeacher')}
                     </button>
 
                     <div style={{ textAlign: 'center', marginTop: '20px' }}>

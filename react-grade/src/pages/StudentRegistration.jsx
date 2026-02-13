@@ -140,16 +140,16 @@ const StudentRegistration = () => {
     else {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
       if (!passwordRegex.test(formData.password)) {
-        newErrors.password = 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.';
+        newErrors.password = t('passwordRequirements') || 'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.';
       }
     }
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t('passwordsDoNotMatch');
 
-    if (!formData.nationalId) newErrors.nationalId = 'National ID / Passport is required';
+    if (!formData.nationalId) newErrors.nationalId = t('nationalIdRequired');
 
     if (!formData.agreeToTerms) newErrors.agreeToTerms = t('mustAgreeToTerms');
-    if (!formData.captchaAnswer) newErrors.captchaAnswer = 'Please answer the human verification question.';
-    else if (parseInt(formData.captchaAnswer) !== captcha.answer) newErrors.captchaAnswer = 'Incorrect human verification answer. Please try again.';
+    if (!formData.captchaAnswer) newErrors.captchaAnswer = t('answerHumanVerification');
+    else if (parseInt(formData.captchaAnswer) !== captcha.answer) newErrors.captchaAnswer = t('incorrectHumanVerification');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0; // Return true if no errors, false otherwise
@@ -158,7 +158,7 @@ const StudentRegistration = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isRegistrationOpen) {
-      alert('Registration is currently closed. Please contact administrator.');
+      alert(t('registrationClosedMessage'));
       return;
     }
 
@@ -186,7 +186,7 @@ const StudentRegistration = () => {
 
         if (result && (result.msg || result.token)) {
           if (result.msg?.includes('already registered')) {
-            alert(result.msg);
+            alert(t('alreadyRegistered'));
           } else {
             setRegistrationSuccess(true);
           }
@@ -196,7 +196,7 @@ const StudentRegistration = () => {
         }
       } catch (error) {
         console.error('Student registration error:', error);
-        alert(error.message || t('studentRegistrationError') || 'Registration failed. Please try again.');
+        alert(error.message || t('studentRegistrationError') || t('registrationFailedTryAgain'));
       }
     }
   };
@@ -206,7 +206,7 @@ const StudentRegistration = () => {
       <div className="auth-page-container fade-in">
         <div className="auth-card" style={{ textAlign: 'center', padding: '50px' }}>
           <div className="loading-spinner"></div>
-          <p style={{ marginTop: '20px', color: '#64748b' }}>Checking registration status...</p>
+          <p style={{ marginTop: '20px', color: '#64748b' }}>{t('checkingRegistrationStatus')}</p>
         </div>
       </div>
     );
@@ -219,13 +219,13 @@ const StudentRegistration = () => {
         <div className="blob blob-2"></div>
         <div className="auth-card" style={{ maxWidth: '400px', textAlign: 'center', padding: '40px' }}>
           <div style={{ fontSize: '60px', marginBottom: '20px' }}>🔐</div>
-          <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>Registration Closed</h2>
+          <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>{t('registrationClosed')}</h2>
           <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '25px' }}>
-            We're sorry, but student registration is currently closed for the
-            <strong> {systemSettings?.current_year} {systemSettings?.current_semester}</strong> academic period.
+            {t('registrationClosedPeriod')}
+            <strong> {systemSettings?.current_year} {systemSettings?.current_semester}</strong> {t('academicPeriod')}
           </p>
           <Link to="/" className="modern-btn" style={{ textDecoration: 'none', display: 'inline-block' }}>
-            Back to Login
+            {t('backToSignIn')}
           </Link>
         </div>
       </div>
@@ -239,21 +239,21 @@ const StudentRegistration = () => {
         <div className="blob blob-2"></div>
         <div className="auth-card" style={{ maxWidth: '450px', textAlign: 'center', padding: '40px' }}>
           <div style={{ fontSize: '60px', marginBottom: '20px' }}>🎉</div>
-          <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>{t('registrationSuccessful') || 'Registration Successful!'}</h2>
+          <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>{t('registrationSuccessful')}</h2>
           <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '25px' }}>
-            Your student account has been verified and activated for <strong>{formData.email}</strong>.
-            You can now log in to the portal.
+            {t('studentAccountVerified')} <strong>{formData.email}</strong>.
+            {t('nowCanLogin')}
           </p>
           <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', marginBottom: '25px', border: '1px solid #e2e8f0' }}>
-            <p style={{ fontWeight: '600', color: '#1a237e', margin: '5px 0' }}>Account Active</p>
-            <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>A <strong>Welcome Email</strong> has been sent to your inbox.</p>
+            <p style={{ fontWeight: '600', color: '#1a237e', margin: '5px 0' }}>{t('accountActive')}</p>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{t('welcomeEmailSent')}</p>
           </div>
           <button
             onClick={() => navigate('/')}
             className="modern-btn"
             style={{ background: 'linear-gradient(45deg, #1a237e, #3949ab)', width: '100%', marginBottom: '15px' }}
           >
-            Log In Now
+            {t('logInNow')}
           </button>
         </div>
       </div>
@@ -312,7 +312,7 @@ const StudentRegistration = () => {
               />
               {focused.fullName && (
                 <div style={{ fontSize: '12px', color: '#1976d2', marginTop: '5px' }}>
-                  ℹ️ Enter your full legal name.
+                  ℹ️ {t('enterLegalName')}
                 </div>
               )}
               {errors.fullName && <small style={{ color: '#f44336' }}>{t('fullNameRequired')}</small>}
@@ -348,13 +348,13 @@ const StudentRegistration = () => {
               </div>
               {focused.studentId && (
                 <div style={{ fontSize: '11px', color: '#1976d2', marginTop: '5px' }}>
-                  ℹ️ {t('studentIdHint') || 'Enter your official university ID.'}
+                  ℹ️ {t('enterOfficialId')}
                 </div>
               )}
               {errors.studentId && <small style={{ color: '#f44336' }}>{t('studentIdRequired')}</small>}
               {idVerifiedStatus === 'valid' && (
                 <div style={{ fontSize: '11px', color: '#4caf50', marginTop: '2px', fontWeight: 'bold' }}>
-                  ✅ Official Record Found! Verified.
+                  ✅ {t('officialRecordVerified')}
                 </div>
               )}
             </div>
@@ -362,7 +362,7 @@ const StudentRegistration = () => {
 
 
           <div className="modern-input-group">
-            <label className="modern-input-label">National ID (FIN)</label>
+            <label className="modern-input-label">{t('nationalIdLabel')}</label>
             <input
               type="text"
               name="nationalId"
@@ -371,12 +371,12 @@ const StudentRegistration = () => {
               onFocus={handleFocus}
               onBlur={handleBlur}
               className="modern-input"
-              placeholder="e.g. FIN-1234567"
+              placeholder={t('nationalIdPlaceholder')}
               autoComplete="off"
             />
             {focused.nationalId && (
               <div style={{ fontSize: '12px', color: '#1976d2', marginTop: '5px' }}>
-                ℹ️ Required for identity verification.
+                ℹ️ {t('nationalIdHint')}
               </div>
             )}
           </div>
@@ -402,7 +402,7 @@ const StudentRegistration = () => {
               />
               {focused.email && (
                 <div style={{ fontSize: '11px', color: '#1976d2', marginTop: '2px' }}>
-                  ℹ️ Valid email required.
+                  ℹ️ {t('emailInputHint')}
                 </div>
               )}
               {errors.email && <small style={{ color: '#f44336' }}>{t('validEmailRequired')}</small>}
@@ -428,7 +428,7 @@ const StudentRegistration = () => {
               />
               {focused.phone && (
                 <div style={{ fontSize: '11px', color: '#1976d2', marginTop: '2px' }}>
-                  ℹ️ For SMS updates.
+                  ℹ️ {t('phoneInputHint')}
                 </div>
               )}
               {errors.phone && <small style={{ color: '#f44336' }}>{t('phoneRequired')}</small>}
@@ -452,7 +452,7 @@ const StudentRegistration = () => {
               />
               {focused.password && (
                 <div style={{ fontSize: '11px', color: '#1976d2', marginTop: '5px' }}>
-                  ℹ️ Min 8 chars, 1 letter, 1 number, 1 special char
+                  ℹ️ {t('passwordRequirements')}
                 </div>
               )}
               <PasswordStrengthMeter password={formData.password} />
@@ -487,11 +487,11 @@ const StudentRegistration = () => {
             marginBottom: '20px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <label className="modern-input-label" style={{ marginBottom: 0 }}>Human Verification</label>
-              <span style={{ fontSize: '12px', background: '#3b82f6', color: 'white', padding: '2px 8px', borderRadius: '4px' }}>ROBOT CHECK</span>
+              <label className="modern-input-label" style={{ marginBottom: 0 }}>{t('humanVerification')}</label>
+              <span style={{ fontSize: '12px', background: '#3b82f6', color: 'white', padding: '2px 8px', borderRadius: '4px' }}>{t('robotCheck')}</span>
             </div>
             <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '15px' }}>
-              Solve this simple math puzzle to prove you are human:
+              {t('solveMathPuzzle')}
             </p>
             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
               <div style={{
@@ -515,7 +515,7 @@ const StudentRegistration = () => {
                   value={formData.captchaAnswer}
                   onChange={(e) => setFormData({ ...formData, captchaAnswer: e.target.value })}
                   className="modern-input"
-                  placeholder="Answer?"
+                  placeholder={t('answerPlaceholder')}
                   style={{
                     height: '50px',
                     textAlign: 'center',
@@ -538,7 +538,7 @@ const StudentRegistration = () => {
               />
               <div>
                 <span style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.4' }}>
-                  {t('agreeToShareAcademicInfo')} By registering, you also agree to our <Link to="/privacy-policy" target="_blank" style={{ color: '#3b82f6', fontWeight: '600' }}>Privacy Policy</Link>.
+                  {t('agreeToShareAcademicInfo')} {t('privacyPolicyAgreement')} <Link to="/privacy-policy" target="_blank" style={{ color: '#3b82f6', fontWeight: '600' }}>{t('privacyPolicy')}</Link>.
                 </span>
                 {errors.agreeToTerms && <div style={{ color: '#f44336', fontSize: '12px', marginTop: '2px' }}>{t('agreeToTermsRequired')}</div>}
               </div>

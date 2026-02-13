@@ -33,7 +33,7 @@ const AdminLinkRequests = () => {
           api.getApprovedLinks()
         ]);
 
-        console.log('Pending Links Response:', pendingLinks);
+
 
         if (pendingLinks && pendingLinks.msg) {
           setError(pendingLinks.msg);

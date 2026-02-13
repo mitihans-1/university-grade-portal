@@ -88,9 +88,14 @@ router.post('/register', async (req, res) => {
     }
 
     if (validID.isUsed) {
-      // Small check: what if the person already exists in Students with THIS ID? 
-      // The below existingStudent check covers it, but we also want to ensure no double-usage of valid official IDs.
-      return res.status(400).json({ msg: 'This Student ID has already been registered.' });
+      // Double check if student actually exists (fail-safe for manual DB deletes)
+      const actualStudent = await Student.findOne({ where: { studentId: validID.studentId } });
+      if (!actualStudent) {
+        // ID was erroneously marked as used, reset it and proceed
+        await validID.update({ isUsed: false });
+      } else {
+        return res.status(400).json({ msg: 'This Student ID has already been registered.' });
+      }
     }
 
     // Verify National ID if it exists in the official record
@@ -499,18 +504,12 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Student not found' });
     }
 
-    // Delete related records first
+    // Delete related records (optional since we have CASCADE, but good for manual control)
     await ParentStudentLink.destroy({ where: { studentId: student.studentId } });
     await Grade.destroy({ where: { studentId: student.studentId } });
 
-    // Mark the official University ID as not used anymore so it can be re-registered
-    await models.UniversityID.update(
-      { isUsed: false },
-      { where: { studentId: student.studentId } }
-    );
-
-    // Delete the student
-    await Student.destroy({ where: { id: req.params.id } });
+    // Use instance.destroy() to trigger model hooks (which reset UniversityID.isUsed)
+    await student.destroy();
 
     res.json({ msg: 'Student and related data deleted successfully' });
   } catch (err) {

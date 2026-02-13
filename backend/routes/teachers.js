@@ -48,8 +48,15 @@ router.post('/register', async (req, res) => {
         console.log('Found valid Teacher ID:', validTeacherId.teacherId, 'isUsed:', validTeacherId.isUsed);
 
         if (validTeacherId.isUsed) {
-            console.log('Teacher ID already used');
-            return res.status(400).json({ msg: 'This Teacher ID has already been used for registration.' });
+            // Double check if teacher actually exists
+            const actualTeacher = await Teacher.findOne({ where: { teacherId: validTeacherId.teacherId } });
+            if (!actualTeacher) {
+                // ID was erroneously marked as used, reset it and proceed
+                await validTeacherId.update({ isUsed: false });
+            } else {
+                console.log('Teacher ID already used and teacher exists');
+                return res.status(400).json({ msg: 'This Teacher ID has already been used for registration.' });
+            }
         }
 
         // Verify National ID if it exists in the official record
@@ -196,6 +203,31 @@ router.put('/:id/approve', auth, async (req, res) => {
         res.json({ msg: 'Teacher approved successfully', teacher });
     } catch (err) {
         console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// @route   DELETE api/teachers/:id
+// @desc    Delete a teacher (admin only)
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ msg: 'Access denied' });
+        }
+
+        const teacher = await Teacher.findByPk(req.params.id);
+
+        if (!teacher) {
+            return res.status(404).json({ msg: 'Teacher not found' });
+        }
+
+        // Delete the teacher (Sequelize hooks and DB cascade will handle the rest)
+        await teacher.destroy();
+
+        res.json({ msg: 'Teacher and related data deleted successfully' });
+    } catch (err) {
+        console.error('Delete Teacher Error:', err.message);
         res.status(500).json({ msg: 'Server error' });
     }
 });

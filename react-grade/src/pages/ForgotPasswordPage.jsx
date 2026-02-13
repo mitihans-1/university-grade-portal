@@ -3,6 +3,7 @@ import { api } from '../utils/api';
 import { useToast } from '../components/common/Toast';
 import { Link, useNavigate } from 'react-router-dom';
 import PasswordStrengthMeter from '../components/common/PasswordStrengthMeter';
+import { useLanguage } from '../context/LanguageContext';
 
 const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ const ForgotPasswordPage = () => {
     const [step, setStep] = useState(1); // 1: Send Email, 2: Enter Code & New Password
     const [loading, setLoading] = useState(false);
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const navigate = useNavigate();
 
     const handleSendCode = async (e) => {
@@ -21,7 +23,7 @@ const ForgotPasswordPage = () => {
             showToast(res.msg, 'success');
             setStep(2);
         } catch (err) {
-            showToast('Error sending reset code', 'error');
+            showToast(t('errorSendingCode'), 'error');
         } finally {
             setLoading(false);
         }
@@ -31,7 +33,7 @@ const ForgotPasswordPage = () => {
         e.preventDefault();
 
         if (password.length < 8) {
-            showToast('Password must be at least 8 characters', 'error');
+            showToast(t('passwordLengthRequired'), 'error');
             return;
         }
 
@@ -42,10 +44,10 @@ const ForgotPasswordPage = () => {
                 showToast(res.msg, 'success');
                 navigate('/'); // Redirect to login
             } else {
-                showToast(res.msg || 'Invalid code', 'error');
+                showToast(res.msg || t('invalidCode'), 'error');
             }
         } catch (err) {
-            showToast('Error resetting password', 'error');
+            showToast(t('errorResettingPassword'), 'error');
         } finally {
             setLoading(false);
         }
@@ -56,15 +58,15 @@ const ForgotPasswordPage = () => {
             <div className="blob blob-1"></div>
             <div className="blob blob-2"></div>
             <div className="auth-card" style={{ maxWidth: '400px' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>Reset Password</h2>
+                <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>{t('resetPassword')}</h2>
 
                 {step === 1 ? (
                     <form onSubmit={handleSendCode}>
                         <p style={{ textAlign: 'center', color: '#64748b', marginBottom: '20px' }}>
-                            Enter your email to receive a 6-digit reset code.
+                            {t('enterEmailForCode')}
                         </p>
                         <div className="modern-input-group" style={{ marginBottom: '20px' }}>
-                            <label className="modern-input-label">Email Address</label>
+                            <label className="modern-input-label">{t('emailAddress')}</label>
                             <input
                                 type="email"
                                 className="modern-input"
@@ -74,16 +76,16 @@ const ForgotPasswordPage = () => {
                             />
                         </div>
                         <button type="submit" className="modern-btn" disabled={loading}>
-                            {loading ? 'Sending...' : 'Send Reset Code'}
+                            {loading ? t('sendingCode') : t('sendResetCode')}
                         </button>
                     </form>
                 ) : (
                     <form onSubmit={handleResetPassword}>
                         <p style={{ textAlign: 'center', color: '#64748b', marginBottom: '20px' }}>
-                            Enter the 6-digit code sent to <b>{email}</b> and your new password.
+                            {t('enterCodeSentTo', { email })} {t('andNewPassword')}
                         </p>
                         <div className="modern-input-group" style={{ marginBottom: '15px' }}>
-                            <label className="modern-input-label">6-Digit Code</label>
+                            <label className="modern-input-label">{t('sixDigitCode')}</label>
                             <input
                                 type="text"
                                 className="modern-input"
@@ -95,7 +97,7 @@ const ForgotPasswordPage = () => {
                             />
                         </div>
                         <div className="modern-input-group" style={{ marginBottom: '20px' }}>
-                            <label className="modern-input-label">New Password</label>
+                            <label className="modern-input-label">{t('newPasswordLabel')}</label>
                             <input
                                 type="password"
                                 className="modern-input"
@@ -106,16 +108,16 @@ const ForgotPasswordPage = () => {
                             <PasswordStrengthMeter password={password} />
                         </div>
                         <button type="submit" className="modern-btn" disabled={loading}>
-                            {loading ? 'Resetting...' : 'Change Password'}
+                            {loading ? t('resetting') : t('changePasswordAction')}
                         </button>
                         <button type="button" onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: '#6366f1', marginTop: '10px', cursor: 'pointer', width: '100%' }}>
-                            Resend Code
+                            {t('resendCode')}
                         </button>
                     </form>
                 )}
 
                 <div style={{ textAlign: 'center', marginTop: '15px' }}>
-                    <Link to="/" style={{ color: '#6366f1', textDecoration: 'none' }}>Back to Login</Link>
+                    <Link to="/" style={{ color: '#6366f1', textDecoration: 'none' }}>{t('backToLogin')}</Link>
                 </div>
             </div>
         </div>

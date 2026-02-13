@@ -1,6 +1,7 @@
 const express = require('express');
 const Attendance = require('../models/Attendance');
 const Student = require('../models/Student');
+const Teacher = require('../models/Teacher');
 const ParentStudentLink = require('../models/ParentStudentLink');
 const auth = require('../middleware/auth');
 const router = express.Router();
@@ -33,6 +34,18 @@ router.post('/upload', auth, async (req, res) => {
             remarks
         });
 
+        // Notify Parent/Student
+        const { checkAttendanceRisk, sendAttendanceNotification } = require('../utils/attendanceUtils');
+        const { percentage } = await checkAttendanceRisk(studentId, courseCode, courseName);
+
+        // Always notify if absent OR if risk exists
+        if (status === 'absent' || percentage < 75) {
+            sendAttendanceNotification(studentId, courseCode, courseName, status, percentage);
+        } else if (status === 'present') {
+            // Optional: notify on manual present entry
+            sendAttendanceNotification(studentId, courseCode, courseName, status, percentage);
+        }
+
         res.json(attendance);
     } catch (err) {
         console.error(err.message);
@@ -50,10 +63,20 @@ router.get('/all', auth, async (req, res) => {
         }
 
         const records = await Attendance.findAll({
-            include: [{
-                model: Student,
-                attributes: ['name', 'department', 'year']
-            }],
+            include: [
+                {
+                    model: Student,
+                    as: 'student',
+                    attributes: ['name', 'department', 'year'],
+                    required: false
+                },
+                {
+                    model: Teacher,
+                    as: 'teacher',
+                    attributes: ['name', 'department'],
+                    required: false
+                }
+            ],
             order: [['date', 'DESC']]
         });
         res.json(records);
@@ -84,6 +107,33 @@ router.get('/student/:studentId', auth, async (req, res) => {
 
         const attendance = await Attendance.findAll({
             where: { studentId },
+            order: [['date', 'DESC']]
+        });
+
+        res.json(attendance);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// @route   GET api/attendance/teacher/:teacherId
+// @desc    Get attendance for a teacher
+// @access  Private (admin, teacher)
+router.get('/teacher/:teacherId', auth, async (req, res) => {
+    try {
+        const { teacherId } = req.params;
+
+        // Permissions check
+        if (req.user.role === 'teacher' && req.user.teacherId !== teacherId) {
+            return res.status(403).json({ msg: 'Access denied' });
+        }
+        if (req.user.role === 'student' || req.user.role === 'parent') {
+            return res.status(403).json({ msg: 'Access denied' });
+        }
+
+        const attendance = await Attendance.findAll({
+            where: { teacherId },
             order: [['date', 'DESC']]
         });
 

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../utils/api';
+import { useLanguage } from '../context/LanguageContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import {
+    Trophy, Clock, ChevronRight, ChevronLeft, Send,
+    HelpCircle, AlertCircle, CheckCircle2, XCircle, Eye, Bell
+} from 'lucide-react';
+import '../admin-dashboard.css';
 
 const StudentExamPlayer = () => {
     const { id } = useParams();
@@ -24,6 +30,7 @@ const StudentExamPlayer = () => {
 
     // State for Results
     const [examResults, setExamResults] = useState(null);
+    const { t } = useLanguage();
 
     useEffect(() => {
         // PREVIEW MODE for Teachers/Admins
@@ -64,7 +71,7 @@ const StudentExamPlayer = () => {
             };
             fetchInfo();
         }
-    }, [id, examInfo]);
+    }, [id, examInfo, location.state]);
 
     // Timer logic
     useEffect(() => {
@@ -108,7 +115,7 @@ const StudentExamPlayer = () => {
                 return;
             }
 
-            if (data.attempt.status === 'started' && data.attempt.createdAt) {
+            if (data.attempt.status === 'started' && data.attempt.startTime) {
                 // Resume or Sync with Global Time
                 const now = new Date().getTime();
                 let remaining;
@@ -233,7 +240,7 @@ const StudentExamPlayer = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '15px',
-            boxShadow: 'none',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
             border: '1px solid #e2e8f0',
             backgroundColor: 'white'
         };
@@ -277,103 +284,123 @@ const StudentExamPlayer = () => {
         return baseStyle;
     };
 
+
     if (loading && !questions.length) return <LoadingSpinner fullScreen />;
 
     // LOBBY VIEW
     if (gameState === 'lobby') {
         return (
-            <div style={{ maxWidth: '600px', margin: '50px auto', padding: '30px', backgroundColor: 'white', borderRadius: '15px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-                {examInfo ? (
-                    <>
-                        <div style={{ fontSize: '40px', marginBottom: '20px' }}>📝</div>
-                        <h1 style={{ color: '#1e293b', marginBottom: '10px' }}>{examInfo.title}</h1>
-                        <p style={{ color: '#64748b', fontSize: '18px', marginBottom: '30px' }}>
-                            {examInfo.courseName} ({examInfo.courseCode})
-                        </p>
-
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '40px' }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>{examInfo.duration}</div>
-                                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Minutes</div>
+            <div className="admin-dashboard-container fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+                <div className="admin-card" style={{ maxWidth: '600px', width: '100%', padding: '50px', textAlign: 'center' }}>
+                    {examInfo ? (
+                        <>
+                            <div style={{ color: '#6366f1', background: '#e0e7ff', width: '80px', height: '80px', borderRadius: '24px', margin: '0 auto 30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Trophy size={40} />
                             </div>
-                            <div style={{ padding: '0 1px', backgroundColor: '#e2e8f0' }}></div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>Year {examInfo.targetYear}</div>
-                                <div style={{ fontSize: '14px', color: '#94a3b8' }}>Target</div>
-                            </div>
-                        </div>
+                            <h1 className="admin-title" style={{ fontSize: '2rem', marginBottom: '10px' }}>{examInfo.title}</h1>
+                            <p style={{ color: '#64748b', fontSize: '1.1rem', marginBottom: '40px', fontWeight: '600' }}>
+                                {examInfo.courseName} <span style={{ opacity: 0.5 }}>•</span> {examInfo.courseCode}
+                            </p>
 
-                        <form onSubmit={handleStartGame} style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
-                            <div style={{ width: '100%', maxWidth: '300px' }}>
-                                <label style={{ display: 'block', textAlign: 'left', marginBottom: '5px', color: '#475569', fontWeight: '600' }}>Enter Secret Code</label>
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type="text"
-                                        value={entryCode}
-                                        onChange={(e) => setEntryCode(e.target.value)}
-                                        placeholder="e.g. 1234"
-                                        style={{
-                                            width: '100%',
-                                            padding: '15px',
-                                            fontSize: '18px',
-                                            textAlign: 'center',
-                                            letterSpacing: '5px',
-                                            borderRadius: '8px',
-                                            border: '2px solid #e2e8f0',
-                                            outline: 'none',
-                                            fontWeight: 'bold'
-                                        }}
-                                    />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', gap: '20px', marginBottom: '50px', alignItems: 'center' }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#6366f1' }}>{examInfo.duration}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('minutes')}</div>
                                 </div>
+                                <div style={{ height: '40px', background: '#e2e8f0' }}></div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#10b981' }}>{examInfo.targetYear}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('targetYear')}</div>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleStartGame} style={{ display: 'flex', flexDirection: 'column', gap: '25px', alignItems: 'center' }}>
+                                <div style={{ width: '100%', maxWidth: '350px' }}>
+                                    <label style={{ display: 'block', textAlign: 'left', marginBottom: '10px', color: '#475569', fontWeight: '700', fontSize: '0.9rem' }}>
+                                        {t('enterSecretCode') || 'Authentication Code'}
+                                    </label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="text"
+                                            value={entryCode}
+                                            onChange={(e) => setEntryCode(e.target.value)}
+                                            placeholder="••••"
+                                            className="form-input"
+                                            style={{
+                                                width: '100%',
+                                                textAlign: 'center',
+                                                fontSize: '1.5rem',
+                                                letterSpacing: '8px',
+                                                padding: '18px',
+                                            }}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            try {
+                                                const res = await api.requestCode(id);
+                                                alert(res.msg || 'Code sent to your notifications!');
+                                            } catch (err) {
+                                                alert('Failed to send code.');
+                                            }
+                                        }}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#6366f1',
+                                            fontSize: '0.85rem',
+                                            fontWeight: '700',
+                                            cursor: 'pointer',
+                                            marginTop: '15px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            margin: '15px auto 0'
+                                        }}
+                                    >
+                                        <Bell size={14} /> {t('sendCodeToNotifications') || 'Request code via notifications'}
+                                    </button>
+                                </div>
+
+                                {error && (
+                                    <div style={{ padding: '10px 20px', borderRadius: '12px', background: '#fee2e2', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+                                        <AlertCircle size={16} style={{ marginRight: '8px' }} /> {error}
+                                    </div>
+                                )}
+
                                 <button
-                                    type="button"
-                                    onClick={async () => {
-                                        try {
-                                            const res = await api.requestCode(id);
-                                            alert(res.msg || 'Code sent to your dashboard!');
-                                        } catch (err) {
-                                            alert('Failed to send code.');
-                                        }
-                                    }}
+                                    type="submit"
+                                    disabled={!entryCode || loading}
+                                    className="admin-btn"
                                     style={{
-                                        background: 'none',
+                                        width: '100%',
+                                        maxWidth: '350px',
+                                        padding: '20px',
+                                        fontSize: '1.1rem',
+                                        background: entryCode ? 'linear-gradient(45deg, #6366f1, #8b5cf6)' : '#f1f5f9',
+                                        color: entryCode ? 'white' : '#94a3b8',
+                                        opacity: entryCode ? 1 : 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '12px',
                                         border: 'none',
-                                        color: '#3b82f6',
-                                        fontSize: '13px',
-                                        fontWeight: '600',
-                                        cursor: 'pointer',
-                                        marginTop: '10px',
-                                        textDecoration: 'underline'
+                                        boxShadow: entryCode ? '0 10px 25px -5px rgba(99, 102, 241, 0.4)' : 'none',
+                                        cursor: entryCode ? 'pointer' : 'not-allowed'
                                     }}
                                 >
-                                    Send code to my notifications 📢
+                                    {loading ? <Clock className="animate-spin" /> : <><Send size={20} /> {t('startExam') || 'Begin Examination'}</>}
                                 </button>
-                            </div>
-
-                            {error && <p style={{ color: '#ef4444', margin: '0' }}>{error}</p>}
-
-                            <button
-                                type="submit"
-                                disabled={!entryCode}
-                                style={{
-                                    padding: '15px 40px',
-                                    backgroundColor: entryCode ? '#3b82f6' : '#cbd5e1',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    fontSize: '18px',
-                                    fontWeight: 'bold',
-                                    cursor: entryCode ? 'pointer' : 'not-allowed',
-                                    marginTop: '10px'
-                                }}
-                            >
-                                Start Exam 🚀
-                            </button>
-                        </form>
-                    </>
-                ) : (
-                    <div>{error || 'Loading exam details...'}</div>
-                )}
+                            </form>
+                        </>
+                    ) : (
+                        <div style={{ padding: '40px', color: '#94a3b8' }}>
+                            <Clock className="animate-spin" size={40} style={{ marginBottom: '20px' }} />
+                            <p>{error || t('loadingExamDetails') || 'Preparing examination environment...'}</p>
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }
@@ -383,327 +410,278 @@ const StudentExamPlayer = () => {
     const questionId = (gameState === 'review' || gameState === 'preview') ? currentQ.questionId : currentQ.id;
 
     return (
-        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
-            {/* Preview Banner */}
-            {gameState === 'preview' && (
-                <div style={{
-                    backgroundColor: '#fff7ed',
-                    border: '1px solid #fed7aa',
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    marginBottom: '15px',
-                    textAlign: 'center',
-                    color: '#c2410c',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px'
-                }}>
-                    <span>👁️ Teacher/Admin Preview Mode</span>
-                    <button
-                        onClick={() => navigate(-1)}
-                        style={{ padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}
-                    > Exit</button>
-                </div>
-            )}
-
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                backgroundColor: 'white',
-                padding: '15px 25px',
-                borderRadius: '10px',
-                marginBottom: '20px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                position: 'sticky',
-                top: '0',
-                zIndex: '10'
-            }}>
-                <div>
-                    <h3 style={{ margin: 0 }}>
-                        {examInfo?.title}
-                        {gameState === 'review' && <span style={{ color: '#f59e0b', marginLeft: '10px' }}> (Review Mode)</span>}
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
-                        Question {currentIdx + 1} of {questions.length}
-                    </p>
-                </div>
-
-                {gameState === 'playing' ? (
-                    <div style={{
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        color: timeLeft < 60 ? '#ef4444' : '#1e293b',
-                        padding: '5px 15px',
-                        borderRadius: '5px',
-                        backgroundColor: timeLeft < 60 ? '#fee2e2' : '#f1f5f9'
+        <div className="admin-dashboard-container fade-in" style={{ padding: '20px', minHeight: '100vh', background: '#f8fafc' }}>
+            <div style={{ maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
+                {/* Preview Banner */}
+                {gameState === 'preview' && (
+                    <div className="admin-card" style={{
+                        padding: '12px 25px', marginBottom: '20px', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', gap: '15px',
+                        border: '1px solid #f97316', background: '#fff7ed'
                     }}>
-                        ⏱️ {formatTime(timeLeft)}
-                    </div>
-                ) : gameState === 'preview' ? (
-                    <div style={{ fontSize: '14px', color: '#64748b', fontStyle: 'italic' }}>
-                        Read-Only View
-                    </div>
-                ) : (
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Final Result</div>
-                        <div style={{ fontSize: '24px', fontWeight: '800', color: '#3b82f6' }}>
-                            {examResults?.score} <span style={{ fontSize: '14px', color: '#94a3b8' }}>/ {questions.reduce((a, b) => a + (b.marks || 1), 0)}</span>
-                        </div>
+                        <Eye size={20} style={{ color: '#f97316' }} />
+                        <span style={{ fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.9rem', color: '#9a3412' }}>
+                            {t('previewMode') || 'Teacher Preview Mode'}
+                        </span>
+                        <button onClick={() => navigate(-1)} className="admin-btn" style={{ padding: '6px 15px', fontSize: '0.8rem', background: 'white', color: '#f97316', border: '1px solid #f97316' }}>
+                            {t('exit') || 'Exit'}
+                        </button>
                     </div>
                 )}
-            </div>
 
-            {gameState === 'review' && (
-                <div style={{
-                    backgroundColor: '#f8fafc',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    marginBottom: '20px',
-                    border: '1px solid #e2e8f0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '15px'
+                {/* Header Stats Bar */}
+                <div className="admin-card stagger-item" style={{
+                    padding: '20px 30px', marginBottom: '30px', display: 'flex',
+                    justifyContent: 'space-between', alignItems: 'center',
+                    position: 'sticky', top: '20px', zIndex: 100
                 }}>
-                    <div>
-                        <h2 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>
-                            {examResults?.score >= (questions.reduce((a, b) => a + (b.marks || 1), 0) / 2) ? '🎉 Great Job!' : '📚 Keep Studying!'}
-                        </h2>
-                        <p style={{ margin: 0, color: '#64748b' }}>
-                            You answered <strong>{questions.filter(q => q.isCorrect).length}</strong> out of <strong>{questions.length}</strong> questions correctly.
-                        </p>
-                    </div>
-                    <div style={{
-                        padding: '10px 20px',
-                        backgroundColor: examResults?.score >= (questions.reduce((a, b) => a + (b.marks || 1), 0) / 2) ? '#dcfce7' : '#fee2e2',
-                        color: examResults?.score >= (questions.reduce((a, b) => a + (b.marks || 1), 0) / 2) ? '#166534' : '#991b1b',
-                        borderRadius: '10px',
-                        fontWeight: 'bold'
-                    }}>
-                        {Math.round((examResults?.score / (questions.reduce((a, b) => a + (b.marks || 1), 0) || 1)) * 100)}% Passing
-                    </div>
-                </div>
-            )}
-
-            <div style={{
-                backgroundColor: 'white',
-                padding: '40px',
-                borderRadius: '15px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                minHeight: '400px',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
-                <h2 style={{ marginBottom: '30px', lineHeight: '1.5', fontSize: '22px', color: '#1e293b' }}>
-                    <span style={{ color: '#cbd5e1', marginRight: '10px' }}>{currentIdx + 1}.</span>
-                    {currentQ.questionText}
-                </h2>
-
-                <div style={{ display: 'grid', gap: '15px' }}>
-                    {currentQ.options.map((option, idx) => (
-                        <div
-                            key={idx}
-                            onClick={() => handleAnswerSelect(option)}
-                            style={getOptionStyle(option, questionId || currentQ.id)}
-                        >
-                            {/* Option Indicator Icon */}
-                            {(gameState === 'review' || gameState === 'preview') && (
-                                <div style={{ marginRight: '10px' }}>
-                                    {(questionId || currentQ.id) && currentQ.correctAnswer === option && <span>✅</span>}
-                                    {(questionId || currentQ.id) && answers[questionId || currentQ.id] === option && currentQ.correctAnswer !== option && <span>❌</span>}
-                                </div>
-                            )}
-                            <span style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '50%',
-                                border: '1px solid #cbd5e1',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '14px',
-                                fontWeight: 'bold',
-                                backgroundColor: gameState === 'playing' ? (answers[questionId || currentQ.id] === option ? '#3b82f6' : 'white') : 'transparent',
-                                color: gameState === 'playing' ? (answers[questionId || currentQ.id] === option ? 'white' : '#64748b') : 'inherit',
-                                transition: 'all 0.2s'
-                            }}>
-                                {String.fromCharCode(65 + idx)}
+                    <div style={{ flex: 1 }}>
+                        <h3 className="admin-title" style={{ margin: 0, fontSize: '1.4rem', textAlign: 'left' }}>
+                            {examInfo?.title}
+                            {gameState === 'review' && <span style={{ color: '#8b5cf6', marginLeft: '12px', fontSize: '0.9rem', opacity: 0.8 }}>({t('reviewMode') || 'Review'})</span>}
+                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '5px' }}>
+                            <div style={{ padding: '2px 10px', fontSize: '0.75rem', background: '#f1f5f9', borderRadius: '4px', color: '#64748b', fontWeight: 'bold' }}>
+                                {t('question')} {currentIdx + 1} / {questions.length}
+                            </div>
+                            <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '600' }}>
+                                {examInfo?.courseCode}
                             </span>
-                            {option}
                         </div>
-                    ))}
-                </div>
-
-                {/* AI Explanation Section */}
-                {(gameState === 'review' || gameState === 'preview') && currentQ.explanation && (
-                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#fff7ed', borderRadius: '8px', borderLeft: '4px solid #f97316' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '18px' }}>🤖</span>
-                            <strong style={{ color: '#9a3412' }}>AI Tutor Explanation:</strong>
-                        </div>
-                        <p style={{ margin: 0, color: '#431407', fontSize: '15px', lineHeight: '1.5' }}>
-                            {currentQ.explanation}
-                        </p>
                     </div>
-                )}
-
-                <div style={{
-                    marginTop: '25px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderTop: '1px solid #f1f5f9',
-                    paddingTop: '20px'
-                }}>
-                    <button
-                        onClick={handleBack}
-                        disabled={currentIdx === 0}
-                        style={{
-                            padding: '12px 30px',
-                            backgroundColor: 'white',
-                            color: currentIdx === 0 ? '#cbd5e1' : '#64748b',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '8px',
-                            cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
-                            fontWeight: '600',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px'
-                        }}
-                    >
-                        ← Back
-                    </button>
 
                     {gameState === 'playing' ? (
-                        currentIdx === questions.length - 1 ? (
-                            <button
-                                onClick={handleSubmit}
-                                style={{
-                                    padding: '12px 40px',
-                                    backgroundColor: '#10b981',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    fontSize: '16px',
-                                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
-                                }}
-                            >
-                                Final Submit 🎯
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleNext}
-                                style={{
-                                    padding: '12px 30px',
-                                    backgroundColor: '#3b82f6',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    fontSize: '16px',
-                                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
-                                }}
-                            >
-                                Next →
-                            </button>
-                        )
+                        <div style={{
+                            padding: '10px 20px', borderRadius: '15px',
+                            background: timeLeft < 60 ? '#fee2e2' : '#e0e7ff',
+                            color: timeLeft < 60 ? '#ef4444' : '#6366f1',
+                            display: 'flex', alignItems: 'center', gap: '10px', minWidth: '120px', justifyContent: 'center',
+                            fontWeight: 'bold'
+                        }}>
+                            <Clock size={20} className={timeLeft < 60 ? 'animate-pulse' : ''} />
+                            <span style={{ fontSize: '1.2rem', fontWeight: '900', fontFamily: 'monospace' }}>{formatTime(timeLeft)}</span>
+                        </div>
+                    ) : gameState === 'preview' ? (
+                        <div style={{ padding: '8px 15px', fontWeight: '800', background: '#f1f5f9', color: '#64748b', borderRadius: '8px' }}>
+                            {t('readOnly') || 'READ ONLY'}
+                        </div>
                     ) : (
-                        <div style={{ display: 'flex', gap: '15px' }}>
-                            {currentIdx < questions.length - 1 ? (
-                                <button
-                                    onClick={handleNext}
-                                    style={{
-                                        padding: '12px 30px',
-                                        backgroundColor: '#3b82f6',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: '600',
-                                    }}
-                                >
-                                    Next Question →
-                                </button>
-                            ) : null}
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '1px' }}>{t('finalScore')}</div>
+                            <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#6366f1' }}>
+                                {examResults?.score} <span style={{ fontSize: '1rem', color: '#94a3b8', fontWeight: '600' }}>/ {questions.reduce((a, b) => a + (b.marks || 1), 0)}</span>
+                            </div>
                         </div>
                     )}
                 </div>
-            </div>
-            {/* Question indicators with review colors if in review mode */}
-            <div style={{
-                marginTop: '30px',
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '10px',
-                justifyContent: 'center'
-            }}>
-                {questions.map((q, idx) => {
-                    let bgColor = 'white';
-                    let textColor = '#64748b';
 
-                    if (gameState === 'playing') {
-                        if (currentIdx === idx) {
-                            bgColor = '#3b82f6';
-                            textColor = 'white';
-                        } else if (answers[q.id]) {
-                            bgColor = '#10b981';
-                            textColor = 'white';
-                        }
-                    } else if (gameState === 'review') {
-                        if (currentIdx === idx) {
-                            bgColor = '#3b82f6';
-                            textColor = 'white';
-                        } else if (q.isCorrect) {
-                            bgColor = '#10b981'; // Green for correct
-                            textColor = 'white';
-                        } else {
-                            bgColor = '#ef4444'; // Red for incorrect
-                            textColor = 'white';
-                        }
-                    } else if (gameState === 'preview') {
-                        if (currentIdx === idx) {
-                            bgColor = '#3b82f6';
-                            textColor = 'white';
-                        } else {
-                            // Default preview style
-                            bgColor = 'white';
-                        }
-                    }
+                {/* Progress Bar */}
+                <div style={{ marginBottom: '30px', padding: '0 10px' }}>
+                    <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{
+                            width: `${((currentIdx + 1) / questions.length) * 100}%`,
+                            height: '100%',
+                            background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                            transition: 'width 0.3s ease'
+                        }}></div>
+                    </div>
+                </div>
 
-                    return (
-                        <div
-                            key={idx}
-                            onClick={() => setCurrentIdx(idx)}
+                {/* Review Summary */}
+                {gameState === 'review' && (
+                    <div className="admin-card stagger-item" style={{
+                        padding: '25px', marginBottom: '30px', borderLeft: '5px solid #6366f1',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                    }}>
+                        <div>
+                            <h4 style={{ margin: '0 0 5px 0', fontSize: '1.2rem', fontWeight: '800', color: '#1e293b' }}>
+                                {examResults?.score >= (questions.reduce((a, b) => a + (b.marks || 1), 0) / 2) ? t('greatJob') || '🎉 Great Job!' : t('keepStudying') || '📚 Keep Studying!'}
+                            </h4>
+                            <p style={{ margin: 0, color: '#64748b', fontWeight: '600' }}>
+                                {t('answeredCorrectly', { count: questions.filter(q => q.isCorrect).length, total: questions.length }) || `You answered ${questions.filter(q => q.isCorrect).length} out of ${questions.length} correctly.`}
+                            </p>
+                        </div>
+                        <div style={{
+                            padding: '12px 25px', borderRadius: '15px',
+                            background: '#dcfce7', color: '#10b981',
+                            fontSize: '1.2rem', fontWeight: '900'
+                        }}>
+                            {Math.round((examResults?.score / (questions.reduce((a, b) => a + (b.marks || 1), 0) || 1)) * 100)}%
+                        </div>
+                    </div>
+                )}
+
+                {/* Question Card */}
+                <div className="admin-card stagger-item" style={{ padding: '50px', minHeight: '450px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ marginBottom: '40px' }}>
+                        <span style={{
+                            fontSize: '0.8rem', fontWeight: '900', color: '#6366f1',
+                            textTransform: 'uppercase', letterSpacing: '2px', display: 'block', marginBottom: '10px'
+                        }}>{t('questionNumber', { n: currentIdx + 1 }) || `Question ${currentIdx + 1}`}</span>
+                        <h2 style={{ fontSize: '1.8rem', lineHeight: '1.4', fontWeight: '800', color: '#1e293b' }}>
+                            {currentQ.questionText}
+                        </h2>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '15px', flexGrow: 1 }}>
+                        {currentQ.options.map((option, idx) => {
+                            const qId = questionId || currentQ.id;
+                            const isSelected = (gameState === 'playing' ? answers[qId] === option : currentQ.selectedAnswer === option);
+                            const isCorrect = (gameState === 'review' || gameState === 'preview') && currentQ.correctAnswer === option;
+                            const isWrongSelection = (gameState === 'review' || gameState === 'preview') && isSelected && !isCorrect;
+
+                            return (
+                                <div
+                                    key={idx}
+                                    onClick={() => handleAnswerSelect(option)}
+                                    style={{
+                                        padding: '20px 30px',
+                                        borderRadius: '20px',
+                                        background: isCorrect ? '#dcfce7' : (isWrongSelection ? '#fee2e2' : (isSelected ? '#eff6ff' : 'white')),
+                                        border: `1px solid ${isCorrect ? '#10b981' : (isWrongSelection ? '#ef4444' : (isSelected ? '#3b82f6' : '#e2e8f0'))}`,
+                                        cursor: gameState === 'playing' ? 'pointer' : 'default',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '20px',
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        position: 'relative',
+                                        overflow: 'hidden',
+                                        boxShadow: isSelected ? '0 4px 12px rgba(59, 130, 246, 0.1)' : '0 2px 4px rgba(0,0,0,0.02)'
+                                    }}
+                                >
+                                    <div style={{
+                                        width: '40px', height: '40px', borderRadius: '12px',
+                                        background: isSelected ? '#3b82f6' : '#f1f5f9',
+                                        color: isSelected ? 'white' : '#64748b',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '1rem', fontWeight: '900', transition: 'all 0.3s'
+                                    }}>
+                                        {String.fromCharCode(65 + idx)}
+                                    </div>
+                                    <span style={{ fontSize: '1.1rem', fontWeight: '600', color: isSelected || isCorrect ? '#1e293b' : '#475569' }}>
+                                        {option}
+                                    </span>
+
+                                    <div style={{ marginLeft: 'auto' }}>
+                                        {isCorrect && <CheckCircle2 size={24} color="#10b981" />}
+                                        {isWrongSelection && <XCircle size={24} color="#ef4444" />}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* AI Explanation Section */}
+                    {(gameState === 'review' || gameState === 'preview') && currentQ.explanation && (
+                        <div className="admin-card" style={{
+                            marginTop: '40px', padding: '25px', background: '#e0e7ff',
+                            borderLeft: '4px solid #6366f1', boxShadow: 'none'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
+                                <HelpCircle size={22} style={{ color: '#6366f1' }} />
+                                <strong style={{ color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.9rem' }}>
+                                    {t('explanation') || 'Tutor Explanation'}
+                                </strong>
+                            </div>
+                            <p style={{ margin: 0, color: '#312e81', fontSize: '1rem', lineHeight: '1.6', fontWeight: '500' }}>
+                                {currentQ.explanation}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Navigation Buttons */}
+                    <div style={{
+                        marginTop: '50px', paddingTop: '30px', borderTop: '1px solid #e2e8f0',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    }}>
+                        <button
+                            onClick={handleBack}
+                            disabled={currentIdx === 0}
+                            className="admin-btn"
                             style={{
-                                width: '35px',
-                                height: '35px',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '14px',
-                                cursor: 'pointer',
-                                backgroundColor: bgColor,
-                                color: textColor,
-                                fontWeight: currentIdx === idx ? 'bold' : 'normal',
-                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                border: currentIdx === idx ? 'none' : '1px solid #e2e8f0'
+                                background: 'white', color: '#64748b', border: '1px solid #e2e8f0',
+                                opacity: currentIdx === 0 ? 0.3 : 1, display: 'flex', alignItems: 'center', gap: '10px', boxShadow: 'none'
                             }}
                         >
-                            {idx + 1}
+                            <ChevronLeft size={20} /> {t('back')}
+                        </button>
+
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                            {gameState === 'playing' ? (
+                                currentIdx === questions.length - 1 ? (
+                                    <button onClick={handleSubmit} className="admin-btn" style={{ background: 'linear-gradient(45deg, #10b981, #059669)', padding: '15px 40px', color: 'white', border: 'none' }}>
+                                        {t('submitExam') || 'Complete Exam'} <Trophy size={20} style={{ marginLeft: '10px' }} />
+                                    </button>
+                                ) : (
+                                    <button onClick={handleNext} className="admin-btn" style={{ padding: '15px 40px', background: 'linear-gradient(45deg, #6366f1, #8b5cf6)', color: 'white', border: 'none' }}>
+                                        {t('next')} <ChevronRight size={20} />
+                                    </button>
+                                )
+                            ) : (
+                                currentIdx < questions.length - 1 && (
+                                    <button onClick={handleNext} className="admin-btn" style={{ padding: '15px 40px', background: '#6366f1', color: 'white', border: 'none' }}>
+                                        {t('nextQuestion') || 'Next Question'} <ChevronRight size={20} />
+                                    </button>
+                                )
+                            )}
                         </div>
-                    );
-                })}
+                    </div>
+                </div>
+
+                {/* Question Map */}
+                <div className="admin-card stagger-item" style={{
+                    marginTop: '30px', padding: '20px', display: 'flex',
+                    flexWrap: 'wrap', gap: '12px', justifyContent: 'center'
+                }}>
+                    {questions.map((q, idx) => {
+                        let statusColor = '#f1f5f9';
+                        let borderColor = '#e2e8f0';
+                        let textCol = '#64748b';
+                        let isActive = currentIdx === idx;
+
+                        if (gameState === 'playing') {
+                            if (answers[q.id]) {
+                                statusColor = '#e0e7ff';
+                                borderColor = '#6366f1';
+                                textCol = '#6366f1';
+                            }
+                        } else if (gameState === 'review') {
+                            if (q.isCorrect) {
+                                statusColor = '#dcfce7';
+                                borderColor = '#10b981';
+                                textCol = '#166534';
+                            } else {
+                                statusColor = '#fee2e2';
+                                borderColor = '#ef4444';
+                                textCol = '#991b1b';
+                            }
+                        }
+
+                        if (isActive) {
+                            borderColor = '#f97316';
+                            statusColor = '#ffedd5';
+                            textCol = '#c2410c';
+                        }
+
+                        return (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentIdx(idx)}
+                                style={{
+                                    width: '45px', height: '45px', borderRadius: '12px',
+                                    background: statusColor, border: `2px solid ${borderColor}`,
+                                    color: textCol, fontWeight: '900', cursor: 'pointer',
+                                    transition: 'all 0.3s',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                                    boxShadow: isActive ? '0 4px 10px rgba(249, 115, 22, 0.3)' : 'none'
+                                }}
+                            >
+                                {idx + 1}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

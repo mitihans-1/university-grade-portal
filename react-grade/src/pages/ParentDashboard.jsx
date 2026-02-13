@@ -3,7 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../utils/api';
 import { Link, useNavigate } from 'react-router-dom';
-import LanguageSelector from '../components/common/LanguageSelector';
+import {
+  Users, BookOpen, Bell, TrendingUp, Calendar, MessageSquare,
+  FileText, Plus, Award, ShieldAlert, Clock, Layout, Zap, Star
+} from 'lucide-react';
+import '../premium-pages.css';
 
 const ParentDashboard = () => {
   const { user } = useAuth();
@@ -267,72 +271,76 @@ const ParentDashboard = () => {
 
   return (
     <div className="dashboard-container">
+      <div className="dashboard-background"></div>
+
+      {/* Premium Header */}
+      <div className="responsive-header stagger-item" style={{ marginBottom: '40px' }}>
+        <div>
+          <h1 className="gradient-text" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>
+            {t('parentDashboard') || 'Parent Observer Portal'}
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>
+            Monitoring academic excellence for your family
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <button onClick={() => setShowAddChildModal(true)} className="premium-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Plus size={18} /> Link Child
+          </button>
+        </div>
+      </div>
       {/* Main Content */}
       <div className="fade-in">
         <div>
           {/* Family Academic Overview - Only show if multiple children */}
           {familyOverview.length > 1 && (
-            <div className="stagger-item" style={{ marginBottom: '25px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1a531b', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span>🏠</span> Family Academic Overview
+            <div className="stagger-item" style={{ marginBottom: '40px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Users className="icon-glow" style={{ color: 'var(--primary)' }} /> Family Overview
                 </h2>
-                <span style={{ fontSize: '0.9rem', color: '#666', backgroundColor: '#e8f5e9', padding: '4px 12px', borderRadius: '15px' }}>
-                  {familyOverview.length} Children Linked
-                </span>
+                <div className="status-badge" style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                  {familyOverview.length} Students
+                </div>
               </div>
-              <div className="responsive-grid" style={{
-                gap: '20px'
-              }}>
+              <div className="responsive-grid">
                 {familyOverview.map(child => (
                   <div
                     key={child.studentId}
                     onClick={() => setSelectedStudentId(child.studentId)}
+                    className="premium-card"
                     style={{
-                      backgroundColor: 'white',
-                      borderRadius: '12px',
-                      padding: '15px',
-                      boxShadow: selectedStudentId === child.studentId ? '0 4px 15px rgba(46, 125, 50, 0.2)' : '0 2px 8px rgba(0,0,0,0.05)',
-                      border: selectedStudentId === child.studentId ? '2px solid #2e7d32' : '2px solid transparent',
+                      padding: '24px',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      position: 'relative',
-                      overflow: 'hidden'
+                      border: selectedStudentId === child.studentId ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
+                      background: selectedStudentId === child.studentId ? 'rgba(99, 102, 241, 0.05)' : 'var(--glass-bg)',
+                      position: 'relative'
                     }}
                   >
                     {selectedStudentId === child.studentId && (
                       <div style={{
                         position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        backgroundColor: '#2e7d32',
-                        color: 'white',
-                        padding: '2px 8px',
-                        borderRadius: '10px',
-                        fontSize: '10px',
-                        fontWeight: 'bold'
-                      }}>SELECTED</div>
-                    )}
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '10px',
-                        backgroundColor: '#f1f8e9',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '20px'
+                        top: '15px',
+                        right: '15px',
+                        color: 'var(--primary)',
                       }}>
-                        {child.gpa >= 3.5 ? '🌟' : child.gpa >= 3.0 ? '📚' : '📖'}
+                        <Star size={18} fill="currentColor" />
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                      <div className="stat-icon-wrapper" style={{
+                        background: child.gpa >= 3.5 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                        color: child.gpa >= 3.5 ? '#10b981' : 'var(--primary)'
+                      }}>
+                        <Star size={24} />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#333' }}>{child.name}</h3>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>{child.department}</p>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>{child.name}</h3>
+                        <p style={{ margin: 0, fontSize: '0.813rem', color: 'var(--text-muted)', fontWeight: '600' }}>{child.department}</p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#666', fontWeight: 'bold' }}>GPA</div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: '800', color: child.gpa >= 3.0 ? '#2e7d32' : '#f44336' }}>
+                        <div className="stat-label" style={{ fontSize: '0.7rem' }}>GPA</div>
+                        <div className="stat-value" style={{ fontSize: '1.5rem', color: child.gpa >= 3.0 ? '#10b981' : '#ef4444' }}>
                           {child.gpa ? child.gpa.toFixed(2) : '0.00'}
                         </div>
                       </div>
@@ -344,236 +352,175 @@ const ParentDashboard = () => {
           )}
 
           {/* Student Info Card */}
-          <div className="stagger-item" style={{
-            backgroundColor: 'white',
-            borderRadius: '10px',
-            padding: '25px',
-            marginBottom: '25px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            background: 'linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%)',
-            borderLeft: '5px solid #2e7d32'
+          <div className="stagger-item premium-card" style={{
+            padding: '35px',
+            marginBottom: '40px',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8))',
+            border: '1px solid rgba(255, 255, 255, 0.5)'
           }}>
-            <div className="responsive-header" style={{ alignItems: 'flex-start', marginBottom: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-                  <div style={{
-                    width: '60px',
-                    height: '60px',
-                    backgroundColor: '#2e7d32',
+            <div className="responsive-header" style={{ alignItems: 'flex-start', marginBottom: '30px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '25px' }}>
+                  <div className="stat-icon-wrapper" style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '24px',
+                    background: 'var(--primary)',
                     color: 'white',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '30px'
+                    fontSize: '2rem'
                   }}>
-                    {loading ? '⏳' : '👨‍🎓'}
+                    {loading ? <Clock className="animate-spin" /> : <GraduationCap size={40} />}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                      <h1 style={{ margin: '0 0 5px 0', color: '#333' }}>
-                        {loading ? t('loading') : studentInfo.name}
-                      </h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+                      <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: '900', color: '#0f172a' }}>
+                        {loading ? 'Fetching...' : studentInfo.name}
+                      </h2>
                       {linkedStudents.length > 1 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <span style={{ fontSize: '10px', color: '#2e7d32', fontWeight: 'bold', textTransform: 'uppercase' }}>Switch Child</span>
+                        <div style={{ position: 'relative' }}>
                           <select
                             value={selectedStudentId}
                             onChange={(e) => setSelectedStudentId(e.target.value)}
+                            className="premium-btn"
                             style={{
-                              padding: '5px 12px',
-                              borderRadius: '20px',
-                              border: '2px solid #2e7d32',
+                              padding: '6px 35px 6px 15px',
+                              borderRadius: '14px',
                               fontSize: '0.85rem',
-                              backgroundColor: 'white',
-                              color: '#2e7d32',
-                              fontWeight: 'bold',
-                              cursor: 'pointer',
-                              outline: 'none',
-                              boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                              background: 'rgba(99, 102, 241, 0.1)',
+                              color: 'var(--primary)',
+                              border: '1px solid rgba(99, 102, 241, 0.2)',
+                              appearance: 'none',
+                              fontWeight: '800'
                             }}
                           >
                             {linkedStudents.map(s => (
-                              <option key={s.studentId} value={s.studentId}>
-                                {s.name} ({s.studentId})
-                              </option>
+                              <option key={s.studentId} value={s.studentId}>{s.name}</option>
                             ))}
                           </select>
+                          <Layout size={14} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--primary)' }} />
                         </div>
                       )}
                     </div>
-                    <p style={{ margin: 0, color: '#666' }}>
-                      {user?.relationship || t('parent')} • ID: {loading ? t('loading') : studentInfo.id}
+                    <p style={{ margin: '5px 0 0', color: 'var(--text-muted)', fontWeight: '600', fontSize: '1rem' }}>
+                      {user?.relationship || t('parent')} • Student ID: {loading ? '...' : studentInfo.id}
                     </p>
                   </div>
                 </div>
 
-                <div className="responsive-grid" style={{
-                  gap: '15px'
-                }}>
-                  <div className="card" style={{ padding: '10px 15px', border: 'none', background: 'rgba(255,255,255,0.5)' }}>
-                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '3px' }}>{t('department')}</div>
-                    <div style={{ fontWeight: 'bold', color: '#333' }}>{loading ? t('loading') : studentInfo.department}</div>
+                <div className="responsive-grid" style={{ gap: '20px' }}>
+                  <div className="stat-card" style={{ padding: '20px', background: 'rgba(255,255,255,0.4)' }}>
+                    <span className="stat-label">{t('department')}</span>
+                    <span style={{ fontWeight: '800', color: '#1e293b' }}>{loading ? '...' : studentInfo.department}</span>
                   </div>
-                  <div className="card" style={{ padding: '10px 15px', border: 'none', background: 'rgba(255,255,255,0.5)' }}>
-                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '3px' }}>{t('year')}</div>
-                    <div style={{ fontWeight: 'bold', color: '#333' }}>{loading ? t('loading') : studentInfo.year}</div>
+                  <div className="stat-card" style={{ padding: '20px', background: 'rgba(255,255,255,0.4)' }}>
+                    <span className="stat-label">{t('year')}</span>
+                    <span style={{ fontWeight: '800', color: '#1e293b' }}>{loading ? '...' : studentInfo.year}</span>
                   </div>
-                  <div className="card" style={{ padding: '10px 15px', border: 'none', background: 'rgba(255,255,255,0.5)' }}>
-                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '3px' }}>{t('currentGPA')}</div>
-                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#2e7d32' }}>
-                      {loading ? t('loading') : studentInfo.gpa}
+                  <div className="stat-card" style={{ padding: '20px', background: 'rgba(255,255,255,0.4)' }}>
+                    <span className="stat-label">Performance</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                      <span className="stat-value" style={{ color: 'var(--primary)' }}>{loading ? '0.00' : studentInfo.gpa}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '800', opacity: 0.5 }}>GPA</span>
                     </div>
                   </div>
-                  <div className="card" style={{ padding: '10px 15px', border: 'none', background: 'rgba(255,255,255,0.5)' }}>
-                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '3px' }}>{t('attendance')}</div>
-                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: attendanceSummary?.percentage < 75 ? '#d32f2f' : '#2e7d32' }}>
-                      {loading ? t('loading') : (attendanceSummary ? `${attendanceSummary.percentage}%` : 'N/A')}
+                  <div className="stat-card" style={{ padding: '20px', background: 'rgba(255,255,255,0.4)' }}>
+                    <span className="stat-label">Attendance</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                      <span className="stat-value" style={{ color: attendanceSummary?.percentage < 75 ? '#ef4444' : '#10b981' }}>
+                        {loading ? '0' : (attendanceSummary ? attendanceSummary.percentage : '0')}%
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <button
-                  onClick={() => navigate('/messages')}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#1976d2',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    fontSize: '16px'
-                  }}
-                >
-                  <span>💬</span>
-                  {t('contactAdvisor')}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '220px' }}>
+                <button onClick={() => navigate('/messages')} className="premium-btn" style={{ width: '100%', background: 'var(--primary)', border: 'none', color: 'white', padding: '14px' }}>
+                  <MessageSquare size={18} style={{ marginRight: '10px' }} /> {t('contactAdvisor')}
                 </button>
-                <button
-                  onClick={handleDownloadReport}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: 'white',
-                    color: '#1976d2',
-                    border: '2px solid #1976d2',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    fontSize: '16px'
-                  }}
-                >
-                  <span>📄</span>
-                  {t('downloadReport')}
-                </button>
-                <button
-                  onClick={() => setShowAddChildModal(true)}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#059669',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    fontSize: '16px',
-                    marginTop: '5px'
-                  }}
-                >
-                  <span>➕</span>
-                  Link Another Child
+                <button onClick={handleDownloadReport} className="premium-btn" style={{ width: '100%', padding: '14px' }}>
+                  <FileText size={18} style={{ marginRight: '10px' }} /> {t('downloadReport')}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Academic Warning Banner for Parent */}
+          {/* Academic Warning Banner */}
           {(parseFloat(studentInfo.gpa) < 2.5 && grades.some(g => ['F', 'D'].includes(g.grade))) && (
-            <div className="stagger-item" style={{
-              backgroundColor: '#fff4e5',
-              color: '#663c00',
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '30px',
-              borderLeft: '6px solid #ffa117',
+            <div className="stagger-item premium-card" style={{
+              background: 'rgba(239, 68, 68, 0.05)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              marginBottom: '35px',
+              padding: '24px',
               display: 'flex',
               alignItems: 'center',
               gap: '20px',
-              boxShadow: '0 4px 12px rgba(255, 161, 23, 0.15)'
+              borderRadius: '24px'
             }}>
-              <div style={{ fontSize: '32px' }}>⚠️</div>
+              <div className="icon-glow" style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', width: '50px', height: '50px', borderRadius: '15px' }}>
+                <ShieldAlert size={28} />
+              </div>
               <div>
-                <h4 style={{ margin: '0 0 5px 0', color: '#663c00' }}>{t('academicAdvisory')}</h4>
-                <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', fontWeight: '900', color: '#ef4444' }}>{t('academicAdvisory')}</h4>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#7f1d1d', fontWeight: '600' }}>
                   {t('lowGpaWarning').replace('{gpa}', studentInfo.gpa)}
                 </p>
               </div>
             </div>
           )}
 
-          {/* New Widgets Section */}
-          <div className="responsive-grid" style={{
-            marginBottom: '30px'
-          }}>
+          {/* Widgets Grid */}
+          <div className="responsive-grid" style={{ marginBottom: '40px' }}>
             {/* Child's Schedule Widget */}
-            <div className="stagger-item" style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '25px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-              borderBottom: '5px solid #a855f7'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>⏰</span> {t('classSchedule')}
+            <div className="stagger-item premium-card" style={{ padding: '25px', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Clock className="icon-glow" style={{ color: 'var(--secondary)' }} /> {t('classSchedule')}
                 </h3>
-                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>{t('today')}</span>
+                <div className="status-badge" style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)', color: 'var(--secondary)', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
+                  {t('today')}
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {childSchedule.filter(s => s.dayOfWeek === new Date().toLocaleDateString('en-US', { weekday: 'long' })).length > 0 ? (
                   childSchedule.filter(s => s.dayOfWeek === new Date().toLocaleDateString('en-US', { weekday: 'long' })).slice(0, 3).map(cls => (
-                    <div key={cls.id} style={{ padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', borderLeft: '3px solid #a855f7' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{cls.courseName}</div>
-                      <div style={{ fontSize: '12px', color: '#64748b' }}>{cls.startTime} - {cls.endTime} • Room {cls.room}</div>
+                    <div key={cls.id} style={{ padding: '15px', background: 'rgba(168, 85, 247, 0.03)', borderRadius: '18px', borderLeft: '4px solid var(--secondary)' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1e293b' }}>{cls.courseName}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                        <Clock size={12} /> {cls.startTime} - {cls.endTime} • Room {cls.room}
+                      </div>
                     </div>
                   ))
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '15px', color: '#94a3b8', fontStyle: 'italic', fontSize: '14px' }}>
-                    {t('noClasses')}
+                  <div style={{ textAlign: 'center', padding: '30px', opacity: 0.5 }}>
+                    <Calendar size={32} style={{ marginBottom: '10px' }} />
+                    <p style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>{t('noClassesToday') || 'No classes today'}</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Upcoming Exams Widget */}
-            <div className="stagger-item" style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '25px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-              borderBottom: '5px solid #6366f1'
-            }}>
-              <h3 style={{ margin: '0 0 15px 0', fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>📝</span> {t('onlineExams')}
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="stagger-item premium-card" style={{ padding: '25px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: '0', fontSize: '1.2rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Award className="icon-glow" style={{ color: 'var(--primary)' }} /> {t('onlineExams')}
+                </h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {childExams.length > 0 ? (
                   childExams.slice(0, 2).map(exam => (
-                    <div key={exam.id} style={{ padding: '10px', backgroundColor: '#f0f5ff', borderRadius: '8px', borderLeft: '3px solid #6366f1' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{exam.title}</div>
-                      <div style={{ fontSize: '12px', color: '#64748b' }}>{exam.duration} {t('durationMinutes')} • {exam.courseCode}</div>
+                    <div key={exam.id} style={{ padding: '15px', background: 'rgba(99, 102, 241, 0.03)', borderRadius: '18px', borderLeft: '4px solid var(--primary)' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1e293b' }}>{exam.title}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                        <Zap size={12} /> {exam.duration}m • {exam.courseCode}
+                      </div>
                     </div>
                   ))
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '15px', color: '#94a3b8', fontStyle: 'italic', fontSize: '14px' }}>
-                    No upcoming exams
+                  <div style={{ textAlign: 'center', padding: '30px', opacity: 0.5 }}>
+                    <Zap size={32} style={{ marginBottom: '10px' }} />
+                    <p style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>No upcoming exams</p>
                   </div>
                 )}
               </div>
@@ -582,362 +529,331 @@ const ParentDashboard = () => {
 
 
 
-          <div className="responsive-grid">
+          <div className="grid-container" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)' }}>
             {/* Grades Table */}
-            <div className="stagger-item">
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '10px',
-                padding: '25px',
-                height: '100%',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h2 style={{ margin: 0, color: '#333' }}>{t('academicPerformance')}</h2>
-                  <div style={{
-                    backgroundColor: '#e3f2fd',
-                    color: '#1976d2',
-                    padding: '5px 15px',
-                    borderRadius: '15px',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                  }}>
-                    {t('autoUpdated')}
-                  </div>
-                </div>
-
-                {loading ? (
-                  <div style={{ textAlign: 'center', padding: '40px' }}>
-                    <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
-                    <p>{t('loading')}...</p>
-                  </div>
-                ) : grades.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px' }}>
-                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>📚</div>
-                    <h3 style={{ color: '#666' }}>{t('noGradesAvailable')}</h3>
-                    <p style={{ color: '#999' }}>{t('gradesWillAppearHere')}</p>
-                  </div>
-                ) : (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#f5f5f5' }}>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>{t('courseName')}</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Lecturer</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>{t('grade')}</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>{t('score')}</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>{t('status')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {grades.map((item, index) => (
-                          <tr key={item.id || index} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '12px', fontWeight: 'bold' }}>{item.courseName || 'N/A'}</td>
-                            <td style={{ padding: '12px', fontSize: '13px', color: '#666' }}>
-                              {item.Teacher ? item.Teacher.name : 'University Admin'}
-                            </td>
-                            <td style={{ padding: '12px' }}>
-                              <span style={{
-                                backgroundColor: getGradeColor(item.grade),
-                                color: 'white',
-                                padding: '6px 12px',
-                                borderRadius: '20px',
-                                fontWeight: 'bold',
-                                display: 'inline-block',
-                                minWidth: '45px',
-                                textAlign: 'center'
-                              }}>
-                                {item.grade || 'N/A'}
-                              </span>
-                            </td>
-                            <td style={{ padding: '12px', fontWeight: 'bold' }}>{item.score || 0}%</td>
-                            <td style={{ padding: '12px' }}>
-                              <span style={{
-                                color: getStatusColor(getGradeStatus(item.grade)),
-                                fontWeight: 'bold'
-                              }}>
-                                {getGradeStatus(item.grade)}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+            <div className="stagger-item premium-card" style={{ padding: '30px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900' }}>{t('academicPerformance')}</h2>
+                <div className="status-badge status-published">{t('autoUpdated')}</div>
               </div>
+
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '60px' }}>
+                  <Clock className="animate-spin" size={40} style={{ margin: '0 auto 15px', opacity: 0.5 }} />
+                  <p>{t('loading')}...</p>
+                </div>
+              ) : grades.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px', opacity: 0.6 }}>
+                  <BookOpen size={60} style={{ margin: '0 auto 20px' }} />
+                  <h3 style={{ margin: '0 0 10px 0' }}>{t('noGradesAvailable')}</h3>
+                  <p style={{ margin: 0 }}>{t('gradesWillAppearHere')}</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="premium-table">
+                    <thead>
+                      <tr>
+                        <th>{t('courseName')}</th>
+                        <th>Lecturer</th>
+                        <th style={{ textAlign: 'center' }}>{t('grade')}</th>
+                        <th>{t('score')}</th>
+                        <th>{t('status')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {grades.map((item, index) => (
+                        <tr key={item.id || index}>
+                          <td style={{ fontWeight: '800' }}>{item.courseName || 'N/A'}</td>
+                          <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                            {item.Teacher ? item.Teacher.name : 'University Faculty'}
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '4px 12px',
+                              borderRadius: '50px',
+                              backgroundColor: 'rgba(255,255,255,0.1)',
+                              border: `1px solid ${getGradeColor(item.grade)}`,
+                              color: getGradeColor(item.grade),
+                              fontWeight: '900',
+                              minWidth: '45px',
+                              fontSize: '0.9rem'
+                            }}>
+                              {item.grade || 'N/A'}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: '800' }}>{item.score || 0}%</td>
+                          <td>
+                            <div className="status-badge" style={{
+                              background: getGradeStatus(item.grade) === 'Excellent' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                              color: getGradeStatus(item.grade) === 'Excellent' ? '#10b981' : 'var(--primary)',
+                              border: 'none'
+                            }}>
+                              {getGradeStatus(item.grade)}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
-            {/* Notifications and Performance */}
-            <div className="stagger-item" style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-              {/* Notifications */}
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '10px',
-                padding: '25px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    backgroundColor: '#ff9800',
-                    color: 'white',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px'
-                  }}>
-                    🔔
+            {/* Side Column: Notifications & GPA Trend */}
+            <div className="responsive-stack stagger-item">
+              {/* Notifications Card */}
+              <div className="premium-card" style={{ padding: '25px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                  <div className="icon-glow" style={{ color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', width: '40px', height: '40px', borderRadius: '12px' }}>
+                    <Bell size={20} />
                   </div>
-                  <h2 style={{ margin: 0, color: '#333' }}>{t('alertsNotifications')}</h2>
+                  <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>{t('alertsNotifications')}</h2>
                 </div>
 
                 {notifications.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '20px' }}>
-                    <div style={{ fontSize: '32px', marginBottom: '10px' }}>🔔</div>
-                    <p style={{ color: '#999' }}>{t('noNotifications')}</p>
+                  <div style={{ textAlign: 'center', padding: '20px', opacity: 0.5 }}>
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>{t('noNotifications')}</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {notifications.map((notification) => (
+                  <div className="responsive-stack" style={{ gap: '12px' }}>
+                    {notifications.slice(0, 4).map((notification) => (
                       <div
                         key={notification.id}
                         style={{
                           padding: '15px',
-                          borderLeft: `4px solid ${notification.type === 'warning' ? '#ff9800' :
-                            notification.type === 'grade_update' ? '#4caf50' : '#2196f3'
+                          borderLeft: `4px solid ${notification.type === 'warning' ? '#f59e0b' :
+                            notification.type === 'grade_update' ? '#10b981' : '#3b82f6'
                             }`,
-                          backgroundColor: '#f8f9fa',
-                          borderRadius: '5px'
+                          background: 'rgba(0, 0, 0, 0.02)',
+                          borderRadius: '12px'
                         }}
                       >
-                        <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>
+                        <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', fontWeight: '800', color: '#1e293b' }}>
                           {notification.message || notification.title}
                         </p>
-                        <small style={{ color: '#666' }}>{new Date(notification.date || notification.createdAt).toLocaleDateString()}</small>
+                        <small style={{ color: 'var(--text-muted)', fontWeight: '600' }}>
+                          {new Date(notification.date || notification.createdAt).toLocaleDateString()}
+                        </small>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* GPA Trend */}
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '10px',
-                padding: '25px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-              }}>
-                <h2 style={{ margin: '0 0 20px 0', color: '#333' }}>{t('academicProgress')}</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  {performanceHistory.map((item, index) => (
+              {/* GPA Trend Card */}
+              <div className="premium-card" style={{ padding: '25px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                  <div className="icon-glow" style={{ color: 'var(--primary)', background: 'rgba(99, 102, 241, 0.1)', width: '40px', height: '40px', borderRadius: '12px' }}>
+                    <TrendingUp size={20} />
+                  </div>
+                  <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>Academic Progress</h2>
+                </div>
+
+                <div className="responsive-stack" style={{ gap: '20px' }}>
+                  {performanceHistory.length > 0 ? performanceHistory.map((item, index) => (
                     <div key={index}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span style={{ color: '#666' }}>{item.semester}</span>
-                        <span style={{ fontWeight: 'bold', color: '#333' }}>{t('gpa')}: {item.gpa}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.85rem' }}>{item.semester}</span>
+                        <span style={{ fontWeight: '900', color: '#1e293b', fontSize: '0.9rem' }}>{item.gpa.toFixed(2)}</span>
                       </div>
-                      <div style={{
-                        height: '10px',
-                        backgroundColor: '#f0f0f0',
-                        borderRadius: '5px',
-                        overflow: 'hidden'
-                      }}>
-                        <div style={{
+                      <div className="health-bar-container" style={{ height: '8px' }}>
+                        <div className="health-bar-fill" style={{
                           width: `${(item.gpa / 4) * 100}%`,
-                          height: '100%',
-                          backgroundColor: item.gpa >= 3.0 ? '#4caf50' : item.gpa >= 2.0 ? '#ff9800' : '#f44336',
-                          borderRadius: '5px'
+                          background: item.gpa >= 3.5 ? 'linear-gradient(90deg, #10b981, #34d399)' :
+                            item.gpa >= 3.0 ? 'linear-gradient(90deg, #3b82f6, #60a5fa)' :
+                              'linear-gradient(90deg, #f59e0b, #fbbf24)'
                         }}></div>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p style={{ textAlign: 'center', opacity: 0.5, fontSize: '0.9rem' }}>No trend data yet</p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Contact Form Modal */}
-        {showContactForm && (
+      {/* Contact Form Modal */}
+      {showContactForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
           <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '10px',
+            maxWidth: '500px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto'
           }}>
-            <div style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '10px',
-              maxWidth: '500px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflow: 'auto'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, color: '#333' }}>{t('contactAdvisor')}</h3>
-                <button
-                  onClick={() => setShowContactForm(false)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '24px',
-                    color: '#666',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, color: '#333' }}>{t('contactAdvisor')}</h3>
+              <button
+                onClick={() => setShowContactForm(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  color: '#666',
+                  cursor: 'pointer'
+                }}
+              >
+                ×
+              </button>
+            </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <p><strong>{t('advisor')}:</strong> {loading ? t('loading') : studentInfo.advisor}</p>
-                <p><strong>{t('email')}:</strong> {loading ? t('loading') : studentInfo.advisorEmail}</p>
-                <p><strong>{t('student')}:</strong> {loading ? t('loading') : studentInfo.name} ({loading ? t('loading') : studentInfo.id})</p>
-              </div>
+            <div style={{ marginBottom: '20px' }}>
+              <p><strong>{t('advisor')}:</strong> {loading ? t('loading') : studentInfo.advisor}</p>
+              <p><strong>{t('email')}:</strong> {loading ? t('loading') : studentInfo.advisorEmail}</p>
+              <p><strong>{t('student')}:</strong> {loading ? t('loading') : studentInfo.name} ({loading ? t('loading') : studentInfo.id})</p>
+            </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#555' }}>
-                  {t('subject')}
-                </label>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: '#555' }}>
+                {t('subject')}
+              </label>
+              <input
+                type="text"
+                defaultValue={t('regardingAcademicProgress').replace('{studentName}', loading ? t('loading') : studentInfo.name)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '5px',
+                  fontSize: '16px',
+                  marginBottom: '15px'
+                }}
+              />
+
+              <label style={{ display: 'block', marginBottom: '8px', color: '#555' }}>
+                {t('yourMessage')}
+              </label>
+              <textarea
+                value={contactMessage}
+                onChange={(e) => setContactMessage(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '5px',
+                  fontSize: '16px',
+                  minHeight: '150px',
+                  fontFamily: 'inherit'
+                }}
+                placeholder={t('writeMessagePlaceholder')}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowContactForm(false)}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#f5f5f5',
+                  color: '#333',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                {t('cancel')}
+              </button>
+              <button
+                onClick={handleContactAdvisor}
+                disabled={!contactMessage.trim()}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: contactMessage.trim() ? '#1976d2' : '#ccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: contactMessage.trim() ? 'pointer' : 'not-allowed'
+                }}
+              >
+                {t('sendMessage')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Child Modal */}
+      {showAddChildModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '12px',
+            maxWidth: '400px',
+            width: '100%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+          }}>
+            <h3 style={{ margin: '0 0 15px 0', fontSize: '1.25rem', color: '#1f2937' }}>Link Another Child</h3>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '20px' }}>
+              Enter your child's official university ID to request an academic link.
+            </p>
+
+            <form onSubmit={handleAddChild}>
+              <div className="modern-input-group">
+                <label className="modern-input-label">Student ID *</label>
                 <input
                   type="text"
-                  defaultValue={t('regardingAcademicProgress').replace('{studentName}', loading ? t('loading') : studentInfo.name)}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                    fontSize: '16px',
-                    marginBottom: '15px'
-                  }}
-                />
-
-                <label style={{ display: 'block', marginBottom: '8px', color: '#555' }}>
-                  {t('yourMessage')}
-                </label>
-                <textarea
-                  value={contactMessage}
-                  onChange={(e) => setContactMessage(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                    fontSize: '16px',
-                    minHeight: '150px',
-                    fontFamily: 'inherit'
-                  }}
-                  placeholder={t('writeMessagePlaceholder')}
+                  value={newChildId}
+                  onChange={(e) => setNewChildId(e.target.value)}
+                  className="modern-input"
+                  placeholder="e.g. UGR/1234/14"
+                  required
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                 <button
-                  onClick={() => setShowContactForm(false)}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#f5f5f5',
-                    color: '#333',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer'
-                  }}
+                  type="button"
+                  onClick={() => setShowAddChildModal(false)}
+                  className="modern-btn"
+                  style={{ flex: 1, backgroundColor: '#94a3b8' }}
                 >
-                  {t('cancel')}
+                  Cancel
                 </button>
                 <button
-                  onClick={handleContactAdvisor}
-                  disabled={!contactMessage.trim()}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: contactMessage.trim() ? '#1976d2' : '#ccc',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: contactMessage.trim() ? 'pointer' : 'not-allowed'
-                  }}
+                  type="submit"
+                  className="modern-btn"
+                  disabled={submittingLink}
+                  style={{ flex: 1, backgroundColor: '#2e7d32' }}
                 >
-                  {t('sendMessage')}
+                  {submittingLink ? 'Sending...' : 'Request Link'}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
-        )}
-
-        {/* Add Child Modal */}
-        {showAddChildModal && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-          }}>
-            <div style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '12px',
-              maxWidth: '400px',
-              width: '100%',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-            }}>
-              <h3 style={{ margin: '0 0 15px 0', fontSize: '1.25rem', color: '#1f2937' }}>Link Another Child</h3>
-              <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '20px' }}>
-                Enter your child's official university ID to request an academic link.
-              </p>
-
-              <form onSubmit={handleAddChild}>
-                <div className="modern-input-group">
-                  <label className="modern-input-label">Student ID *</label>
-                  <input
-                    type="text"
-                    value={newChildId}
-                    onChange={(e) => setNewChildId(e.target.value)}
-                    className="modern-input"
-                    placeholder="e.g. UGR/1234/14"
-                    required
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddChildModal(false)}
-                    className="modern-btn"
-                    style={{ flex: 1, backgroundColor: '#94a3b8' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="modern-btn"
-                    disabled={submittingLink}
-                    style={{ flex: 1, backgroundColor: '#2e7d32' }}
-                  >
-                    {submittingLink ? 'Sending...' : 'Request Link'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

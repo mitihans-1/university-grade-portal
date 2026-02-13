@@ -71,7 +71,7 @@ const Notification = sequelize.define('Notification', {
 
 Notification.associate = (models) => {
   Notification.belongsTo(models.Parent, { foreignKey: 'parentId', targetKey: 'id', as: 'parent' });
-  Notification.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student' });
+  Notification.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student', onDelete: 'CASCADE' });
   Notification.belongsTo(models.Teacher, { foreignKey: 'teacherId', targetKey: 'teacherId', as: 'teacher' });
 };
 

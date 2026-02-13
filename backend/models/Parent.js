@@ -79,7 +79,7 @@ const Parent = sequelize.define('Parent', {
 });
 
 Parent.associate = (models) => {
-  Parent.hasMany(models.ParentStudentLink, { foreignKey: 'parentId', sourceKey: 'id', as: 'links' });
+  Parent.hasMany(models.ParentStudentLink, { foreignKey: 'parentId', sourceKey: 'id', as: 'links', onDelete: 'CASCADE', hooks: true });
 };
 
 module.exports = Parent;

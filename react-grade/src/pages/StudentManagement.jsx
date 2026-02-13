@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../utils/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { Search, Filter, Edit2, Trash2, MessageSquare, CheckCircle, XCircle, Shield, User, Mail, Phone, BookOpen, AlertCircle, Send } from 'lucide-react';
+import { Search, Filter, Edit2, Trash2, MessageSquare, CheckCircle, XCircle, Shield, User, Mail, Phone, AlertCircle, Send, X } from 'lucide-react';
+import '../admin-dashboard.css';
 
 const StudentManagement = () => {
   const { user } = useAuth();
@@ -118,7 +119,7 @@ const StudentManagement = () => {
   const handleNotifyParentClick = (student) => {
     setNotifyingStudent(student);
     setNotificationForm({
-      title: t('studentIssueReport'),
+      title: t('studentIssueReport') || 'Issue Report',
       message: '',
       type: 'administrative'
     });
@@ -138,6 +139,7 @@ const StudentManagement = () => {
       });
       if (result.success) {
         setNotifyingStudent(null);
+        alert('Notification sent successfully');
       } else {
         alert(result.msg || t('errorSendingNotification'));
       }
@@ -163,226 +165,232 @@ const StudentManagement = () => {
   if (loading) return <LoadingSpinner fullScreen />;
 
   return (
-    <div className="fade-in" style={{ maxWidth: '1400px', margin: '0 auto', padding: '30px' }}>
-      <div className="responsive-header" style={{ marginBottom: '30px' }}>
-        <div>
-          <h1 style={{ color: '#1e293b', fontSize: '28px', marginBottom: '8px' }}>{t('studentManagement')}</h1>
-          <p style={{ color: '#64748b' }}>{t('manageStudentInformation')}</p>
-        </div>
-        <div style={{ padding: '10px 20px', backgroundColor: '#e2e8f0', borderRadius: '20px', color: '#475569', fontWeight: '600', width: 'fit-content' }}>
-          Total Students: {students.length}
-        </div>
-      </div>
+    <div className="admin-dashboard-container fade-in">
+      <div className="admin-card" style={{ maxWidth: '1400px', margin: '20px auto' }}>
+        <header className="admin-header">
+          <div className="admin-title" style={{ textAlign: 'center' }}>
+            {t('studentManagement')}
+          </div>
+          <p className="admin-subtitle" style={{ textAlign: 'center', marginBottom: '30px' }}>
+            {t('manageStudentInformation')}
+          </p>
+        </header>
 
-      <div className="responsive-grid" style={{ marginBottom: '25px' }}>
-        <div style={{ position: 'relative' }}>
-          <Search size={20} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)' }} />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder={t('searchByIdOrName')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="modern-input"
-            style={{ paddingLeft: '45px', width: '100%' }}
-          />
+        <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '30px' }}>
+          <div className="stat-card-glass">
+            <div className="stat-icon-box" style={{ color: '#3b82f6' }}>
+              <User size={24} />
+            </div>
+            <div className="stat-value">{students.length}</div>
+            <div className="stat-label">{t('totalStudentsLabel')}</div>
+          </div>
         </div>
-        <div style={{ position: 'relative' }}>
-          <Filter size={20} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)' }} />
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="modern-input"
-            style={{ paddingLeft: '45px', width: '100%', appearance: 'none' }}
-          >
-            <option value="all">{t('referenceAllYears')}</option>
-            {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t(`year${y}`)}</option>)}
-          </select>
-        </div>
-      </div>
 
-      <div className="table-responsive-cards" style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <th style={{ padding: '15px 20px', textAlign: 'left', color: '#475569', fontWeight: '600' }}>{t('student')}</th>
-                <th style={{ padding: '15px 20px', textAlign: 'left', color: '#475569', fontWeight: '600' }}>Contact</th>
-                <th style={{ padding: '15px 20px', textAlign: 'left', color: '#475569', fontWeight: '600' }}>{t('department')}</th>
-                <th style={{ padding: '15px 20px', textAlign: 'left', color: '#475569', fontWeight: '600' }}>{t('year')}</th>
-                <th style={{ padding: '15px 20px', textAlign: 'left', color: '#475569', fontWeight: '600' }}>{t('parent')}</th>
-                <th style={{ padding: '15px 20px', textAlign: 'left', color: '#475569', fontWeight: '600' }}>{t('actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredStudents.map((student) => (
-                <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} className="hover-bg-slate-50">
-                  <td data-label={t('student')} style={{ padding: '15px 20px' }}>
-                    {editingStudent === student.id ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                        <input className="modern-input" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} placeholder="Name" />
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>{student.studentId}</div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div style={{ fontWeight: '600', color: '#1e293b' }}>{student.name}</div>
-                        <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          {student.studentId}
-                          {student.isVerified ?
-                            <CheckCircle size={14} color="#16a34a" fill="#dcfce7" /> :
-                            <div onClick={() => handleToggleVerify(student.id, student.isVerified)} style={{ cursor: 'pointer' }}><Shield size={14} color="#ca8a04" /></div>
-                          }
-                        </div>
-                      </div>
-                    )}
-                  </td>
-                  <td data-label="Contact" style={{ padding: '15px 20px' }}>
-                    {editingStudent === student.id ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                        <input className="modern-input" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} placeholder="Email" />
-                        <input className="modern-input" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} placeholder="Phone" />
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#475569' }}>
-                          <Mail size={14} /> {student.email}
-                        </div>
-                        {student.phone && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#475569' }}>
-                            <Phone size={14} /> {student.phone}
+        <div className="admin-card" style={{ marginBottom: '30px', background: 'rgba(255,255,255,0.5)' }}>
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+              <Search size={20} color="#64748b" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder={t('searchByIdOrName')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-input"
+                style={{ flex: 1 }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Filter size={20} color="#64748b" />
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="form-input"
+                style={{ width: '150px' }}
+              >
+                <option value="all">{t('referenceAllYears')}</option>
+                {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t(`year${y}`) || `Year ${y}`}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-card" style={{ padding: '0', overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="dash-table">
+              <thead>
+                <tr>
+                  <th>{t('student')}</th>
+                  <th>{t('contact')}</th>
+                  <th>{t('department')}</th>
+                  <th>{t('year')}</th>
+                  <th>{t('parent')}</th>
+                  <th>{t('actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredStudents.length > 0 ? (
+                  filteredStudents.map((student) => (
+                    <tr key={student.id}>
+                      <td>
+                        {editingStudent === student.id ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <input className="form-input" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} placeholder={t('name')} />
+                            <div style={{ fontSize: '12px', color: '#64748b' }}>{student.studentId}</div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div style={{ fontWeight: '600', color: '#1e293b' }}>{student.name}</div>
+                            <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {student.studentId}
+                              {student.isVerified ?
+                                <CheckCircle size={14} color="#16a34a" fill="#dcfce7" /> :
+                                <div onClick={() => handleToggleVerify(student.id, student.isVerified)} style={{ cursor: 'pointer' }}><Shield size={14} color="#ca8a04" /></div>
+                              }
+                            </div>
                           </div>
                         )}
-                      </div>
-                    )}
-                  </td>
-                  <td data-label={t('department')} style={{ padding: '15px 20px' }}>
-                    {editingStudent === student.id ? (
-                      <select className="modern-input" style={{ width: '100%' }} value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })}>
-                        <option value="Computer Science">Computer Science</option>
-                        <option value="Electrical Engineering">Electrical Engineering</option>
-                        <option value="Mechanical Engineering">Mechanical Engineering</option>
-                        <option value="Civil Engineering">Civil Engineering</option>
-                        <option value="Medicine">Medicine</option>
-                        <option value="Business Administration">Business Administration</option>
-                      </select>
-                    ) : (
-                      <span style={{ padding: '6px 12px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '20px', fontSize: '13px', fontWeight: '500' }}>
-                        {student.department || 'Unassigned'}
-                      </span>
-                    )}
-                  </td>
-                  <td data-label={t('year')} style={{ padding: '15px 20px' }}>
-                    {editingStudent === student.id ? (
-                      <input type="number" className="modern-input" style={{ width: '100%' }} value={editForm.year} onChange={e => setEditForm({ ...editForm, year: e.target.value })} />
-                    ) : (
-                      <span style={{ fontWeight: '600', color: '#475569' }}>Year {student.year}</span>
-                    )}
-                  </td>
-                  <td data-label={t('parent')} style={{ padding: '15px 20px' }}>
-                    {student.parentLink ? (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', width: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <User size={16} color="#64748b" />
+                      </td>
+                      <td>
+                        {editingStudent === student.id ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <input className="form-input" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} placeholder={t('email')} />
+                            <input className="form-input" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} placeholder={t('phone')} />
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '500', color: '#334155' }}>{student.parentLink.parent.name}</span>
-                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Linked</span>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#475569' }}>
+                              <Mail size={14} /> {student.email}
+                            </div>
+                            {student.phone && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#475569' }}>
+                                <Phone size={14} /> {student.phone}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <button
-                            onClick={() => handleNotifyParentClick(student)}
-                            title={t('notifyParent')}
-                            style={{ padding: '6px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', color: '#f59e0b' }}
-                          >
-                            <AlertCircle size={16} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              const parent = student.parentLink.parent;
-                              window.location.href = `/messages?userId=${parent.id}&userRole=parent&userName=${encodeURIComponent(parent.name)}`;
-                            }}
-                            title={t('directChat')}
-                            style={{ padding: '6px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', color: '#3b82f6' }}
-                          >
-                            <MessageSquare size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <span style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>No Parent Linked</span>
-                    )}
-                  </td>
-                  <td data-label={t('actions')} style={{ padding: '15px 20px' }}>
-                    {editingStudent === student.id ? (
-                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                        <button onClick={handleUpdate} className="modern-btn" style={{ flex: 1, backgroundColor: '#22c55e', padding: '8px 12px' }}><CheckCircle size={16} /></button>
-                        <button onClick={() => setEditingStudent(null)} className="modern-btn" style={{ flex: 1, backgroundColor: '#94a3b8', padding: '8px 12px' }}><XCircle size={16} /></button>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                        <button onClick={() => handleEdit(student)} className="modern-btn" style={{ flex: 1, padding: '8px', backgroundColor: '#e2e8f0', color: '#475569' }}><Edit2 size={16} /></button>
-                        <button onClick={() => handleDelete(student.id)} className="modern-btn" style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#ef4444' }}><Trash2 size={16} /></button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredStudents.length === 0 && (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
-              <Search size={48} style={{ opacity: 0.2, marginBottom: '10px' }} />
-              <p>{t('noStudentsFound')}</p>
-            </div>
-          )}
+                        )}
+                      </td>
+                      <td>
+                        {editingStudent === student.id ? (
+                          <select className="form-input" value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })}>
+                            <option value="Computer Science">{t('computerScience') || 'Computer Science'}</option>
+                            <option value="Electrical Engineering">{t('electricalEngineering') || 'Electrical Engineering'}</option>
+                            <option value="Mechanical Engineering">{t('mechanicalEngineering') || 'Mechanical Engineering'}</option>
+                            <option value="Civil Engineering">{t('civilEngineering') || 'Civil Engineering'}</option>
+                            <option value="Medicine">{t('medicine') || 'Medicine'}</option>
+                            <option value="Business Administration">{t('businessAdministration') || 'Business Administration'}</option>
+                          </select>
+                        ) : (
+                          <span>{student.department || t('unassigned')}</span>
+                        )}
+                      </td>
+                      <td>
+                        {editingStudent === student.id ? (
+                          <input type="number" className="form-input" value={editForm.year} onChange={e => setEditForm({ ...editForm, year: e.target.value })} />
+                        ) : (
+                          <span style={{ fontWeight: '600' }}>Yr {student.year}</span>
+                        )}
+                      </td>
+                      <td>
+                        {student.parentLink ? (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <User size={14} color="#64748b" />
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '500', color: '#334155' }}>{student.parentLink.parent.name}</span>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '5px' }}>
+                              <button
+                                onClick={() => handleNotifyParentClick(student)}
+                                title={t('notifyParent')}
+                                style={{ padding: '6px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: 'white', cursor: 'pointer', color: '#f59e0b' }}
+                              >
+                                <AlertCircle size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>{t('noParentLinked')}</span>
+                        )}
+                      </td>
+                      <td>
+                        {editingStudent === student.id ? (
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={handleUpdate} className="admin-btn" style={{ padding: '8px 12px', background: '#10b981' }}><CheckCircle size={16} /></button>
+                            <button onClick={() => setEditingStudent(null)} className="admin-btn" style={{ padding: '8px 12px', background: '#64748b' }}><XCircle size={16} /></button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={() => handleEdit(student)} className="admin-btn" style={{ padding: '8px 12px', background: '#3b82f6' }}><Edit2 size={16} /></button>
+                            <button onClick={() => handleDelete(student.id)} className="admin-btn" style={{ padding: '8px 12px', background: '#ef4444' }}><Trash2 size={16} /></button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                      <Search size={48} style={{ marginBottom: '15px', opacity: 0.5 }} />
+                      <p>{t('noStudentsFound')}</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       {/* Notification Modal */}
       {notifyingStudent && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '16px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ marginBottom: '20px', color: '#1e293b' }}>{t('notifyParent')}</h2>
+        <div className="modal-overlay" onClick={() => setNotifyingStudent(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, color: '#1e293b' }}>{t('notifyParent')}</h2>
+              <button onClick={() => setNotifyingStudent(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} color="#64748b" /></button>
+            </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#475569' }}>{t('notificationTitle')}</label>
+            <div className="form-group">
+              <label className="form-label">{t('notificationTitle') || 'Title'}</label>
               <input
                 type="text"
                 value={notificationForm.title}
                 onChange={(e) => setNotificationForm({ ...notificationForm, title: e.target.value })}
-                className="modern-input"
+                className="form-input"
               />
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#475569' }}>{t('messageToParent')}</label>
+            <div className="form-group">
+              <label className="form-label">{t('messageToParent') || 'Message'}</label>
               <textarea
                 value={notificationForm.message}
                 onChange={(e) => setNotificationForm({ ...notificationForm, message: e.target.value })}
                 rows="4"
-                className="modern-input"
+                className="form-input"
                 style={{ resize: 'vertical' }}
                 placeholder={t('writeMessagePlaceholder')}
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button
+                onClick={() => setNotifyingStudent(null)}
+                className="admin-btn"
+                style={{ background: '#94a3b8', padding: '10px 20px' }}
+              >
+                {t('cancel')}
+              </button>
               <button
                 onClick={handleSendNotification}
                 disabled={sending}
-                className="modern-btn"
-                style={{ flex: 1, backgroundColor: '#ea580c' }}
+                className="admin-btn"
+                style={{ background: '#ea580c', padding: '10px 20px' }}
               >
-                {sending ? 'Sending...' : <><Send size={18} /> Send Notification</>}
-              </button>
-              <button
-                onClick={() => setNotifyingStudent(null)}
-                className="modern-btn"
-                style={{ flex: 1, backgroundColor: '#94a3b8' }}
-              >
-                Cancel
+                {sending ? t('sending') : <><Send size={18} /> {t('sendNotification')}</>}
               </button>
             </div>
           </div>

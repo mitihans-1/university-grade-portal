@@ -81,13 +81,29 @@ const Student = sequelize.define('Student', {
   }
 }, {
   tableName: 'students',
-  timestamps: false
+  timestamps: false,
+  hooks: {
+    afterDestroy: async (student) => {
+      try {
+        const { UniversityID } = sequelize.models;
+        if (UniversityID) {
+          await UniversityID.update(
+            { isUsed: false },
+            { where: { studentId: student.studentId } }
+          );
+        }
+      } catch (err) {
+        console.error('Error in Student afterDestroy hook:', err);
+      }
+    }
+  }
 });
 
 Student.associate = (models) => {
-  Student.hasMany(models.Grade, { foreignKey: 'studentId', sourceKey: 'studentId', as: 'Grades' });
-  Student.hasOne(models.ParentStudentLink, { foreignKey: 'studentId', sourceKey: 'studentId', as: 'parentLink' });
-  Student.hasMany(models.Submission, { foreignKey: 'studentId', sourceKey: 'studentId', as: 'submissions' });
+  Student.hasMany(models.Grade, { foreignKey: 'studentId', sourceKey: 'studentId', as: 'Grades', onDelete: 'CASCADE', hooks: true });
+  Student.hasOne(models.ParentStudentLink, { foreignKey: 'studentId', sourceKey: 'studentId', as: 'parentLink', onDelete: 'CASCADE', hooks: true });
+  Student.hasMany(models.Submission, { foreignKey: 'studentId', sourceKey: 'studentId', as: 'submissions', onDelete: 'CASCADE', hooks: true });
+  Student.hasMany(models.Attendance, { foreignKey: 'studentId', sourceKey: 'studentId', as: 'attendanceRecords', onDelete: 'CASCADE', hooks: true });
 };
 
 module.exports = Student;

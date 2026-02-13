@@ -1,24 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../utils/api';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../components/common/Toast';
-import { FileText, Download, Trash2, Upload, File, Image as ImageIcon } from 'lucide-react';
+import { api } from '../utils/api';
+import { FileText, Download, Trash2, Upload, File, Image as ImageIcon, Search, BookOpen, ChevronRight, User } from 'lucide-react';
+import '../premium-pages.css';
 
 const CourseResources = () => {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const { showToast } = useToast();
     const [resources, setResources] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterCourse, setFilterCourse] = useState('all');
 
-    // Upload state
     const [uploadFile, setUploadFile] = useState(null);
-    const [uploadData, setUploadData] = useState({
-        title: '',
-        description: '',
-        courseCode: ''
-    });
+    const [uploadData, setUploadData] = useState({ title: '', description: '', courseCode: '' });
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
@@ -37,9 +34,7 @@ const CourseResources = () => {
         }
     };
 
-    const handleFileChange = (e) => {
-        setUploadFile(e.target.files[0]);
-    };
+    const handleFileChange = (e) => setUploadFile(e.target.files[0]);
 
     const handleUpload = async (e) => {
         e.preventDefault();
@@ -47,7 +42,6 @@ const CourseResources = () => {
             showToast('Please fill all required fields', 'error');
             return;
         }
-
         try {
             setIsUploading(true);
             const formData = new FormData();
@@ -55,16 +49,12 @@ const CourseResources = () => {
             formData.append('title', uploadData.title);
             formData.append('description', uploadData.description);
             formData.append('courseCode', uploadData.courseCode);
-
             await api.uploadResource(formData);
             showToast('File uploaded successfully', 'success');
-
-            // Reset form
             setUploadFile(null);
             setUploadData({ title: '', description: '', courseCode: '' });
             fetchResources();
         } catch (error) {
-            console.error('Upload error:', error);
             showToast('Failed to upload file', 'error');
         } finally {
             setIsUploading(false);
@@ -93,191 +83,110 @@ const CourseResources = () => {
 
     const getFileIcon = (type) => {
         const t = type.toLowerCase();
-        if (t.includes('pdf')) return <FileText color="#f44336" />;
-        if (t.includes('doc')) return <FileText color="#2196f3" />;
-        if (t.includes('jpg') || t.includes('png')) return <ImageIcon color="#4caf50" />;
-        return <File color="#666" />;
+        if (t.includes('pdf')) return <FileText size={24} style={{ color: '#ff4b2b' }} />;
+        if (t.includes('doc')) return <FileText size={24} style={{ color: '#00c9ff' }} />;
+        if (t.includes('jpg') || t.includes('png')) return <ImageIcon size={24} style={{ color: '#92fe9d' }} />;
+        return <File size={24} style={{ opacity: 0.5 }} />;
     };
 
     if (loading && !isUploading) return <LoadingSpinner fullScreen />;
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
-            <div style={{ marginBottom: '30px' }}>
-                <h1 style={{ margin: '0 0 10px 0' }}>📂 Course Resources</h1>
-                <p style={{ color: '#666' }}>Access study materials, assignments, and lecture notes.</p>
-            </div>
-
-            {/* Upload Section (Teacher/Admin only) */}
-            {(user.permissions?.includes('enter_grades') || user.permissions?.includes('manage_users')) && (
-                <div style={{
-                    backgroundColor: 'white',
-                    padding: '25px',
-                    borderRadius: '10px',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                    marginBottom: '30px'
-                }}>
-                    <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Upload size={20} /> Upload New Material
-                    </h3>
-                    <form onSubmit={handleUpload} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Title *</label>
-                            <input
-                                type="text"
-                                value={uploadData.title}
-                                onChange={e => setUploadData({ ...uploadData, title: e.target.value })}
-                                placeholder="e.g. Lecture 1 Slides"
-                                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Course Code *</label>
-                            <input
-                                type="text"
-                                value={uploadData.courseCode}
-                                onChange={e => setUploadData({ ...uploadData, courseCode: e.target.value })}
-                                placeholder="e.g. CS101"
-                                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>File *</label>
-                            <input
-                                type="file"
-                                onChange={handleFileChange}
-                                style={{ width: '100%', padding: '7px', borderRadius: '5px', border: '1px solid #ddd', backgroundColor: '#f9f9f9' }}
-                            />
-                        </div>
-                        <div style={{ gridColumn: '1 / span 3' }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>Description</label>
-                            <input
-                                type="text"
-                                value={uploadData.description}
-                                onChange={e => setUploadData({ ...uploadData, description: e.target.value })}
-                                placeholder="Optional description..."
-                                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
-                            />
-                        </div>
-                        <div style={{ gridColumn: '1 / span 3', textAlign: 'right' }}>
-                            <button
-                                type="submit"
-                                disabled={isUploading}
-                                style={{
-                                    padding: '10px 25px',
-                                    backgroundColor: isUploading ? '#ccc' : '#2196f3',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '5px',
-                                    cursor: isUploading ? 'not-allowed' : 'pointer',
-                                    fontWeight: 'bold',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}
-                            >
-                                {isUploading ? 'Uploading...' : <><Upload size={18} /> Upload File</>}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            {/* Filter and List */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px' }}>
-                <input
-                    type="text"
-                    placeholder="Filter by Course Code..."
-                    value={filterCourse === 'all' ? '' : filterCourse}
-                    onChange={(e) => setFilterCourse(e.target.value || 'all')}
-                    style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ddd', width: '250px' }}
-                />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-                {resources.length === 0 ? (
-                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '50px', color: '#888', backgroundColor: 'white', borderRadius: '10px' }}>
-                        No resources found.
+        <div className="premium-page-container fade-in">
+            <div className="premium-glass-card">
+                <header style={{ textAlign: 'center', marginBottom: '40px' }}>
+                    <h1 className="premium-title">{t('courseResources') || 'Academic Library'}</h1>
+                    <div className="year-badge" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', background: 'transparent', boxShadow: 'none', animation: 'none' }}>
+                        <span style={{ fontSize: '1rem', fontWeight: '700', opacity: 0.9 }}>REPOSITORY</span>
+                        <span style={{ opacity: 0.4 }}>|</span>
+                        <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#fff', textShadow: '0 2px 10px rgba(0,198,255,0.4)', background: 'rgba(255,255,255,0.1)', padding: '2px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                            {user.name}
+                        </span>
+                        <span style={{ opacity: 0.4 }}>|</span>
+                        <span style={{ fontWeight: '500', opacity: 0.9, letterSpacing: '1px' }}>MATERIALS: {resources.length}</span>
                     </div>
-                ) : (
-                    resources.map(file => (
-                        <div key={file.id} style={{
-                            backgroundColor: 'white',
-                            padding: '20px',
-                            borderRadius: '10px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            transition: 'transform 0.2s',
-                            cursor: 'default'
-                        }}>
-                            <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                                    <div style={{ backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '50%' }}>
+                </header>
+
+                {(user.permissions?.includes('enter_grades') || user.permissions?.includes('manage_users')) && (
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '30px', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '40px' }}>
+                        <h3 style={{ marginBottom: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Upload size={20} /> Upload New Material
+                        </h3>
+                        <form onSubmit={handleUpload} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                            <input required className="premium-btn" style={{ background: 'rgba(255,255,255,0.05)', textAlign: 'left' }} placeholder="Title" value={uploadData.title} onChange={e => setUploadData({ ...uploadData, title: e.target.value })} />
+                            <input required className="premium-btn" style={{ background: 'rgba(255,255,255,0.05)', textAlign: 'left' }} placeholder="Course Code" value={uploadData.courseCode} onChange={e => setUploadData({ ...uploadData, courseCode: e.target.value })} />
+                            <input type="file" required className="premium-btn" style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 15px' }} onChange={handleFileChange} />
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <input className="premium-btn" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', textAlign: 'left' }} placeholder="Short Description (Optional)" value={uploadData.description} onChange={e => setUploadData({ ...uploadData, description: e.target.value })} />
+                            </div>
+                            <button type="submit" disabled={isUploading} className="premium-btn" style={{ gridColumn: '1 / -1', background: 'linear-gradient(45deg, #00c9ff, #92fe9d)', color: '#0f172a', border: 'none' }}>
+                                {isUploading ? 'Uploading...' : 'Publish Resource'}
+                            </button>
+                        </form>
+                    </div>
+                )}
+
+                <div style={{ position: 'relative', marginBottom: '40px' }}>
+                    <Search style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} size={20} />
+                    <input
+                        type="text"
+                        placeholder="Search materials by course code..."
+                        className="premium-btn"
+                        style={{ width: '100%', padding: '15px 15px 15px 55px', textAlign: 'left', background: 'rgba(255,255,255,0.05)', fontSize: '1rem' }}
+                        value={filterCourse === 'all' ? '' : filterCourse}
+                        onChange={(e) => setFilterCourse(e.target.value || 'all')}
+                    />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '25px' }}>
+                    {resources.length === 0 ? (
+                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px', opacity: 0.5 }}>
+                            <BookOpen size={60} style={{ marginBottom: '20px' }} />
+                            <h3>No materials found...</h3>
+                        </div>
+                    ) : (
+                        resources.map(file => (
+                            <div key={file.id} style={{
+                                background: 'rgba(255,255,255,0.05)',
+                                padding: '30px',
+                                borderRadius: '25px',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                position: 'relative',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                transition: 'all 0.3s ease'
+                            }} className="info-card">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '15px' }}>
                                         {getFileIcon(file.fileType || '')}
                                     </div>
-                                    <span style={{
-                                        fontSize: '11px',
-                                        fontWeight: 'bold',
-                                        backgroundColor: '#e3f2fd',
-                                        color: '#1565c0',
-                                        padding: '4px 8px',
-                                        borderRadius: '10px'
-                                    }}>
+                                    <span style={{ fontSize: '11px', fontWeight: '900', background: 'rgba(255,255,255,0.1)', padding: '5px 12px', borderRadius: '50px', letterSpacing: '1px' }}>
                                         {file.courseCode}
                                     </span>
                                 </div>
-                                <h3 style={{ margin: '0 0 5px 0', fontSize: '16px', lineHeight: '1.4' }}>{file.title}</h3>
-                                <p style={{ margin: '0 0 15px 0', fontSize: '13px', color: '#666' }}>{file.description || 'No description'}</p>
-                            </div>
 
-                            <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#999', marginBottom: '15px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-                                    <span>By {file.uploaderName || 'Teacher'}</span>
-                                    <span>{new Date(file.createdAt).toLocaleDateString()}</span>
-                                </div>
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '10px' }}>{file.title}</h3>
+                                <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: '25px', flexGrow: 1 }}>{file.description || 'No additional details provided.'}</p>
 
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <button
-                                        onClick={() => handleDownload(file.id, file.fileName)}
-                                        style={{
-                                            flex: 1,
-                                            padding: '8px',
-                                            backgroundColor: '#f5f5f5',
-                                            border: '1px solid #ddd',
-                                            borderRadius: '5px',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            gap: '5px',
-                                            color: '#333',
-                                            fontWeight: 'bold'
-                                        }}
-                                    >
-                                        <Download size={16} /> Download
-                                    </button>
-                                    {(user.permissions?.includes('manage_users') || user.id === file.uploadedBy) && (
-                                        <button
-                                            onClick={() => handleDelete(file.id)}
-                                            style={{
-                                                padding: '8px 12px',
-                                                backgroundColor: '#ffebee',
-                                                border: '1px solid #ffcdd2',
-                                                borderRadius: '5px',
-                                                cursor: 'pointer',
-                                                color: '#c62828'
-                                            }}
-                                        >
-                                            <Trash2 size={16} />
+                                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', opacity: 0.5 }}>
+                                        <User size={14} /> {file.uploaderName || 'Faculty'}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button onClick={() => handleDownload(file.id, file.fileName)} className="premium-btn" style={{ padding: '8px 15px', fontSize: '12px', background: 'rgba(255,255,255,0.08)', border: 'none' }}>
+                                            <Download size={14} />
                                         </button>
-                                    )}
+                                        {(user.permissions?.includes('manage_users') || user.id === file.uploadedBy) && (
+                                            <button onClick={() => handleDelete(file.id)} className="premium-btn" style={{ padding: '8px 15px', fontSize: '12px', background: 'rgba(255, 75, 43, 0.1)', color: '#ff4b2b', border: 'none' }}>
+                                                <Trash2 size={14} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
-                )}
+                        ))
+                    )}
+                </div>
             </div>
         </div>
     );

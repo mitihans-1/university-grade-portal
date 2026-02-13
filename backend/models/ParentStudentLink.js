@@ -42,7 +42,7 @@ const ParentStudentLink = sequelize.define('ParentStudentLink', {
 
 ParentStudentLink.associate = (models) => {
   ParentStudentLink.belongsTo(models.Parent, { foreignKey: 'parentId', targetKey: 'id', as: 'parent' });
-  ParentStudentLink.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student' });
+  ParentStudentLink.belongsTo(models.Student, { foreignKey: 'studentId', targetKey: 'studentId', as: 'student', onDelete: 'CASCADE' });
 };
 
 module.exports = ParentStudentLink;

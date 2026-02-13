@@ -3,247 +3,194 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../utils/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { Calendar, BookOpen, Award, FileText, AlertCircle } from 'lucide-react';
-import { useToast } from '../components/common/Toast';
+import {
+    GraduationCap, TrendingUp, Award, Clock, Download,
+    Printer, Filter, ChevronRight, BookOpen, AlertCircle
+} from 'lucide-react';
+import '../admin-dashboard.css';
 
 const StudentGrades = () => {
     const { user } = useAuth();
     const { t } = useLanguage();
-    const { showToast } = useToast();
     const [grades, setGrades] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [appealingGrade, setAppealingGrade] = useState(null);
-    const [appealReason, setAppealReason] = useState('');
+    const [selectedSemester, setSelectedSemester] = useState('all');
 
     useEffect(() => {
-        const fetchGrades = async () => {
-            try {
-                if (user?.studentId) {
-                    // Assuming getMyGrades is the newer simpler call, but let's stick to what works for student
-                    const data = await api.getStudentGrades(user.studentId);
-                    setGrades(data || []);
-                }
-            } catch (error) {
-                console.error('Error fetching grades:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        fetchGrades();
+    }, []);
 
-        if (user) {
-            fetchGrades();
-        }
-    }, [user]);
-
-    const getGradeColor = (grade) => {
-        if (!grade) return '#666';
-        if (grade.includes('A')) return '#2e7d32'; // Green
-        if (grade.includes('B')) return '#1976d2'; // Blue
-        if (grade.includes('C')) return '#ed6c02'; // Orange
-        if (grade.includes('D')) return '#d32f2f'; // Red
-        return '#b71c1c'; // F or others
-    };
-
-    const handleAppealSubmit = async () => {
-        if (!appealReason) return;
+    const fetchGrades = async () => {
         try {
-            await api.submitAppeal({
-                gradeId: appealingGrade.id,
-                reason: appealReason
-            });
-            showToast('Appeal submitted successfully', 'success');
-            setAppealingGrade(null);
-            setAppealReason('');
+            setLoading(true);
+            const data = await api.getMyGrades();
+            setGrades(Array.isArray(data) ? data : []);
         } catch (error) {
-            console.error(error);
-            showToast('Failed to submit appeal. You may have already appealed this grade.', 'error');
+            console.error('Error fetching grades:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (loading) {
-        return <LoadingSpinner fullScreen />;
-    }
+    const calculateGPA = (gradeList) => {
+        if (!gradeList.length) return '0.00';
+        const gradePoints = { 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0 };
+        let points = 0, units = 0;
+        gradeList.forEach(g => {
+            const u = g.creditHours || g.credits || 3;
+            points += (gradePoints[g.grade] || 0) * u;
+            units += u;
+        });
+        return (points / (units || 1)).toFixed(2);
+    };
+
+    const handlePrint = () => window.print();
+
+    if (loading) return <LoadingSpinner fullScreen />;
+
+    const filteredGrades = selectedSemester === 'all'
+        ? grades
+        : grades.filter(g => g.semester?.toString() === selectedSemester);
+
+    const gpa = calculateGPA(filteredGrades);
+    const totalCredits = filteredGrades.reduce((acc, curr) => acc + (curr.creditHours || curr.credits || 0), 0);
 
     return (
-        <div className="fade-in" style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 20px' }}>
-            <div style={{ marginBottom: '30px' }}>
-                <h1 style={{ margin: '0 0 10px 0', fontSize: '28px' }}>{t('myGrades')}</h1>
-                <p style={{ color: '#666' }}>{t('viewAcademicPerformance')}</p>
+        <div className="admin-dashboard-container fade-in">
+            <header className="admin-header no-print">
+                <div>
+                    <h1 className="admin-title">Academic Records</h1>
+                    <p className="admin-subtitle">Comprehensive performance analytics and transcripts</p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={handlePrint} className="admin-btn" style={{ background: 'white', color: '#1e293b' }}>
+                        <Printer size={18} /> Print Transcript
+                    </button>
+                    <button className="admin-btn primary">
+                        <Download size={18} /> Export PDF
+                    </button>
+                </div>
+            </header>
+
+            <div className="admin-stats-grid no-print">
+                <div className="stat-card-glass">
+                    <div className="stat-icon-box" style={{ color: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)' }}>
+                        <TrendingUp size={24} />
+                    </div>
+                    <div>
+                        <div className="stat-value">{gpa}</div>
+                        <div className="stat-label">Cumulative GPA</div>
+                    </div>
+                </div>
+                <div className="stat-card-glass">
+                    <div className="stat-icon-box" style={{ color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)' }}>
+                        <Award size={24} />
+                    </div>
+                    <div>
+                        <div className="stat-value">{totalCredits}</div>
+                        <div className="stat-label">Credits Earned</div>
+                    </div>
+                </div>
+                <div className="stat-card-glass">
+                    <div className="stat-icon-box" style={{ color: '#10b981', background: 'rgba(16, 185, 129, 0.1)' }}>
+                        <BookOpen size={24} />
+                    </div>
+                    <div>
+                        <div className="stat-value">{filteredGrades.length}</div>
+                        <div className="stat-label">Courses Completed</div>
+                    </div>
+                </div>
             </div>
 
-            <div style={{ backgroundColor: 'white', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #eee' }}>
-                        <tr>
-                            <th style={{ padding: '15px', textAlign: 'left', color: '#555' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <BookOpen size={16} /> {t('courseName')}
-                                </div>
-                            </th>
-                            <th style={{ padding: '15px', textAlign: 'left', color: '#555' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <FileText size={16} /> {t('code')}
-                                </div>
-                            </th>
-                            <th style={{ padding: '15px', textAlign: 'center', color: '#555' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                    <Award size={16} /> {t('grade')}
-                                </div>
-                            </th>
-                            <th style={{ padding: '15px', textAlign: 'left', color: '#555' }}>{t('score')}</th>
-                            <th style={{ padding: '15px', textAlign: 'left', color: '#555' }}>{t('credits')}</th>
-                            <th style={{ padding: '15px', textAlign: 'left', color: '#555' }}>{t('status')}</th>
-                            <th style={{ padding: '15px', textAlign: 'center', color: '#555' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {grades.length === 0 ? (
+            <div className="admin-card">
+                <div className="section-title no-print" style={{ justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <GraduationCap size={20} color="#3b82f6" />
+                        Semester Results
+                    </div>
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                        <Filter size={16} color="#64748b" />
+                        <select
+                            className="form-input"
+                            style={{ padding: '8px 12px', fontSize: '0.85rem', width: 'auto' }}
+                            value={selectedSemester}
+                            onChange={(e) => setSelectedSemester(e.target.value)}
+                        >
+                            <option value="all">All Semesters</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="table-container" style={{ border: 'none', boxShadow: 'none' }}>
+                    <table className="dash-table">
+                        <thead>
                             <tr>
-                                <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
-                                    {t('noGradesAvailable')}
-                                </td>
+                                <th>Course Details</th>
+                                <th>Code</th>
+                                <th>Credits</th>
+                                <th>Grade</th>
+                                <th>Status</th>
+                                <th className="no-print">Action</th>
                             </tr>
-                        ) : (
-                            grades.map((grade, index) => (
-                                <tr key={index} className="table-row-animate" style={{ borderBottom: '1px solid #eee' }}>
-                                    <td style={{ padding: '15px', fontWeight: '500' }}>{grade.courseName}</td>
-                                    <td style={{ padding: '15px', color: '#666' }}>{grade.courseCode}</td>
-                                    <td style={{ padding: '15px', textAlign: 'center' }}>
-                                        <span style={{
-                                            display: 'inline-block',
+                        </thead>
+                        <tbody>
+                            {filteredGrades.length > 0 ? filteredGrades.map((g, i) => (
+                                <tr key={i} className="table-row-animate">
+                                    <td style={{ fontWeight: '600' }}>{g.courseName}</td>
+                                    <td style={{ color: '#64748b' }}>{g.courseCode || g.code}</td>
+                                    <td>{g.creditHours || g.credits || 3}</td>
+                                    <td>
+                                        <span className="status-badge" style={{
+                                            background: ['A', 'A-'].includes(g.grade) ? '#dcfce7' : '#dbeafe',
+                                            color: ['A', 'A-'].includes(g.grade) ? '#15803d' : '#1e40af',
                                             padding: '4px 12px',
-                                            borderRadius: '20px',
-                                            backgroundColor: getGradeColor(grade.grade),
-                                            color: 'white',
-                                            fontWeight: 'bold',
-                                            minWidth: '45px',
-                                            textAlign: 'center'
+                                            borderRadius: '8px',
+                                            fontWeight: '800'
                                         }}>
-                                            {grade.grade || 'N/A'}
+                                            {g.grade}
                                         </span>
                                     </td>
-                                    <td style={{ padding: '15px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{
-                                                flex: 1,
-                                                height: '8px',
-                                                backgroundColor: '#eee',
-                                                borderRadius: '4px',
-                                                overflow: 'hidden',
-                                                maxWidth: '100px'
-                                            }}>
-                                                <div style={{
-                                                    width: `${Math.min(grade.score || 0, 100)}%`,
-                                                    height: '100%',
-                                                    backgroundColor: getGradeColor(grade.grade)
-                                                }}></div>
-                                            </div>
-                                            <span style={{ fontWeight: 'bold' }}>{grade.score || 0}%</span>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '15px' }}>{grade.creditHours || 3}</td>
-                                    <td style={{ padding: '15px' }}>
-                                        <span style={{
-                                            backgroundColor: (grade.published || grade.status === 'published') ? '#d4edda' : '#fff3cd',
-                                            color: (grade.published || grade.status === 'published') ? '#155724' : '#856404',
-                                            padding: '4px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            fontWeight: 'bold'
-                                        }}>
-                                            {(grade.published || grade.status === 'published') ? t('published') : t('pending')}
+                                    <td>
+                                        <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', fontWeight: '600' }}>
+                                            Completed
                                         </span>
                                     </td>
-                                    <td style={{ padding: '15px', textAlign: 'center' }}>
-                                        <button
-                                            onClick={() => setAppealingGrade(grade)}
-                                            style={{
-                                                padding: '6px 12px',
-                                                backgroundColor: 'white',
-                                                border: '1px solid #ff9800',
-                                                color: '#ff9800',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                fontSize: '13px'
-                                            }}
-                                        >
-                                            Appeal
+                                    <td className="no-print">
+                                        <button className="admin-btn" style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b' }}>
+                                            Details
                                         </button>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            )) : (
+                                <tr>
+                                    <td colSpan="6" style={{ textAlign: 'center', padding: '100px 0' }}>
+                                        <div className="empty-state">
+                                            <div className="empty-icon-box">
+                                                <AlertCircle size={32} color="#94a3b8" />
+                                            </div>
+                                            <h4>No records found</h4>
+                                            <p>There are no grades matching the selected criteria.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            {/* Appeal Modal */}
-            {appealingGrade && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-                }}>
-                    <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '500px', maxWidth: '90%' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ margin: 0, fontSize: '20px' }}>Appeal Grade</h2>
-                            <button onClick={() => setAppealingGrade(null)} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
-                        </div>
-
-                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#fff3e0', borderRadius: '8px', borderLeft: '4px solid #ff9800' }}>
-                            <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{appealingGrade.courseName}</div>
-                            <div style={{ fontSize: '14px' }}>Current Grade: <b>{appealingGrade.grade}</b> ({appealingGrade.score}%)</div>
-                        </div>
-
-                        <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>
-                            If you believe there has been an error in your grading, please submit an appeal below. Be specific about your reasoning.
-                        </p>
-
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>Reason for Appeal</label>
-                        <select
-                            value={appealReason}
-                            onChange={(e) => setAppealReason(e.target.value)}
-                            style={{ width: '100%', padding: '10px', marginBottom: '15px', borderRadius: '5px', border: '1px solid #ddd' }}
-                        >
-                            <option value="">Select a reason...</option>
-                            <option value="Calculation Error">Calculation Error</option>
-                            <option value="Missing Assignment">Missing Assignment Score</option>
-                            <option value="Bias/Unfair Grading">Bias/Unfair Grading</option>
-                            <option value="Other">Other</option>
-                        </select>
-
-                        {appealReason === 'Other' && (
-                            <textarea
-                                placeholder="Please explain..."
-                                style={{ width: '100%', padding: '10px', height: '80px', borderRadius: '5px', border: '1px solid #ddd', marginBottom: '15px', resize: 'vertical' }}
-                            ></textarea>
-                        )}
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                            <button
-                                onClick={() => setAppealingGrade(null)}
-                                style={{ padding: '10px 20px', backgroundColor: '#f5f5f5', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', color: '#666' }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleAppealSubmit}
-                                disabled={!appealReason}
-                                style={{
-                                    padding: '10px 20px',
-                                    backgroundColor: appealReason ? '#ff9800' : '#ccc',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '5px',
-                                    cursor: appealReason ? 'pointer' : 'not-allowed',
-                                    fontWeight: 'bold'
-                                }}
-                            >
-                                Submit Appeal
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <style>{`
+                @media print {
+                    .no-print { display: none !important; }
+                    body { background: white !important; }
+                    .admin-dashboard-container { padding: 0 !important; }
+                    .admin-card { border: none !important; box-shadow: none !important; background: transparent !important; }
+                    .dash-table th { background: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
+                }
+            `}</style>
         </div>
     );
 };
