@@ -17,6 +17,10 @@ const options = {
                 url: 'http://localhost:5000',
                 description: 'Development Server',
             },
+            {
+                url: 'https://university-grade-portal.onrender.com',
+                description: 'Production Server',
+            },
         ],
         components: {
             securitySchemes: {
