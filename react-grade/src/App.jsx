@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { SocketProvider } from './context/SocketContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ToastProvider, useToast } from './components/common/Toast';
@@ -680,7 +681,7 @@ function AppLayout() {
   );
 }
 
-import { SocketProvider } from './context/SocketContext';
+
 
 // Root App Component
 function App() {
